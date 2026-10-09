@@ -1,0 +1,133 @@
+import {
+	useToast,
+	Flex,
+	Box,
+	Avatar,
+	CircularProgress,
+	Button,
+	Input,
+} from "@chakra-ui/react";
+import { IUser } from "@libs/types/user";
+import axios from "axios";
+import { FC, useEffect, useState } from "react";
+import { getMediaUrl } from "@libs/helpers/media";
+import { FaSave } from "react-icons/fa";
+import { MdCamera } from "react-icons/md";
+
+interface IProfileUpdate {
+	user: IUser;
+}
+
+export const ProfileUpdate: FC<IProfileUpdate> = ({ user }) => {
+	const [file, setFile] = useState(null);
+	const [profileUrl, setProfileUrl] = useState(user.profile_url);
+	const [previewUrl, setPreviewUrl] = useState<string>();
+	const [progress, setProgress] = useState(0);
+	const [uploading, setUploading] = useState(false);
+	const toast = useToast();
+
+	useEffect(() => {
+		if (!file) {
+			setPreviewUrl(undefined);
+			return;
+		}
+		const objectUrl = URL.createObjectURL(file);
+		setPreviewUrl(objectUrl);
+		return () => URL.revokeObjectURL(objectUrl);
+	}, [file]);
+
+	const uploadImage = async () => {
+		const formData = new FormData();
+		formData.append("image", file);
+
+		setUploading(true);
+		await axios
+			.post("/api/user/uploadProfile", formData, {
+				headers: {
+					"Content-Type": "multipart/form-data",
+				},
+				onUploadProgress: (event) => {
+					setProgress((event.loaded * 100) / event.total);
+				},
+			})
+			.then((res) => {
+				setProfileUrl(res.data?.user?.profile_url || profileUrl);
+				toast({
+					title: "Success",
+					variant: "solid",
+					description: "Profile Picture Uploaded",
+					status: "success",
+				});
+			})
+			.catch((err) => {
+				toast({
+					title: "Error",
+					variant: "solid",
+					description:
+						"Can't Upload Profile Picture, please Try again",
+					status: "error",
+				});
+			})
+			.finally(() => {
+				setUploading(false);
+				setFile(null);
+				setProgress(0);
+			});
+	};
+	return (
+		<Flex direction={"column"} alignItems="center">
+			<Box position="relative">
+				<Avatar size="2xl" name={user.firstName + " " + user.lastName} src={previewUrl || getMediaUrl(profileUrl, "profile")} />
+				{uploading && (
+					<Flex
+						position="absolute"
+						left="0"
+						top="0"
+						width="100%"
+						height="100%"
+						background="blackAlpha.500"
+						alignItems="center"
+						justifyContent="center"
+						borderRadius="full"
+					>
+						<CircularProgress
+							size="80px"
+							thickness={"4px"}
+							value={progress}
+						></CircularProgress>
+					</Flex>
+				)}
+			</Box>
+			<Box my="5" position="relative">
+				<Button cursor="pointer" leftIcon={<MdCamera />}>
+					Upload Image
+				</Button>
+				<Input
+					disabled={uploading}
+					onChange={(e) => setFile(e.target.files[0])}
+					accept="image/*"
+					cursor="pointer"
+					type="file"
+					position="absolute"
+					top="0"
+					left="0"
+					width="100%"
+					height="100%"
+					opacity="0"
+					aria-hidden="true"
+				/>
+			</Box>
+			{file && (
+				<Button
+					disabled={uploading}
+					onClick={uploadImage}
+					colorScheme="blue"
+					size="sm"
+					leftIcon={<FaSave />}
+				>
+					Apply
+				</Button>
+			)}
+		</Flex>
+	);
+};

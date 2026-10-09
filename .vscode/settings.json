@@ -1,0 +1,44 @@
+{
+	"sqltools.connections": [
+		{
+			"mysqlOptions": {
+				"authProtocol": "default"
+			},
+			"previewLimit": 50,
+			"server": "localhost",
+			"port": 3306,
+			"askForPassword": true,
+			"driver": "MySQL",
+			"name": "Habesha Brokers",
+			"database": "habesha_brokers",
+			"username": "root"
+		}
+	],
+	"editor.quickSuggestions": {
+		"other": "on",
+		"comments": true,
+		"strings": "off"
+	},
+	"cSpell.words": [
+		"blackalpha",
+		"Chala",
+		"CONTACTTYPE",
+		"firstname",
+		"formdata",
+		"formik",
+		"FORSALE",
+		"Habesha",
+		"habeshabrokers",
+		"jwtmiddleware",
+		"JWTSECRET",
+		"lastname",
+		"maingray",
+		"mainorange",
+		"MYEMAIL",
+		"MYPASS",
+		"Naol",
+		"transmition",
+		"zustand"
+	],
+	"dotenv.enableAutocloaking": false
+}

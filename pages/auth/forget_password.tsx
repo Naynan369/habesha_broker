@@ -1,0 +1,151 @@
+import { ArrowBackIcon } from "@chakra-ui/icons";
+import {
+	Button,
+	Flex,
+	FormControl,
+	FormErrorMessage,
+	FormLabel,
+	Heading,
+	Input,
+	Link,
+	Text,
+	useToast,
+	VStack,
+} from "@chakra-ui/react";
+import { MyTheme } from "@config/theme/MyTheme";
+import axios from "axios";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import { useState } from "react";
+import { MdRotateLeft } from "react-icons/md";
+
+export default function ForgetPassword() {
+	const [email, setEmail] = useState("");
+	const [sending, setSending] = useState(false);
+	const [sent, setSent] = useState(false);
+	const [err, setErr] = useState("");
+
+	const router = useRouter();
+	const toast = useToast();
+
+	const requestLink = async () => {
+		setSending(true);
+		await axios
+			.post("/api/user/forgotPassword/requestLink", {
+				email,
+			})
+			.then((res) => {
+				setSent(true);
+			})
+			.catch((error) => {
+				const e = error.response.data;
+				if (e?.email) {
+					setErr(e.err);
+				} else {
+					toast({
+						title: "Error, Sending link",
+						description: "Please try again",
+						isClosable: true,
+						status: "error",
+					});
+				}
+			})
+			.finally(() => {
+				setSending(false);
+			});
+	};
+
+	return (
+		<>
+			<Head>
+				<title>Forget Password</title>
+			</Head>
+			<Flex
+				direction="column"
+				alignItems="center"
+				justifyContent="center"
+				background="red.100"
+				height="100vh"
+				px={MyTheme.paddings.pagePadding}
+			>
+				<Flex
+					p="10"
+					borderRadius="2xl"
+					boxShadow="2xl"
+					background="white"
+					direction="column"
+				>
+					<Heading>Forget Password 🤷‍♂️</Heading>
+					{sent ? (
+						<Flex mt="5" direction="column">
+							<Text>
+								Link that use to reset your password have been
+								sent through your email, <br /> check your email{" "}
+								<Link
+									color={"blue.600"}
+									href={`mailto:${email}`}
+								>
+									{email}
+								</Link>
+							</Text>
+							<Button
+								mt="10"
+								colorScheme="red"
+								leftIcon={<ArrowBackIcon />}
+								onClick={() => router.back()}
+							>
+								Go Back
+							</Button>
+						</Flex>
+					) : (
+						<Flex direction={"column"}>
+							<Text my="5">
+								Request password resting link through your
+								email.
+							</Text>
+
+							<FormControl
+								isDisabled={sending}
+								isInvalid={!!err}
+								my="5"
+							>
+								<FormLabel>Email</FormLabel>
+								<Input
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									type="email"
+									name="email"
+									autoComplete="email"
+									variant="flushed"
+									placeholder="Enter your email here"
+								/>
+
+								<FormErrorMessage>{err}</FormErrorMessage>
+							</FormControl>
+							<VStack mt="5">
+								<Button
+									w="full"
+									isLoading={sending}
+									leftIcon={<MdRotateLeft />}
+									colorScheme={"red"}
+									onClick={requestLink}
+								>
+									Reset Password
+								</Button>
+								<Button
+									isDisabled={sending}
+									w="full"
+									variant={"ghost"}
+									colorScheme="red"
+									onClick={() => router.back()}
+								>
+									Cancel
+								</Button>
+							</VStack>
+						</Flex>
+					)}
+				</Flex>
+			</Flex>
+		</>
+	);
+}

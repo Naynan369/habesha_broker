@@ -1,0 +1,111 @@
+import { Box, Image, Text } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { MdDirectionsCar, MdHomeWork, MdImageNotSupported } from "react-icons/md";
+import { getMediaUrl } from "@libs/helpers/media";
+
+interface ListingImageProps {
+	src?: string;
+	alt: string;
+	itemType?: string;
+	w?: any;
+	h?: any;
+	width?: any;
+	height?: any;
+	borderRadius?: any;
+	borderTopRadius?: any;
+	borderLeftRadius?: any;
+	objectFit?: any;
+	position?: any;
+	top?: any;
+	left?: any;
+	mb?: any;
+	fill?: boolean;
+	loading?: "eager" | "lazy";
+}
+
+export function ListingImage({
+	src,
+	alt,
+	itemType,
+	w = "full",
+	h = "full",
+	width,
+	height,
+	borderRadius,
+	borderTopRadius,
+	borderLeftRadius,
+	objectFit = "cover",
+	position,
+	top,
+	left,
+	mb,
+	fill = false,
+	loading = "lazy",
+}: ListingImageProps) {
+	const imageUrl = getMediaUrl(src, "items");
+	const [failed, setFailed] = useState(!imageUrl);
+	const isCar = itemType?.toUpperCase() === "CAR";
+	const Icon = imageUrl ? MdImageNotSupported : isCar ? MdDirectionsCar : MdHomeWork;
+
+	useEffect(() => setFailed(!imageUrl), [imageUrl]);
+
+	const sharedProps = {
+		w: width || w,
+		h: height || h,
+		borderRadius,
+		borderTopRadius,
+		borderLeftRadius,
+		position: fill ? "absolute" : position,
+		top: fill ? 0 : top,
+		left: fill ? 0 : left,
+		mb,
+	};
+
+	if (failed || !imageUrl) {
+		return (
+			<Box
+				{...sharedProps}
+				role="img"
+				aria-label={alt}
+				position={fill ? "absolute" : position || "relative"}
+				top={fill ? 0 : top}
+				left={fill ? 0 : left}
+				display="flex"
+				alignItems="center"
+				justifyContent="center"
+				flexDirection="column"
+				gap="3"
+				overflow="hidden"
+				color="white"
+				background="linear-gradient(135deg, #0b2535 0%, #234d5e 55%, #c97942 100%)"
+			>
+				<Box
+					position="absolute"
+					width="70%"
+					height="70%"
+					border="1px solid"
+					borderColor="whiteAlpha.300"
+					borderRadius="full"
+					transform="translate(30%, 35%)"
+				/>
+				<Box position="relative" textAlign="center">
+					<Icon size={42} />
+					<Text mt="2" fontSize="xs" fontWeight="semibold" color="whiteAlpha.800">
+						{isCar ? "Vehicle listing" : "Property listing"}
+					</Text>
+				</Box>
+			</Box>
+		);
+	}
+
+	return (
+		<Image
+			{...sharedProps}
+			alt={alt}
+			src={imageUrl}
+			loading={loading}
+			objectFit={objectFit}
+			onError={() => setFailed(true)}
+		/>
+	);
+}

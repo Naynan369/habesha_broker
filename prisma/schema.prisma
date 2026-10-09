@@ -1,0 +1,173 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  firstName     String
+  lastName      String
+  email         String          @unique
+  password      String
+  bio           String?
+  profile_url   String?
+  role          Role            @default(USER)
+  verfied       Boolean         @default(false)
+  ContactInfo   ContactInfo[]
+  AddedItem     Item[]          @relation("Addes")
+  ApprovedItem  Item[]          @relation("Approves")
+  SavedItems    SavedItems[]
+  RecentActions RecentActions[]
+  Verification  Verification[]
+  PasswordReset PasswordReset[]
+}
+
+model ContactInfo {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String @db.ObjectId
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactType ContactType
+  value       String
+}
+
+model Verification {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code        String
+  requestTime DateTime @default(now())
+}
+
+model PasswordReset {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  link        String   @unique
+  requestTime DateTime @default(now())
+}
+
+model Item {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  featured    Boolean    @default(false)
+  description String?
+  price       Float
+  priceType   PriceType
+  images      String[]
+  createdAt   DateTime   @default(now())
+  itemType    ItemType
+  status      ItemStatus @default(PENDING)
+
+  userId String @db.ObjectId
+  user   User   @relation("Addes", fields: [userId], references: [id], onDelete: Cascade)
+
+  approvedId    String? @db.ObjectId
+  approvedUser  User?           @relation("Approves", fields: [approvedId], references: [id])
+  House         House[]
+  Car           Car[]
+  SavedItems    SavedItems[]
+  RecentActions RecentActions[]
+}
+
+model House {
+  id   String @id @map("_id") @db.ObjectId
+  item Item   @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  area   Float?
+  room   Int?
+  type   HouseType?
+  region String?
+  city   String?
+}
+
+model Car {
+  id   String @id @map("_id") @db.ObjectId
+  item Item   @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  model        String
+  status       CarType
+  manufacturer String
+  year         Int?
+  transmition  String
+  color        String?
+  cylinder     Float?
+  fuel         Float?
+}
+
+model SavedItems {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  savedAt DateTime @default(now())
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  itemId String @db.ObjectId
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
+
+model RecentActions {
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  actionType ActionType
+  actionTime DateTime   @default(now())
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  itemId String @db.ObjectId
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
+
+enum ItemType {
+  HOUSE
+  CAR
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum ItemStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  SOLD
+}
+
+enum ContactType {
+  TELEGRAM
+  FACEBOOK
+  INSTAGRAM
+  PHONE_NUMBER
+  ADDRESS
+  EMAIL
+}
+
+enum HouseType {
+  RENT
+  FORSALE
+}
+
+enum CarType {
+  USED
+  NEW
+  NEW_ETH
+}
+
+enum ActionType {
+  ADDED
+  SAVED
+  APPROVED
+}
+
+enum PriceType {
+  FIXED
+  NEGOTIABLE
+}
