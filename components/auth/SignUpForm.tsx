@@ -5,39 +5,45 @@ import {
 	Button,
 	Spinner,
 	useToast,
-	Box,
+	Text,
 } from "@chakra-ui/react";
 import { useLang } from "@libs/hooks/useLang";
 import axios from "axios";
 import { Formik } from "formik";
 import Link from "next/link";
-import router from "next/router";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import * as yup from "yup";
 import { AuthInputField } from "./AuthInputField";
-
-const signUpSchema = yup.object().shape({
-	firstName: yup.string().max(100).required("Please Enter your first name"),
-	lastName: yup.string().max(100).required("Please Enter your last name"),
-	email: yup
-		.string()
-		.email("Please Enter a valid Email")
-		.required("Your Email is required"),
-	password: yup
-		.string()
-		.min(8, "Your password should be minimum of 8 Characters")
-		.max(128, "Your password is too long")
-		.required("Please Enter Your Password"),
-	confirmation: yup
-		.string()
-		.oneOf([yup.ref("password"), null], "Passwords Must match")
-		.required("Please Enter Your password again to confirm"),
-});
 
 export const SignUpForm = () => {
 	const [agree, setAgree] = useState(false);
 	const lang = useLang();
 	const toast = useToast();
+	const router = useRouter();
+	const signUpSchema = yup.object().shape({
+		firstName: yup
+			.string()
+			.max(100, lang.auth.name_max)
+			.required(lang.auth.first_name_required),
+		lastName: yup
+			.string()
+			.max(100, lang.auth.name_max)
+			.required(lang.auth.last_name_required),
+		email: yup
+			.string()
+			.email(lang.auth.email_invalid)
+			.required(lang.auth.email_required),
+		password: yup
+			.string()
+			.min(8, lang.auth.password_min)
+			.max(128, lang.auth.password_max)
+			.required(lang.auth.password_required),
+		confirmation: yup
+			.string()
+			.oneOf([yup.ref("password"), null], lang.auth.password_confirm)
+			.required(lang.auth.password_confirm_required),
+	});
 
 	return (
 		<Formik
@@ -50,103 +56,118 @@ export const SignUpForm = () => {
 			}}
 			validationSchema={signUpSchema}
 			validateOnBlur
-			onSubmit={(values, actions) => {
-				actions.setSubmitting(true);
-				axios
-					.post("/api/user/signUp", { ...values, termsAccepted: agree })
-					.then((res) => {
-						router.push("/auth/login");
-					})
-					.catch((err) => {
-						toast({
-							title: "Error Occurred",
-							description: err.response.data.err,
-							status: "error",
-							isClosable: true,
-						});
-					})
-					.finally(() => {
-						actions.setSubmitting(false);
+			onSubmit={async (values, actions) => {
+				try {
+					await axios.post("/api/user/signUp", {
+						...values,
+						termsAccepted: agree,
 					});
+					actions.resetForm();
+					void router.push("/auth/login", undefined, { locale: router.locale });
+				} catch (error) {
+					const emailAlreadyExists = error?.response?.status === 409;
+					toast({
+						title: lang.auth.error_title,
+						description: emailAlreadyExists
+							? lang.auth.email_exists
+							: lang.auth.signup_failed,
+						status: "error",
+						isClosable: true,
+					});
+				} finally {
+					actions.setSubmitting(false);
+				}
 			}}
 		>
 			{(formik) => (
 				<form
 					onSubmit={formik.handleSubmit}
-					onReset={formik.handleReset}
 					style={{
 						display: "flex",
 						flexDirection: "column",
 					}}
 				>
-					<Flex gap="4" direction={{ base: "column", md: "row" }}>
+					<Flex gap="4" direction={{ base: "column", sm: "row" }}>
 						<AuthInputField
 							formik={formik}
 							name="firstName"
 							label={lang.auth.firstname}
+							autoComplete="given-name"
 						/>
 						<AuthInputField
 							formik={formik}
 							name="lastName"
 							label={lang.auth.lastname}
+							autoComplete="family-name"
 						/>
 					</Flex>
-					<Flex my="5">
+					<Flex mt="5" mb="5">
 						<AuthInputField
 							type="email"
 							name="email"
 							formik={formik}
 							label={lang.auth.email}
+							autoComplete="email"
 						/>
 					</Flex>
-					<Flex gap="4" direction={{ base: "column", md: "row" }}>
+					<Flex gap="4" direction={{ base: "column", sm: "row" }}>
 						<AuthInputField
 							formik={formik}
 							name="password"
 							type="password"
 							label={lang.auth.password}
+							autoComplete="new-password"
 						/>
 						<AuthInputField
 							formik={formik}
 							type="password"
 							name="confirmation"
 							label={lang.auth.confirm}
+							autoComplete="new-password"
 						/>
 					</Flex>
-					<Flex>
+					<Flex mt="6">
 						<Checkbox
 							checked={agree}
-							onChange={(e) => setAgree((val) => !val)}
-							mx="3"
-							my={"8"}
+							onChange={(event) => setAgree(event.target.checked)}
+							colorScheme="orange"
+							alignItems="flex-start"
+							aria-label={lang.auth.agree}
 						>
-							{lang.auth.agree}
+							<Text fontSize="sm" color="gray.600" lineHeight="1.6">
+								{lang.auth.agree}
+							</Text>
 						</Checkbox>
 					</Flex>
 
 					<Flex
-						gap="2"
-						direction={["column-reverse", null, "row"]}
-						mt="4"
-						alignItems={"center"}
+						gap="4"
+						mt="8"
+						direction={{ base: "column", sm: "row" }}
+						alignItems="center"
+						justify="space-between"
 					>
-						<Link href="/auth/login" passHref>
-							<Button as="a" variant="ghost" size="sm">Already Have an Account?</Button>
-						</Link>
-						<Box flex="1"></Box>
+						<Flex gap="1" align="center" fontSize="sm" color="gray.600">
+							<Text>{lang.auth.have_account}</Text>
+							<Link href="/auth/login" passHref>
+								<Button as="a" variant="link" size="sm" color="mainorange" fontWeight="700">
+									{lang.auth.sign_in}
+								</Button>
+							</Link>
+						</Flex>
 						<Button
-							leftIcon={
-								formik.isSubmitting ? <Spinner /> : <EditIcon />
-							}
-							colorScheme="red"
+							leftIcon={formik.isSubmitting ? <Spinner /> : <EditIcon />}
+							bg="mainorange"
+							color="white"
+							_hover={{ bg: "#ad582a" }}
+							borderRadius="xl"
+							h="52px"
+							px="6"
 							type="submit"
-							disabled={
-								!formik.isValid || !agree || formik.isSubmitting
-							}
+							isDisabled={!formik.isValid || !agree || formik.isSubmitting}
+							w={{ base: "full", sm: "auto" }}
 						>
-							{formik.isSubmitting
-								? "Creating..."
-								: lang.auth.create}
+							{formik.isSubmitting ? lang.auth.creating : lang.auth.create}
 						</Button>
 					</Flex>
 				</form>

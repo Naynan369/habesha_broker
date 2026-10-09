@@ -1,13 +1,9 @@
 import { LockIcon } from "@chakra-ui/icons";
 import {
-	FormControl,
-	FormLabel,
-	Input,
-	FormErrorMessage,
 	Flex,
-	Checkbox,
 	Button,
 	Spinner,
+	Text,
 	useToast,
 } from "@chakra-ui/react";
 import { useLang } from "@libs/hooks/useLang";
@@ -19,47 +15,35 @@ import { useRouter } from "next/router";
 import * as Yup from "yup";
 import { AuthInputField } from "./AuthInputField";
 
-const LoginSchema = Yup.object().shape({
-	email: Yup.string()
-		.email("Please Enter Valid Email")
-		.required("Please Enter your Email"),
-	password: Yup.string()
-		.min(6, "Your password should be minimum of 6 Characters")
-		.max(16, "Your password is too long")
-		.required("Please Enter Your Password"),
-});
-
 const LoginForm = () => {
 	const router = useRouter();
 	const toast = useToast();
 	const lang = useLang();
 	const setUser = useUser((state) => state.setUser);
+	const loginSchema = Yup.object().shape({
+		email: Yup.string()
+			.email(lang.auth.email_invalid)
+			.required(lang.auth.email_required),
+		password: Yup.string().required(lang.auth.password_required),
+	});
 
 	const handleSubmit = async (values, actions) => {
-		await axios
-			.post("/api/user/login", values)
-			.then((res) => {
-				const user = res.data.user;
-				setUser(user);
-				router.replace(user.role === "ADMIN" ? "/admin" : "/dashboard");
-			})
-			.catch((error) => {
-				const response = error?.response?.data || {};
-				const { type } = response;
-				const msg = response.err || response.msg || "Email or password is incorrect";
-				if (type) {
-					actions.setFieldError(type, msg);
-				} else {
-					toast({
-						title: "Error",
-						description: msg,
-						status: "error",
-					});
-				}
-			})
-			.finally(() => {
-				actions.setSubmitting(false);
+		try {
+			const response = await axios.post("/api/user/login", values);
+			const user = response.data.user;
+			setUser(user);
+			const destination = user.role === "ADMIN" ? "/admin" : "/dashboard";
+			await router.replace(destination, destination, { locale: router.locale });
+		} catch {
+			toast({
+				title: lang.auth.error_title,
+				description: lang.auth.login_failed,
+				status: "error",
+				isClosable: true,
 			});
+		} finally {
+			actions.setSubmitting(false);
+		}
 	};
 
 	return (
@@ -69,42 +53,44 @@ const LoginForm = () => {
 				password: "",
 			}}
 			onSubmit={handleSubmit}
-			validationSchema={LoginSchema}
+			validationSchema={loginSchema}
 			validateOnBlur
 		>
 			{(formik) => (
 				<form onSubmit={formik.handleSubmit}>
-					<Flex direction={"column"} gap="5">
+					<Flex direction="column" gap="5">
 						<AuthInputField
 							formik={formik}
 							name="email"
 							label={lang.auth.email}
+							type="email"
+							autoComplete="email"
 						/>
 						<AuthInputField
 							formik={formik}
 							name="password"
 							type="password"
 							label={lang.auth.password}
+							autoComplete="current-password"
 						/>
 					</Flex>
 
-					<Flex mt="2" justifyContent={"flex-end"}>
-						<Link href={"/auth/forget_password"}>
-							{lang.auth.forget}
+					<Flex mt="4" justifyContent="flex-end">
+						<Link href="/auth/forget_password" passHref>
+							<Text as="a" fontSize="sm" color="mainorange" fontWeight="600" _hover={{ textDecoration: "underline" }}>
+								{lang.auth.forget}
+							</Text>
 						</Link>
 					</Flex>
-					<Flex mt="5">
-						<Checkbox defaultChecked colorScheme={"red"}>
-							{lang.auth.remember}
-						</Checkbox>
-					</Flex>
 
-					<Flex justifyContent={"center"} mt="12">
+					<Flex justifyContent="center" mt="8">
 						<Button
 							w="full"
 							type="submit"
-							alignSelf={"center"}
-							textTransform={"uppercase"}
+							alignSelf="center"
+							textTransform="uppercase"
+							h="54px"
+							borderRadius="xl"
 							leftIcon={
 								!formik.isSubmitting ? (
 									<LockIcon />
@@ -112,11 +98,13 @@ const LoginForm = () => {
 									<Spinner />
 								)
 							}
-							colorScheme={"red"}
+							colorScheme="orange"
+							bg="mainorange"
+							_hover={{ bg: "#ad582a" }}
 							isDisabled={formik.isSubmitting}
 						>
 							{formik.isSubmitting
-								? "Authenticating..."
+								? lang.auth.authenticating
 								: lang.auth.login}
 						</Button>
 					</Flex>

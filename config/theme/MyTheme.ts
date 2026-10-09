@@ -1,12 +1,12 @@
 const MyTheme = {
     colors: {
-        maingray: "#003049",
-        mainred: "#D62828",
-        mainorange: "#C66B36",
-        mainyellow: "#E9B75C",
-        mainlightYellow: "#EAE2B7",
+        maingray: "#143a45",
+        mainred: "#bf4b3e",
+        mainorange: "#c66b36",
+        mainyellow: "#e9b75c",
+        mainlightYellow: "#f1e5c3",
         background: {
-            RedGrayGrad: `linear-gradient(90deg, #003049, #D62828)`,
+            RedGrayGrad: `linear-gradient(90deg, #143a45, #bf4b3e)`,
         },
     },
     paddings: {
@@ -17,7 +17,7 @@ const MyTheme = {
         },
     },
     size: {
-        navbarHeight: "100px",
+        navbarHeight: "82px",
         navbarHeightCompact: "70px",
     },
 };

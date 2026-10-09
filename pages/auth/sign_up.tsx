@@ -1,8 +1,8 @@
-import { Flex, Heading } from "@chakra-ui/react";
+import { Box, Heading, Text } from "@chakra-ui/react";
 import { SignUpForm } from "@components/auth/SignUpForm";
+import { AuthPageLayout } from "@components/auth/AuthPageLayout";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { useLang } from "@libs/hooks/useLang";
-import styles from "@styles/Auth.module.scss";
 import Head from "next/head";
 
 export const getServerSideProps = withSessionSsr(async ({ req }) => {
@@ -27,31 +27,19 @@ export default function SignUp() {
 		<>
 			<Head>
 				<title>{lang.auth.sign_title}</title>
+				<meta name="description" content={lang.auth.signup_description} />
 			</Head>
-			<Flex
-				height={{ base: "auto", md: "100vh" }}
-				minHeight="100vh"
-				direction={{ base: "column", md: "row" }}
-				color="maingray"
-			>
-				<Flex
-					flex={5}
-					direction="column"
-					alignItems={"center"}
-					justifyContent={"center"}
-					p="5"
-				>
-					<Heading mb="16" fontSize={"5xl"}>
+			<AuthPageLayout>
+				<Box mb="7">
+					<Heading fontSize={{ base: "3xl", md: "4xl" }} color="maingray" letterSpacing="-0.035em">
 						{lang.auth.signUp}
 					</Heading>
-					<SignUpForm />
-				</Flex>
-				<Flex
-					boxShadow={"dark-lg"}
-					flex={2}
-					className={styles.lgbg}
-				></Flex>
-			</Flex>
+					<Text mt="3" color="gray.600" lineHeight="1.7">
+						{lang.auth.signup_description}
+					</Text>
+				</Box>
+				<SignUpForm />
+			</AuthPageLayout>
 		</>
 	);
 }

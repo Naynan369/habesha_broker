@@ -1,11 +1,10 @@
-import { Button, Flex, Heading, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
 import Head from "next/head";
 import Link from "next/link";
-import styles from "@styles/Auth.module.scss";
 import { useLang } from "@libs/hooks/useLang";
 import { LoginForm } from "@components/auth/LoginForm";
+import { AuthPageLayout } from "@components/auth/AuthPageLayout";
 import { withSessionSsr } from "@config/cookie/cookie";
-import { ArrowLeftIcon } from "@chakra-ui/icons";
 
 export const getServerSideProps = withSessionSsr(async ({ req }) => {
 	const user = req.session.user;
@@ -28,51 +27,28 @@ export default function Login() {
 	return (
 		<>
 			<Head>
-				<title>{lang.auth.login_title} </title>
+				<title>{lang.auth.login_title}</title>
+				<meta name="description" content={lang.auth.login_description} />
 			</Head>
-			<Flex
-				height={{ base: "auto", md: "100vh" }}
-				minHeight="100vh"
-				width={"100%"}
-				direction={{ base: "column", md: "row" }}
-				color={"maingray"}
-			>
-				<Flex
-					className={styles.lgbg}
-					boxShadow={"dark-lg"}
-					flex={2}
-				></Flex>
-				<Flex
-					p={{ base: "3", md: "0" }}
-					pb="0"
-					flex={4}
-					direction={"column"}
-					alignItems={"center"}
-					justifyContent={"center"}
-				>
-					<Heading my="5" fontSize={"5xl"}>
+			<AuthPageLayout>
+				<Box mb="8">
+					<Heading fontSize={{ base: "3xl", md: "4xl" }} color="maingray" letterSpacing="-0.035em">
 						{lang.auth.login}
 					</Heading>
-					<LoginForm />
-					<Link href={"/auth/sign_up"} passHref>
-						<Button as="a" size="sm" variant="ghost" borderBottom="1px solid" borderColor="gray.300" color="maingray" mt="10" fontSize="sm">
+					<Text mt="3" color="gray.600" lineHeight="1.7">
+						{lang.auth.login_description}
+					</Text>
+				</Box>
+				<LoginForm />
+				<Flex mt="8" align="center" gap="2" fontSize="sm" color="gray.600">
+					<Text>{lang.auth.new_to}</Text>
+					<Link href="/auth/sign_up" passHref>
+						<Button as="a" size="sm" variant="link" color="mainorange" fontWeight="700">
 							{lang.auth.create}
 						</Button>
 					</Link>
-					<Flex
-						mt={"10"}
-						w="full"
-						alignItems={"center"}
-						justifyContent="center"
-					>
-						<Link href={"/"} passHref>
-							<Button as="a" size="sm" leftIcon={<ArrowLeftIcon />} variant="ghost" color="mainorange" textTransform="uppercase" fontSize="sm">
-								{lang.auth.home}
-							</Button>
-						</Link>
-					</Flex>
 				</Flex>
-			</Flex>
+			</AuthPageLayout>
 		</>
 	);
 }

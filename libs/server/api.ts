@@ -82,6 +82,38 @@ async function requireAdmin(req: SessionRequest, res: NextApiResponse) {
 	return user;
 }
 
+function numberBound(value: any): number | undefined {
+	if (typeof value === "number" && Number.isFinite(value) && value >= 0) return value;
+	if (typeof value === "string" && value.trim() !== "") {
+		const parsed = Number(value);
+		if (Number.isFinite(parsed) && parsed >= 0) return parsed;
+	}
+	return undefined;
+}
+
+function safeNumberRange(value: any) {
+	if (!value || typeof value !== "object") return undefined;
+	const range: any = {};
+	const gt = numberBound(value.gt);
+	const lt = numberBound(value.lt);
+	if (gt !== undefined) range.gt = gt;
+	if (lt !== undefined) range.lt = lt;
+	return Object.keys(range).length ? range : undefined;
+}
+
+function safeStringFilter(value: any) {
+	if (typeof value === "string") return value.slice(0, 100);
+	if (!value || typeof value !== "object") return undefined;
+	const condition: any = {};
+	for (const operator of ["startsWith", "contains", "endsWith"]) {
+		if (typeof value[operator] === "string" && value[operator].trim()) {
+			condition[operator] = value[operator].trim().slice(0, 100);
+		}
+	}
+	if (Object.keys(condition).length && value.mode === "insensitive") condition.mode = "insensitive";
+	return Object.keys(condition).length ? condition : undefined;
+}
+
 function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 	const where: any = {};
 	if (isAdmin) {
@@ -96,27 +128,16 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 		where.status = "APPROVED";
 	}
 
-	if (typeof body.itemType === "string") {
-		where.itemType = body.itemType;
-	} else if (body.itemType?.in && Array.isArray(body.itemType.in)) {
-		where.itemType = { in: body.itemType.in.filter((x: string) => ["HOUSE", "CAR"].includes(x)) };
-	}
-	if (body.priceType === "FIXED" || body.priceType === "NEGOTIABLE") {
-		where.priceType = body.priceType;
-	}
-	if (body.price && typeof body.price === "object") {
-		const price: any = {};
-		if (Number.isFinite(Number(body.price.gt))) price.gt = Number(body.price.gt);
-		if (Number.isFinite(Number(body.price.lt))) price.lt = Number(body.price.lt);
-		if (Object.keys(price).length) where.price = price;
-	}
+	if (["HOUSE", "CAR"].includes(body.itemType)) where.itemType = body.itemType;
+	if (body.priceType === "FIXED" || body.priceType === "NEGOTIABLE") where.priceType = body.priceType;
+	const price = safeNumberRange(body.price);
+	if (price) where.price = price;
+
 	if (body.title && typeof body.title === "object") {
-		const title: any = {};
-		if (typeof body.title.startsWith === "string") title.startsWith = body.title.startsWith.slice(0, 120);
-		if (typeof body.title.contains === "string") title.contains = body.title.contains.slice(0, 120);
-		if (Object.keys(title).length) where.title = title;
-	} else if (typeof body.title === "string") {
-		where.title = { contains: body.title.slice(0, 120) };
+		const title = safeStringFilter(body.title);
+		if (title) where.title = title;
+	} else if (typeof body.title === "string" && body.title.trim()) {
+		where.title = { contains: body.title.trim().slice(0, 120) };
 	}
 
 	for (const relation of ["House", "Car"]) {
@@ -125,24 +146,30 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 		const allowed = relation === "House"
 			? ["area", "room", "region", "city", "type"]
 			: ["model", "status", "manufacturer", "year", "color", "cylinder", "fuel"];
+		const numericFields = relation === "House" ? ["area", "room"] : ["year", "cylinder", "fuel"];
+		const stringFields = relation === "House" ? ["region", "city"] : ["model", "manufacturer", "color"];
 		const details: any = {};
 		for (const key of allowed) {
 			const value = input[key];
-			if (value === undefined || value === "") continue;
-			if (typeof value === "object" && value !== null) {
-				const range: any = {};
-				if (Number.isFinite(Number(value.gt))) range.gt = Number(value.gt);
-				if (Number.isFinite(Number(value.lt))) range.lt = Number(value.lt);
-				if (Object.keys(range).length) details[key] = range;
-			} else if (typeof value === "string" || typeof value === "number") {
-				details[key] = value;
+			if (numericFields.includes(key)) {
+				const range = safeNumberRange(value);
+				const scalar = numberBound(value);
+				if (range) details[key] = range;
+				else if (scalar !== undefined) details[key] = scalar;
+				continue;
 			}
+			if (stringFields.includes(key)) {
+				const condition = safeStringFilter(value);
+				if (condition) details[key] = condition;
+				continue;
+			}
+			if (relation === "House" && key === "type" && ["RENT", "FORSALE"].includes(value)) details[key] = value;
+			if (relation === "Car" && key === "status" && ["USED", "NEW", "NEW_ETH"].includes(value)) details[key] = value;
 		}
 		where[relation] = { some: details };
 	}
 	return where;
 }
-
 async function listItems(req: SessionRequest, res: NextApiResponse) {
 	const adminView = Boolean(
 		req.session?.user?.role === "ADMIN" &&

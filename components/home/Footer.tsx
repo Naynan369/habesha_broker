@@ -11,51 +11,22 @@ export const HomeFooter = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
 	return (
-		<Flex background="maingray" color="white" direction="column">
-			<SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={{ base: 8, md: 10 }} p={{ base: 7, md: 14 }}>
+		<Flex as="footer" bg="#0a222e" color="white" direction="column">
+			<SimpleGrid maxW="1440px" w="full" mx="auto" columns={{ base: 1, sm: 2, lg: 4 }} spacing={{ base: 8, md: 10 }} px={{ base: 6, md: 12, xl: 16 }} py={{ base: 10, md: 14 }}>
 				<Flex direction="column">
-					<Flex alignItems="center" gap="3" mb="4">
-						<Flex w="10" h="10" borderRadius="xl" bg="whiteAlpha.100" color="mainyellow" alignItems="center" justifyContent="center" fontWeight="black">HB</Flex>
-						<Heading textTransform="uppercase" fontSize="lg">{lang.title}</Heading>
-					</Flex>
-					<Text color="whiteAlpha.800" lineHeight="1.8">Find homes and vehicles across Ethiopia, compare the details, and connect with sellers directly.</Text>
+					<Flex align="center" gap="3" mb="4"><Flex w="10" h="10" borderRadius="xl" bg="whiteAlpha.100" color="mainyellow" align="center" justify="center" fontWeight="black">HB</Flex><Heading textTransform="uppercase" fontSize="sm" letterSpacing=".08em">{lang.title}</Heading></Flex>
+					<Text color="whiteAlpha.700" lineHeight="1.8" maxW="300px">{lang.home.footer_description}</Text>
 				</Flex>
-				<Flex direction="column">
-					<Heading fontSize="sm" color="mainyellow" textTransform="uppercase" letterSpacing=".12em">{lang.home.services_txt}</Heading>
-					<Flex mt="4" alignItems="flex-start" direction="column">
-						<FooterLink href="/#categories">Browse by category</FooterLink>
-						<FooterLink href="/explore">Explore all listings</FooterLink>
-						<FooterLink href="/auth/login">{lang.home.work_btn}</FooterLink>
-					</Flex>
-				</Flex>
-				<Flex direction="column">
-					<Heading fontSize="sm" color="mainyellow" textTransform="uppercase" letterSpacing=".12em">{lang.home.footer.links}</Heading>
-					<Flex mt="4" alignItems="flex-start" direction="column">
-						<FooterLink href="/">Home</FooterLink>
-						<FooterLink href="/explore">Explore</FooterLink>
-						<FooterLink href="/#Contact">Contact</FooterLink>
-					</Flex>
-				</Flex>
-				<Flex direction="column">
-					<Heading fontSize="sm" color="mainyellow" textTransform="uppercase" letterSpacing=".12em">{lang.home.contacttxt}</Heading>
-					<Flex mt="4" alignItems="flex-start" direction="column">
-						<ContactLink icon={<PhoneIcon />} href="tel:0973723769">0973723769</ContactLink>
-						<ContactLink icon={<EmailIcon />} href="mailto:naolchala6@gmail.com">naolchala6@gmail.com</ContactLink>
-						<ContactLink icon={<ChatIcon />} href="https://t.me/stepphenwolf">@stepphenwolf</ContactLink>
-					</Flex>
-				</Flex>
+				<FooterColumn title={lang.home.services_txt}><FooterLink href="/#categories">{lang.home.browse_categories}</FooterLink><FooterLink href="/explore">{lang.home.explore_all}</FooterLink><FooterLink href="/auth/login">{lang.home.work_btn}</FooterLink></FooterColumn>
+				<FooterColumn title={lang.home.footer.links}><FooterLink href="/">{lang.nav.home}</FooterLink><FooterLink href="/explore">{lang.nav.explore}</FooterLink><FooterLink href="/#Contact">{lang.home.contacttxt}</FooterLink></FooterColumn>
+				<FooterColumn title={lang.home.contacttxt}><ContactLink icon={<PhoneIcon />} href="tel:0973723769">0973723769</ContactLink><ContactLink icon={<EmailIcon />} href="mailto:naolchala6@gmail.com">naolchala6@gmail.com</ContactLink><ContactLink icon={<ChatIcon />} href="https://t.me/stepphenwolf">@stepphenwolf</ContactLink></FooterColumn>
 			</SimpleGrid>
-			<Flex background="blackAlpha.300" justifyContent="center" p="5" alignItems="center">
-				<Text fontSize="sm" color="whiteAlpha.800">{lang.home.year} © {lang.home.copyright}</Text>
-			</Flex>
+			<Flex bg="blackAlpha.200" justify="center" px="6" py="5" align="center"><Text fontSize="sm" color="whiteAlpha.600">© {new Date().getFullYear()} {lang.title}. {lang.home.copyright}</Text></Flex>
 		</Flex>
 	);
 };
 
+const FooterColumn = ({ title, children }) => <Flex direction="column"><Heading fontSize="xs" color="mainyellow" textTransform="uppercase" letterSpacing=".16em">{title}</Heading><Flex mt="4" align="flex-start" direction="column">{children}</Flex></Flex>;
 interface ILink extends LinkProps { children?: ReactNode; icon?: ReactElement; }
-const FooterLink: FC<ILink> = ({ children, ...props }) => (
-	<Link {...props} passHref><Text as="a" my="1.5" className={styles.navLink} color="whiteAlpha.800" _hover={{ color: "white" }}>{children}</Text></Link>
-);
-const ContactLink: FC<ILink> = ({ children, icon, ...props }) => (
-	<Link {...props} passHref><Flex as="a" my="1.5" className={styles.navLink} alignItems="center" color="whiteAlpha.800" _hover={{ color: "white" }}>{icon}<Text ml="2">{children}</Text></Flex></Link>
-);
+const FooterLink: FC<ILink> = ({ children, ...props }) => <Link {...props} passHref><Text as="a" my="1.5" className={styles.navLink} color="whiteAlpha.700" _hover={{ color: "white" }}>{children}</Text></Link>;
+const ContactLink: FC<ILink> = ({ children, icon, ...props }) => <Link {...props} passHref><Flex as="a" my="1.5" className={styles.navLink} align="center" color="whiteAlpha.700" _hover={{ color: "white" }}>{icon}<Text ml="2">{children}</Text></Flex></Link>;

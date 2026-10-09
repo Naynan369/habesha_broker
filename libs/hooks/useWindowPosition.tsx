@@ -5,12 +5,14 @@ const useWindowPosition = () => {
 
 	useEffect(() => {
 		const page = document.getElementById("pageContainer");
-		if (!page) return;
-
-		const updatePosition = () => setPos(page.scrollTop);
-		page.addEventListener("scroll", updatePosition, { passive: true });
+		const updatePosition = () => setPos(window.scrollY || document.documentElement.scrollTop || page?.scrollTop || 0);
+		window.addEventListener("scroll", updatePosition, { passive: true });
+		page?.addEventListener("scroll", updatePosition, { passive: true });
 		updatePosition();
-		return () => page.removeEventListener("scroll", updatePosition);
+		return () => {
+			window.removeEventListener("scroll", updatePosition);
+			page?.removeEventListener("scroll", updatePosition);
+		};
 	}, []);
 
 	return pos;

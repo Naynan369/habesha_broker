@@ -11,5 +11,6 @@ if (process.env.NODE_ENV === "production") {
 	prisma = global.prisma;
 }
 
-prisma.$connect();
+// Prisma connects on first use. Avoid an unhandled background connection error
+// taking down the UI when the configured database is temporarily unreachable.
 export { prisma };
