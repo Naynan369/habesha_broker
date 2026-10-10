@@ -27,7 +27,7 @@ import { useUser } from "@libs/store";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { FC, useRef, useState } from "react";
-import { MdCarRental, MdHouse, MdLogout } from "react-icons/md";
+import { MdCarRental, MdHouse, MdLogout, MdStorefront } from "react-icons/md";
 import { dayjs } from "@config/dayjs";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { getMediaUrl } from "@libs/helpers/media";
@@ -192,11 +192,9 @@ const ItemCard: FC<ICard> = ({ id, title, featured, createdAt, itemType }) => {
 	const toast = useToast();
 
 	const itemIcon =
-		itemType === "HOUSE" ? (
-			<MdHouse size={"28px"} />
-		) : (
-			<MdCarRental size={"28px"} />
-		);
+		itemType === "HOUSE" ? <MdHouse size="28px" /> :
+		itemType === "CAR" ? <MdCarRental size="28px" /> :
+		<MdStorefront size="28px" />;
 
 	const handleItem = async (newStatus: "APPROVED" | "DECLINED") => {
 		setStatus("LOADING");
@@ -301,7 +299,7 @@ function StatsBar() {
 
 	return (
 		data && (
-			<SimpleGrid p="5" spacing="10" columns={[2, 3, 5]}>
+			<SimpleGrid p="5" spacing="10" columns={[2, 3, 6]}>
 				<Stat
 					boxShadow="2xl"
 					p="5"
@@ -363,6 +361,10 @@ function StatsBar() {
 						Total Cars
 					</StatLabel>
 					<StatNumber fontSize={"4xl"}>{data.cars}</StatNumber>
+				</Stat>
+				<Stat boxShadow="2xl" p="5" borderRadius="lg" background="teal.600" color="white">
+					<StatLabel fontSize="lg" textTransform="uppercase">Business Spaces</StatLabel>
+					<StatNumber fontSize="4xl">{data.businessSpaces}</StatNumber>
 				</Stat>
 			</SimpleGrid>
 		)

@@ -30,6 +30,7 @@ const publicUserSelect = {
 const itemInclude = {
 	Car: true,
 	House: true,
+	BusinessSpace: true,
 	user: {
 		select: {
 			id: true,
@@ -44,8 +45,8 @@ const itemInclude = {
 const error = (res: NextApiResponse, status: number, err: string) =>
 	res.status(status).json({ err });
 
-const isObjectId = (value: unknown): value is string =>
-	typeof value === "string" && /^[a-f0-9]{24}$/i.test(value);
+const isValidRecordId = (value: unknown): value is string =>
+	typeof value === "string" && /^[A-Za-z0-9_-]{8,128}$/.test(value);
 
 async function currentUser(req: SessionRequest) {
 	if (!req.session?.user?.id) return null;
@@ -122,13 +123,15 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 		return where;
 	}
 
-	if (user && body.userId === user.id) {
-		where.userId = user.id;
-	} else {
-		where.status = "APPROVED";
-	}
+	if (user && body.userId === user.id) where.userId = user.id;
+	else where.status = "APPROVED";
 
-	if (["HOUSE", "CAR"].includes(body.itemType)) where.itemType = body.itemType;
+	const validTypes = ["HOUSE", "CAR", "BUSINESS_SPACE"];
+	if (validTypes.includes(body.itemType)) where.itemType = body.itemType;
+	else if (Array.isArray(body.itemType?.in)) {
+		const types = body.itemType.in.filter((type: unknown) => validTypes.includes(String(type)));
+		if (types.length) where.itemType = { in: types };
+	}
 	if (body.priceType === "FIXED" || body.priceType === "NEGOTIABLE") where.priceType = body.priceType;
 	const price = safeNumberRange(body.price);
 	if (price) where.price = price;
@@ -140,33 +143,29 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 		where.title = { contains: body.title.trim().slice(0, 120) };
 	}
 
-	for (const relation of ["House", "Car"]) {
+	const relationRules: Record<string, { numeric: string[]; strings: string[]; enums: Record<string, string[]> }> = {
+		House: { numeric: ["area", "room"], strings: ["region", "city"], enums: { type: ["RENT", "FORSALE"] } },
+		Car: { numeric: ["year", "cylinder", "fuel"], strings: ["model", "manufacturer", "color"], enums: { status: ["USED", "NEW", "NEW_ETH"] } },
+		BusinessSpace: { numeric: ["area"], strings: ["region", "city", "subcity", "neighborhood"], enums: { spaceType: ["SHOP", "OFFICE", "WAREHOUSE", "MARKET_STALL", "WORKSHOP", "LAND"], type: ["RENT", "FORSALE"], priceFrequency: ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"] } },
+	};
+	for (const [relation, rules] of Object.entries(relationRules)) {
 		const input = body[relation]?.some;
 		if (!input || typeof input !== "object") continue;
-		const allowed = relation === "House"
-			? ["area", "room", "region", "city", "type"]
-			: ["model", "status", "manufacturer", "year", "color", "cylinder", "fuel"];
-		const numericFields = relation === "House" ? ["area", "room"] : ["year", "cylinder", "fuel"];
-		const stringFields = relation === "House" ? ["region", "city"] : ["model", "manufacturer", "color"];
 		const details: any = {};
-		for (const key of allowed) {
-			const value = input[key];
-			if (numericFields.includes(key)) {
-				const range = safeNumberRange(value);
-				const scalar = numberBound(value);
-				if (range) details[key] = range;
-				else if (scalar !== undefined) details[key] = scalar;
-				continue;
-			}
-			if (stringFields.includes(key)) {
-				const condition = safeStringFilter(value);
-				if (condition) details[key] = condition;
-				continue;
-			}
-			if (relation === "House" && key === "type" && ["RENT", "FORSALE"].includes(value)) details[key] = value;
-			if (relation === "Car" && key === "status" && ["USED", "NEW", "NEW_ETH"].includes(value)) details[key] = value;
+		for (const key of rules.numeric) {
+			const range = safeNumberRange(input[key]);
+			const scalar = numberBound(input[key]);
+			if (range) details[key] = range;
+			else if (scalar !== undefined) details[key] = scalar;
 		}
-		where[relation] = { some: details };
+		for (const key of rules.strings) {
+			const condition = safeStringFilter(input[key]);
+			if (condition) details[key] = condition;
+		}
+		for (const [key, options] of Object.entries(rules.enums)) {
+			if (options.includes(input[key])) details[key] = input[key];
+		}
+		where[relation] = { is: details };
 	}
 	return where;
 }
@@ -177,7 +176,7 @@ async function listItems(req: SessionRequest, res: NextApiResponse) {
 	);
 	const user = adminView ? req.session.user : await currentUser(req);
 	const isAdmin = adminView;
-	if (isAdmin && req.body?.id && !isObjectId(req.body.id)) {
+	if (isAdmin && req.body?.id && !isValidRecordId(req.body.id)) {
 		return error(res, 400, "Listing ID is invalid");
 	}
 	if (isAdmin && !(await requireAdmin(req, res))) return;
@@ -404,7 +403,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		const user = await requireUser(req, res);
 		if (!user) return;
 		const itemId = String(req.query.itemId || "");
-		if (!isObjectId(itemId)) return res.status(200).json({ saved: false });
+		if (!isValidRecordId(itemId)) return res.status(200).json({ saved: false });
 		const saved = await prisma.savedItems.findFirst({ where: { userId: user.id, itemId } });
 		return res.status(200).json({ saved: Boolean(saved) });
 	}
@@ -413,7 +412,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		const user = await requireUser(req, res);
 		if (!user) return;
 		const itemId = String(body.itemId || "");
-		if (!isObjectId(itemId)) return error(res, 404, "Listing not found");
+		if (!isValidRecordId(itemId)) return error(res, 404, "Listing not found");
 		const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true, status: true } });
 		if (!item || item.status !== "APPROVED") return error(res, 404, "Listing not found");
 		const existing = await prisma.savedItems.findFirst({ where: { userId: user.id, itemId } });
@@ -430,7 +429,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		const user = await requireUser(req, res);
 		if (!user) return;
 		const itemId = String(body.itemId || "");
-		if (!isObjectId(itemId)) return res.status(200).json({ ok: true });
+		if (!isValidRecordId(itemId)) return res.status(200).json({ ok: true });
 		await prisma.savedItems.deleteMany({ where: { userId: user.id, itemId } });
 		return res.status(200).json({ ok: true });
 	}
@@ -438,7 +437,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 	if (route === "edit" && req.method === "POST") {
 		const user = await requireUser(req, res, true);
 		if (!user) return;
-		if (!isObjectId(body.itemId)) return error(res, 400, "Listing ID is invalid");
+		if (!isValidRecordId(body.itemId)) return error(res, 400, "Listing ID is invalid");
 		const item = await prisma.item.findUnique({ where: { id: body.itemId }, select: { id: true, userId: true, itemType: true } });
 		if (!item || item.userId !== user.id) return error(res, 404, "Listing not found");
 		const data: any = {};
@@ -460,9 +459,12 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		}
 		if (Object.keys(data).length) data.status = "PENDING";
 		if (body.specificProps && typeof body.specificProps === "object") {
-			const houseAllowed = ["area", "room", "type", "region", "city"];
-			const carAllowed = ["model", "status", "manufacturer", "year", "transmition", "color", "cylinder", "fuel"];
-			const allowed = item.itemType === "HOUSE" ? houseAllowed : carAllowed;
+			const allowedByType: Record<string, string[]> = {
+				HOUSE: ["area", "room", "type", "region", "city"],
+				CAR: ["model", "status", "manufacturer", "year", "transmition", "color", "cylinder", "fuel"],
+				BUSINESS_SPACE: ["spaceType", "type", "priceFrequency", "area", "region", "city", "subcity", "woreda", "neighborhood", "landmark", "electricity", "water", "roadAccess", "parking"],
+			};
+			const allowed = allowedByType[item.itemType] || [];
 			const specific: any = {};
 			for (const key of allowed) {
 				const value = body.specificProps[key];
@@ -474,8 +476,17 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 					}
 					specific[key] = number;
 				} else if (key === "type") {
-					if (!["RENT", "FORSALE"].includes(value)) return error(res, 400, "Invalid house type");
+					if (!["RENT", "FORSALE"].includes(value)) return error(res, 400, "Invalid listing purpose");
 					specific[key] = value;
+				} else if (key === "spaceType") {
+					if (!["SHOP", "OFFICE", "WAREHOUSE", "MARKET_STALL", "WORKSHOP", "LAND"].includes(value)) return error(res, 400, "Invalid commercial space type");
+					specific[key] = value;
+				} else if (key === "priceFrequency") {
+					if (!["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].includes(value)) return error(res, 400, "Invalid rent frequency");
+					specific[key] = value;
+				} else if (["electricity", "water", "roadAccess", "parking"].includes(key)) {
+					if (value !== "true" && value !== "false" && typeof value !== "boolean") return error(res, 400, "Invalid facility value");
+					specific[key] = value === true || value === "true";
 				} else if (key === "status" && item.itemType === "CAR") {
 					if (!["USED", "NEW", "NEW_ETH"].includes(value)) return error(res, 400, "Invalid car condition");
 					specific[key] = value;
@@ -487,13 +498,15 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				}
 			}
 			if (Object.keys(specific).length) {
-				const detail = item.itemType === "HOUSE" ? await prisma.house.findFirst({ where: { id: item.id } }) : await prisma.car.findFirst({ where: { id: item.id } });
-				if (detail) {
-					if (item.itemType === "HOUSE") {
-						await prisma.house.update({ where: { id: item.id }, data: specific });
-					} else {
-						await prisma.car.update({ where: { id: item.id }, data: specific });
-					}
+				if (item.itemType === "HOUSE") {
+					const detail = await prisma.house.findUnique({ where: { itemId: item.id } });
+					if (detail) await prisma.house.update({ where: { itemId: item.id }, data: specific });
+				} else if (item.itemType === "CAR") {
+					const detail = await prisma.car.findUnique({ where: { itemId: item.id } });
+					if (detail) await prisma.car.update({ where: { itemId: item.id }, data: specific });
+				} else {
+					const detail = await prisma.businessSpace.findUnique({ where: { itemId: item.id } });
+					if (detail) await prisma.businessSpace.update({ where: { itemId: item.id }, data: specific });
 				}
 				data.status = "PENDING";
 			}
@@ -505,7 +518,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 
 	const itemId = route;
 	if (req.method === "GET" && itemId && !itemId.includes("/")) {
-		if (!isObjectId(itemId)) return error(res, 404, "Listing not found");
+		if (!isValidRecordId(itemId)) return error(res, 404, "Listing not found");
 		const item = await prisma.item.findUnique({ where: { id: itemId }, include: itemInclude });
 		const user = await currentUser(req);
 		if (!item || (item.status !== "APPROVED" && item.userId !== user?.id && user?.role !== "ADMIN")) {
@@ -523,20 +536,21 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 	if (!admin) return;
 
 	if (route === "stat" && req.method === "GET") {
-		const [users, approvedItems, waitingItems, houses, cars] = await Promise.all([
+		const [users, approvedItems, waitingItems, houses, cars, businessSpaces] = await Promise.all([
 			prisma.user.count(),
 			prisma.item.count({ where: { status: "APPROVED" } }),
 			prisma.item.count({ where: { status: "PENDING" } }),
 			prisma.item.count({ where: { itemType: "HOUSE" } }),
 			prisma.item.count({ where: { itemType: "CAR" } }),
+			prisma.item.count({ where: { itemType: "BUSINESS_SPACE" } }),
 		]);
-		return res.status(200).json({ users, approvedItems, waitingItems, houses, cars });
+		return res.status(200).json({ users, approvedItems, waitingItems, houses, cars, businessSpaces });
 	}
 
 	if (route === "changeItemStatus" && req.method === "POST") {
 		const itemId = String(req.body?.itemId || "");
 		const status = req.body?.status;
-		if (!isObjectId(itemId)) return error(res, 400, "Listing ID is invalid");
+		if (!isValidRecordId(itemId)) return error(res, 400, "Listing ID is invalid");
 		if (!itemId || !["APPROVED", "DECLINED"].includes(status)) return error(res, 400, "Listing ID or status is invalid");
 		const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true, userId: true, status: true } });
 		if (!item) return error(res, 404, "Listing not found");
@@ -578,7 +592,19 @@ export async function apiHandler(req: NextApiRequest, res: NextApiResponse) {
 			return res.status(200).json(user);
 		}
 		return error(res, 404, "Route not found");
-	} catch (_err) {
+	} catch (err) {
+		if (process.env.NODE_ENV !== "production") {
+			const details = err && typeof err === "object" ? (err as any) : {};
+			const message = String(details.message || err || "Unknown error")
+				.replace(/postgres(?:ql)?:\/\/[^\s\"'`<>]+/gi, "postgresql://[credentials redacted]")
+				.replace(/(password|pwd)=([^&\s]+)/gi, "$1=[redacted]");
+			console.error("[api] Request failed", {
+				route: slug.join("/"),
+				name: details.name || "Error",
+				code: details.code,
+				message,
+			});
+		}
 		return error(res, 500, "The request could not be completed");
 	}
 }

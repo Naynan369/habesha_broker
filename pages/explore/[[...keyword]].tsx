@@ -9,7 +9,7 @@ import axios from "axios";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { FormEvent, useEffect, useState } from "react";
-import { MdArrowForward, MdDirectionsCar, MdHomeWork, MdSearch, MdSearchOff } from "react-icons/md";
+import { MdArrowForward, MdDirectionsCar, MdHomeWork, MdSearch, MdSearchOff, MdStorefront } from "react-icons/md";
 import { FilterNav } from "@components/explore/FilterNav";
 import { Navbar } from "@components/explore/Navbar";
 import { ItemCard, ItemLoader } from "@components/explore/ItemCard";
@@ -45,7 +45,7 @@ export default function ExplorePage({ user, keyword }) {
 	});
 
 	const applyFilters = () => setFilterRevision((revision) => revision + 1);
-	const selectCategory = (type: "HOUSE" | "CAR") => {
+	const selectCategory = (type: "HOUSE" | "CAR" | "BUSINESS_SPACE") => {
 		filter.setField("itemType", type);
 		applyFilters();
 	};
@@ -101,6 +101,8 @@ export default function ExplorePage({ user, keyword }) {
 									<Box w="1px" h="4" bg="whiteAlpha.500" />
 									<Flex align="center" gap="2"><MdDirectionsCar color="#f2b64e" /> {lang.explore.vehicles}</Flex>
 									<Box w="1px" h="4" bg="whiteAlpha.500" />
+									<Flex align="center" gap="2"><MdStorefront color="#f2b64e" /> {lang.explore.businessSpaces}</Flex>
+									<Box w="1px" h="4" bg="whiteAlpha.500" />
 									<Text>{lang.explore.directConnections}</Text>
 								</Flex>
 							</Box>
@@ -119,7 +121,7 @@ export default function ExplorePage({ user, keyword }) {
 							</Box>
 							<Text color="gray.600" maxW="430px" fontSize="sm" lineHeight="1.7">{lang.explore.categoryDescription}</Text>
 						</Flex>
-						<SimpleGrid columns={{ base: 1, md: 2 }} spacing={{ base: 4, md: 6 }}>
+						<SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={{ base: 4, md: 6 }}>
 							<Box
 								as="button"
 								type="button"
@@ -152,6 +154,23 @@ export default function ExplorePage({ user, keyword }) {
 									<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.vehicleCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.vehicleCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
 								</Flex>
 							</Box>
+							<Box
+								as="button"
+								type="button"
+								textAlign="left"
+								aria-pressed={filter.itemType === "BUSINESS_SPACE"}
+								onClick={() => selectCategory("BUSINESS_SPACE")}
+								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
+								bg="linear-gradient(135deg, #243f43, #48625d 58%, #b96a43)"
+								boxShadow={filter.itemType === "BUSINESS_SPACE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
+								transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
+							>
+								<Flex position="absolute" inset="0" align="center" justify="center" color="whiteAlpha.200"><MdStorefront size="150" /></Flex>
+								<Flex position="relative" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
+									<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.businessSpaces}</Text>
+									<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.businessCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.businessCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
+								</Flex>
+							</Box>
 						</SimpleGrid>
 					</Box>
 
@@ -178,7 +197,7 @@ export default function ExplorePage({ user, keyword }) {
 									<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">{[...Array(4)].map((_, index) => <ItemLoader key={index} />)}</SimpleGrid>
 								) : data.length ? (
 									<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
-										{data.map((item) => <ItemCard key={item.id} id={item.id} title={item.title} date={item.createdAt} photoURL={item.images?.[0]} ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")} ownerPhoto={item?.user?.profile_url} price={item.price} itemType={item.itemType} featured={item.featured} status={item.status} />)}
+										{data.map((item) => <ItemCard key={item.id} id={item.id} title={item.title} date={item.createdAt} photoURL={item.images?.[0]} ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")} ownerPhoto={item?.user?.profile_url} price={item.price} itemType={item.itemType} priceFrequency={item.BusinessSpace?.priceFrequency} featured={item.featured} status={item.status} />)}
 									</SimpleGrid>
 								) : (
 									<Flex align="center" justify="center" direction="column" bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.200" p={{ base: 8, md: 12 }} textAlign="center">

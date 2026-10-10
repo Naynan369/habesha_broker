@@ -32,6 +32,7 @@ import { prisma } from "@config/prisma";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useLang } from "@libs/hooks/useLang";
 import { useEffect, useState } from "react";
 import { FaExclamationCircle, FaHeart, FaRegHeart } from "react-icons/fa";
 import { MdArrowBack, MdFullscreen } from "react-icons/md";
@@ -130,8 +131,12 @@ const SaveButton = ({ user }) => {
 
 const ItemDetail = ({ itemId, user, item }) => {
 	const router = useRouter();
+	const businessText = useLang().businessListing;
 	const [preview, setPreview] = useState(item?.images[0]);
 	const data = item;
+	const detailRelation = data.itemType === "HOUSE" ? "House" : data.itemType === "CAR" ? "Car" : "BusinessSpace";
+	const relationData = data[detailRelation];
+	const listingDetails = Array.isArray(relationData) ? relationData[0] : relationData;
 
 	// check if saved
 	return (
@@ -295,7 +300,7 @@ const ItemDetail = ({ itemId, user, item }) => {
 									>
 										<StatLabel>Price</StatLabel>
 										<StatNumber>
-											{formatPrice(data.price)} ETB
+											{formatPrice(data.price)} ETB{data.itemType === "BUSINESS_SPACE" && listingDetails?.type === "RENT" && listingDetails?.priceFrequency ? ` · ${businessText.frequencies[listingDetails.priceFrequency]}` : ""}
 										</StatNumber>
 									</Stat>
 								</SimpleGrid>
@@ -305,40 +310,12 @@ const ItemDetail = ({ itemId, user, item }) => {
 									Details
 								</Heading>
 								<Wrap p="4" spacing="5">
-									{Object.entries(
-										data[
-											data.itemType.charAt(0) +
-												data.itemType
-													.slice(1)
-													.toLowerCase()
-										]?.[0] || {}
-									).map(([key, value]) => {
-										if (key == "id") {
-											return;
-										}
-										return (
-											<WrapItem key={key}>
-												<Stat
-													p="4"
-													minW={"40"}
-													boxShadow="md"
-													borderRadius={"xl"}
-												>
-													<StatLabel
-														textTransform={
-															"capitalize"
-														}
-													>
-														{key}
-													</StatLabel>
-													<StatNumber>
-														{value}
-													</StatNumber>
-												</Stat>
-											</WrapItem>
-										);
-									})}
-								</Wrap>
+									{Object.entries(listingDetails || {}).map(([key, value]) => {
+									if (["id", "itemId"].includes(key)) return null;
+									const label = data.itemType === "BUSINESS_SPACE" ? businessText.detailLabels[key] || key : key.replace(/([A-Z])/g, " $1");
+									const displayValue = key === "spaceType" ? businessText.spaceTypes[value as string] : key === "type" && data.itemType === "BUSINESS_SPACE" ? value === "RENT" ? businessText.rent : businessText.sale : key === "priceFrequency" ? businessText.frequencies[value as string] : typeof value === "boolean" ? value ? businessText.yes : businessText.no : key === "area" && data.itemType === "BUSINESS_SPACE" ? `${value} m²` : String(value ?? "");
+									return <WrapItem key={key}><Stat p="4" minW="40" boxShadow="md" borderRadius="xl"><StatLabel textTransform="capitalize">{label}</StatLabel><StatNumber fontSize="md">{displayValue}</StatNumber></Stat></WrapItem>;
+								})}</Wrap>
 							</Box>
 							<Box>
 								<Heading color="mainorange" as="h2" size="md">
@@ -512,7 +489,7 @@ export const ItemDetailErrorMessage = () => {
 export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	let user = req.session.user;
 	const { itemId } = params;
-	if (typeof itemId !== "string" || !/^[a-f0-9]{24}$/i.test(itemId)) {
+	if (typeof itemId !== "string" || !/^[A-Za-z0-9_-]{8,128}$/.test(itemId)) {
 		return { notFound: true };
 	}
 
@@ -523,6 +500,7 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 		include: {
 			Car: true,
 			House: true,
+			BusinessSpace: true,
 			user: {
 				select: {
 					id: true,

@@ -16,20 +16,16 @@ export interface IFilterInput {
 }
 
 export const FilterInput: FC<IFilterInput> = ({ name, title, isSingleInput, isSelect, isSpecific, itemType, children }) => {
-	const filter = useFilter();
+	const filter: any = useFilter();
 	const text = useLang().explore.filters;
-	const handleFunction = isSpecific
-		? itemType === "CAR" ? filter.setCar : filter.setHouse
-		: filter.setField;
-	const fieldName: any = isSpecific
-		? itemType === "CAR" ? filter?.Car?.some[name] : filter?.House?.some[name]
-		: filter[name];
+	const relation = itemType === "CAR" ? "Car" : itemType === "BUSINESS_SPACE" ? "BusinessSpace" : "House";
+	const handleFunction = isSpecific ? filter[`set${relation}`] : filter.setField;
+	const fieldName: any = isSpecific ? filter?.[relation]?.some?.[name] : filter[name];
 
 	const updateRange = (bound: "gt" | "lt", rawValue: string) => {
 		const next = { ...(fieldName && typeof fieldName === "object" ? fieldName : {}) };
-		if (rawValue === "") {
-			delete next[bound];
-		} else {
+		if (rawValue === "") delete next[bound];
+		else {
 			const numericValue = Number(rawValue);
 			if (Number.isFinite(numericValue) && numericValue >= 0) next[bound] = numericValue;
 		}
@@ -42,24 +38,12 @@ export const FilterInput: FC<IFilterInput> = ({ name, title, isSingleInput, isSe
 		<Flex w="full" direction="column">
 			<Text color="gray.600" fontSize="xs" fontWeight="semibold" mb="2">{title}</Text>
 			{isSelect ? (
-				<Select value={fieldName || ""} onChange={(event) => handleFunction(name, event.target.value || undefined)} w="full" bg="gray.50" borderColor="gray.200" size="sm" borderRadius="lg" aria-label={title}>
-					{children}
-				</Select>
+				<Select value={fieldName || ""} onChange={(event) => handleFunction(name, event.target.value || undefined)} w="full" bg="gray.50" borderColor="gray.200" size="sm" borderRadius="lg" aria-label={title}>{children}</Select>
 			) : isSingleInput ? (
-				<Input
-					value={textValue}
-					onChange={(event) => {
-						const value = event.target.value.trimStart();
-						handleFunction(name, value ? { startsWith: value.slice(0, 100), mode: "insensitive" } : undefined);
-					}}
-					maxLength={100}
-					placeholder={text.inputPlaceholder}
-					size="sm"
-					bg="gray.50"
-					borderColor="gray.200"
-					borderRadius="lg"
-					aria-label={title}
-				/>
+				<Input value={textValue} onChange={(event) => {
+					const value = event.target.value.trimStart();
+					handleFunction(name, value ? { startsWith: value.slice(0, 100), mode: "insensitive" } : undefined);
+				}} maxLength={100} placeholder={text.inputPlaceholder} size="sm" bg="gray.50" borderColor="gray.200" borderRadius="lg" aria-label={title} />
 			) : (
 				<HStack>
 					<Input value={fieldName?.gt ?? ""} onChange={(event) => updateRange("gt", event.target.value)} type="number" min="0" step={name === "room" || name === "year" ? 1 : "any"} bg="gray.50" borderColor="gray.200" placeholder={text.minimum} size="sm" borderRadius="lg" aria-label={`${text.minimum} ${title}`} />

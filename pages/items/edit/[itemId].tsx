@@ -18,7 +18,7 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	const user = req.session.user;
 	if (!user) return { redirect: { destination: "/auth/login" }, props: {} };
 	const itemId = params?.itemId;
-	if (typeof itemId !== "string" || !/^[a-f0-9]{24}$/i.test(itemId)) return { notFound: true };
+	if (typeof itemId !== "string" || !/^[A-Za-z0-9_-]{8,128}$/.test(itemId)) return { notFound: true };
 
 	const item = await prisma.item.findUnique({
 		where: { id: itemId },
@@ -32,6 +32,7 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 			itemType: true,
 			House: { select: { area: true, room: true, type: true, region: true, city: true } },
 			Car: { select: { model: true, status: true, manufacturer: true, year: true, transmition: true, color: true, cylinder: true, fuel: true } },
+			BusinessSpace: { select: { spaceType: true, type: true, priceFrequency: true, area: true, region: true, city: true, subcity: true, woreda: true, neighborhood: true, landmark: true, electricity: true, water: true, roadAccess: true, parking: true } },
 		},
 	});
 	if (!item || item.userId !== user.id) return { notFound: true };
@@ -41,7 +42,7 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 
 export default function EditItemPage({ item }) {
 	const router = useRouter();
-	const detail = item.itemType === "HOUSE" ? item.House?.[0] : item.Car?.[0];
+	const detail = item.itemType === "HOUSE" ? item.House : item.itemType === "CAR" ? item.Car : item.BusinessSpace;
 
 	return (
 		<>
@@ -77,7 +78,7 @@ export default function EditItemPage({ item }) {
 						<EditInputField title="Description" name="description" defaultValues={item.description || ""} isTextarea />
 					</Box>
 					<Divider my="8" />
-					<Heading size="md" mb="5">{item.itemType === "HOUSE" ? "House details" : "Car details"}</Heading>
+					<Heading size="md" mb="5">{item.itemType === "HOUSE" ? "House details" : item.itemType === "CAR" ? "Car details" : "Business space details"}</Heading>
 					{item.itemType === "HOUSE" ? (
 						<SimpleGrid columns={[1, 2]} spacing="5">
 							<EditInputField title="Area" name="area" type="number" defaultValues={String(detail?.area ?? "")} isProductSpecific />
@@ -89,7 +90,7 @@ export default function EditItemPage({ item }) {
 							<EditInputField title="Region" name="region" defaultValues={detail?.region || ""} isProductSpecific />
 							<EditInputField title="City" name="city" defaultValues={detail?.city || ""} isProductSpecific />
 						</SimpleGrid>
-					) : (
+					) : item.itemType === "CAR" ? (
 						<SimpleGrid columns={[1, 2]} spacing="5">
 							<EditInputField title="Manufacturer" name="manufacturer" defaultValues={detail?.manufacturer || ""} isProductSpecific />
 							<EditInputField title="Model" name="model" defaultValues={detail?.model || ""} isProductSpecific />
@@ -106,6 +107,15 @@ export default function EditItemPage({ item }) {
 							<EditInputField title="Color" name="color" defaultValues={detail?.color || ""} isProductSpecific />
 							<EditInputField title="Cylinder size" name="cylinder" type="number" defaultValues={String(detail?.cylinder ?? "")} isProductSpecific />
 							<EditInputField title="Fuel consumption" name="fuel" type="number" defaultValues={String(detail?.fuel ?? "")} isProductSpecific />
+						</SimpleGrid>
+					) : (
+						<SimpleGrid columns={[1, 2]} spacing="5">
+							<EditInputField title="Space type" name="spaceType" defaultValues={detail?.spaceType || "SHOP"} isProductSpecific isSelect><option value="SHOP">Shop</option><option value="OFFICE">Office</option><option value="WAREHOUSE">Warehouse</option><option value="MARKET_STALL">Market stall</option><option value="WORKSHOP">Workshop</option><option value="LAND">Commercial land</option></EditInputField>
+							<EditInputField title="Availability" name="type" defaultValues={detail?.type || "RENT"} isProductSpecific isSelect><option value="RENT">For rent</option><option value="FORSALE">For sale</option></EditInputField>
+							<EditInputField title="Rent frequency" name="priceFrequency" defaultValues={detail?.priceFrequency || "MONTHLY"} isProductSpecific isSelect><option value="DAILY">Daily</option><option value="WEEKLY">Weekly</option><option value="MONTHLY">Monthly</option><option value="YEARLY">Yearly</option></EditInputField>
+							<EditInputField title="Floor area (m²)" name="area" type="number" defaultValues={String(detail?.area ?? "")} isProductSpecific />
+							{["region", "city", "subcity", "woreda", "neighborhood", "landmark"].map((field) => <EditInputField key={field} title={field.replace(/([A-Z])/g, " $1")} name={field} defaultValues={detail?.[field] || ""} isProductSpecific />)}
+							{["electricity", "water", "roadAccess", "parking"].map((field) => <EditInputField key={field} title={field.replace(/([A-Z])/g, " $1")} name={field} defaultValues={String(detail?.[field] ?? false)} isProductSpecific isSelect><option value="true">Yes</option><option value="false">No</option></EditInputField>)}
 						</SimpleGrid>
 					)}
 				</Flex>

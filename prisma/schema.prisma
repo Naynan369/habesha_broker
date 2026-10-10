@@ -1,17 +1,17 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Habesha Brokers data model
+// The PostgreSQL database is configured through DATABASE_URL.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  id            String          @id @default(cuid())
   firstName     String
   lastName      String
   email         String          @unique
@@ -30,55 +30,58 @@ model User {
 }
 
 model ContactInfo {
-  id          String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String @db.ObjectId
+  id          String      @id @default(cuid())
+  userId      String
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   contactType ContactType
   value       String
 }
 
 model Verification {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String @db.ObjectId
+  id          String   @id @default(cuid())
+  userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   code        String
   requestTime DateTime @default(now())
 }
 
 model PasswordReset {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String @db.ObjectId
+  id          String   @id @default(cuid())
+  userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   link        String   @unique
   requestTime DateTime @default(now())
 }
 
 model Item {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  featured    Boolean    @default(false)
-  description String?
-  price       Float
-  priceType   PriceType
-  images      String[]
-  createdAt   DateTime   @default(now())
-  itemType    ItemType
-  status      ItemStatus @default(PENDING)
-
-  userId String @db.ObjectId
-  user   User   @relation("Addes", fields: [userId], references: [id], onDelete: Cascade)
-
-  approvedId    String? @db.ObjectId
-  approvedUser  User?           @relation("Approves", fields: [approvedId], references: [id])
-  House         House[]
-  Car           Car[]
+  id            String         @id @default(cuid())
+  title         String
+  featured      Boolean        @default(false)
+  description   String?
+  price         Float
+  priceType     PriceType
+  images        String[]       @default([])
+  createdAt     DateTime       @default(now())
+  itemType      ItemType
+  status        ItemStatus     @default(PENDING)
+  userId        String
+  user          User           @relation("Addes", fields: [userId], references: [id], onDelete: Cascade)
+  approvedId    String?
+  approvedUser  User?          @relation("Approves", fields: [approvedId], references: [id])
+  House         House?
+  Car           Car?
+  BusinessSpace BusinessSpace?
   SavedItems    SavedItems[]
   RecentActions RecentActions[]
+
+  @@index([status, createdAt])
+  @@index([itemType, status])
 }
 
 model House {
-  id   String @id @map("_id") @db.ObjectId
-  item Item   @relation(fields: [id], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  itemId String @unique
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   area   Float?
   room   Int?
@@ -88,8 +91,9 @@ model House {
 }
 
 model Car {
-  id   String @id @map("_id") @db.ObjectId
-  item Item   @relation(fields: [id], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  itemId String @unique
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   model        String
   status       CarType
@@ -101,32 +105,53 @@ model Car {
   fuel         Float?
 }
 
+model BusinessSpace {
+  id             String               @id @default(cuid())
+  itemId         String               @unique
+  item           Item                 @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  spaceType      CommercialSpaceType
+  type           HouseType
+  priceFrequency PriceFrequency?
+  area           Float
+  region         String
+  city           String
+  subcity        String?
+  woreda         String?
+  neighborhood   String?
+  landmark       String?
+  electricity    Boolean              @default(false)
+  water          Boolean              @default(false)
+  roadAccess     Boolean              @default(false)
+  parking        Boolean              @default(false)
+}
+
 model SavedItems {
-  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  id      String   @id @default(cuid())
   savedAt DateTime @default(now())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId  String
+  item    Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
-  userId String @db.ObjectId
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  itemId String @db.ObjectId
-  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  @@unique([userId, itemId])
 }
 
 model RecentActions {
-  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  id         String     @id @default(cuid())
   actionType ActionType
   actionTime DateTime   @default(now())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId     String
+  item       Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
-  userId String @db.ObjectId
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  itemId String @db.ObjectId
-  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  @@index([actionTime])
 }
 
 enum ItemType {
   HOUSE
   CAR
+  BUSINESS_SPACE
 }
 
 enum Role {
@@ -153,6 +178,22 @@ enum ContactType {
 enum HouseType {
   RENT
   FORSALE
+}
+
+enum CommercialSpaceType {
+  SHOP
+  OFFICE
+  WAREHOUSE
+  MARKET_STALL
+  WORKSHOP
+  LAND
+}
+
+enum PriceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
 }
 
 enum CarType {

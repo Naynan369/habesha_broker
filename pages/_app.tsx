@@ -9,12 +9,12 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
 		<ChakraProvider theme={theme}>
 			<DefaultSeo
 				title="Habesha Brokers"
-				description="Best House and Cars Brokage site in Ethiopia"
+				description="Homes, vehicles, and business spaces across Ethiopia"
 				openGraph={{
 					url: process.env.DOMAIN,
 					siteName: "Habesha Brokers",
 					title: "Habesha Brokers",
-					description: "Best House and Cars Brokage site in Ethiopia",
+					description: "Homes, vehicles, and business spaces across Ethiopia",
 					images: [
 						{
 							url: "/assets/images/brand-mark.svg",

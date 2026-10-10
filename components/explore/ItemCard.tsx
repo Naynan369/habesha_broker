@@ -11,7 +11,8 @@ import { MdArrowForward } from "react-icons/md";
 
 export const ItemCard: FC<IItem> = (props) => {
 	const router = useRouter();
-	const card = useLang().explore.card;
+	const lang = useLang();
+	const card = lang.explore.card;
 	const postedTime = dayjs(props.date).locale(router.locale === "am" ? "am" : "en").fromNow();
 	return (
 	<Link href={`/items/${props.id}`} passHref>
@@ -23,9 +24,9 @@ export const ItemCard: FC<IItem> = (props) => {
 			<Flex direction="column" flex="1" p={{ base: 5, md: 6 }}>
 				<Flex align="flex-start" justify="space-between" gap="3">
 					<Box minW="0"><Heading noOfLines={2} fontSize="lg" lineHeight="1.35" color="maingray">{props.title}</Heading><Text color="gray.500" fontSize="xs" mt="2">{card.posted} {postedTime}</Text></Box>
-					<Badge flexShrink={0} colorScheme="teal" variant="subtle" borderRadius="full" px="2.5" py="1">{props.itemType === "HOUSE" ? card.home : card.vehicle}</Badge>
+					<Badge flexShrink={0} colorScheme="teal" variant="subtle" borderRadius="full" px="2.5" py="1">{props.itemType === "HOUSE" ? card.home : props.itemType === "CAR" ? card.vehicle : card.businessSpace}</Badge>
 				</Flex>
-				<Flex align="baseline" gap="2" mt="5"><Heading fontSize="2xl" color="maingray" letterSpacing="-.03em">{Intl.NumberFormat("en-US").format(Number(props.price) || 0)}</Heading><Text fontSize="sm" color="gray.600" fontWeight="semibold">{card.currency}</Text></Flex>
+				<Flex align="baseline" gap="2" mt="5"><Heading fontSize="2xl" color="maingray" letterSpacing="-.03em">{Intl.NumberFormat("en-US").format(Number(props.price) || 0)}</Heading>{props.itemType === "BUSINESS_SPACE" && props.priceFrequency && <Text fontSize="xs" color="gray.500">{lang.businessListing.frequencies[props.priceFrequency]}</Text>}<Text fontSize="sm" color="gray.600" fontWeight="semibold">{card.currency}</Text></Flex>
 				<Flex align="center" justify="space-between" mt="5" pt="4" borderTop="1px solid" borderColor="gray.100" gap="3">
 					<Flex align="center" minW="0"><Avatar size="sm" name={props.ownerName || card.sellerFallback} src={getMediaUrl(props.ownerPhoto, "profile")} /><Box ml="3" minW="0"><Text color="gray.500" fontSize="xs">{card.listedBy}</Text><Text noOfLines={1} fontSize="sm" fontWeight="semibold" color="maingray">{props.ownerName || card.sellerFallback}</Text></Box></Flex>
 					<Flex align="center" gap="2" color="mainred" flexShrink={0}><Text fontSize="sm" fontWeight="bold">{card.view}</Text><MdArrowForward /></Flex>

@@ -50,6 +50,7 @@ export const ItemList: FC<IItemsList> = ({ user, filters, keyword = "", orderBy 
 						ownerPhoto={user.profile_url}
 						price={item.price}
 						itemType={item.itemType}
+						priceFrequency={item.BusinessSpace?.priceFrequency}
 						featured={item.featured}
 						status={item.status}
 					/>

@@ -3,7 +3,7 @@ import { useFilter } from "@libs/store";
 import { useRouter } from "next/router";
 import { am } from "@locales/am";
 import { en } from "@locales/en";
-import { MdArrowForward } from "react-icons/md";
+import { MdArrowForward, MdStorefront } from "react-icons/md";
 
 export const CategoriesSection = () => {
 	const { locale } = useRouter();
@@ -21,12 +21,13 @@ export const CategoriesSection = () => {
 			<Flex gap={{ base: 5, md: 7 }} align="stretch" mt={{ base: 9, md: 12 }} flexWrap="wrap">
 				<Category title={lang.home.homes_title} itemType="HOUSE" image="/assets/images/homes-addis.jpg" description={lang.home.homes_description} number="01" action={lang.home.browse_homes} />
 				<Category title={lang.home.vehicles_title} itemType="CAR" image="/assets/images/vehicles-addis.jpg" description={lang.home.vehicles_description} number="02" action={lang.home.browse_vehicles} />
+				<Category title={lang.home.business_spaces_title} itemType="BUSINESS_SPACE" icon={<MdStorefront size="54" />} description={lang.home.business_spaces_description} number="03" action={lang.home.browse_business_spaces} />
 			</Flex>
 		</Flex>
 	);
 };
 
-const Category = ({ title, itemType, image, description, number, action }) => {
+const Category = ({ title, itemType, image = "", icon = null, description, number, action }) => {
 	const setField = useFilter((state) => state.setField);
 	const router = useRouter();
 	return (
@@ -54,10 +55,10 @@ const Category = ({ title, itemType, image, description, number, action }) => {
 			_focusVisible={{ outline: "3px solid", outlineColor: "mainyellow", outlineOffset: "3px" }}
 			transition="all 220ms ease"
 		>
-			<Image src={image} alt="" aria-hidden="true" position="absolute" inset="0" w="full" h="full" objectFit="cover" transition="transform 500ms ease" _groupHover={{ transform: "scale(1.04)" }} />
+			<Box position="absolute" inset="0" bg={image ? "maingray" : "linear-gradient(135deg, #263f43, #45615d 55%, #ad6348)"}>{image ? <Image src={image} alt="" aria-hidden="true" position="absolute" inset="0" w="full" h="full" objectFit="cover" transition="transform 500ms ease" _groupHover={{ transform: "scale(1.04)" }} /> : <Flex h="full" align="center" justify="center" color="whiteAlpha.300"><Box transition="transform 500ms ease" _groupHover={{ transform: "scale(1.08)" }}>{icon}</Box></Flex>}</Box>
 			<Box position="absolute" inset="0" bgGradient="linear(to-t, rgba(8,25,25,.92) 0%, rgba(8,25,25,.48) 46%, rgba(8,25,25,.08) 100%)" />
 			<Flex position="relative" zIndex="1" direction="column" justify="space-between" align="stretch" w="full" minH={{ base: "350px", md: "420px" }} p={{ base: 6, md: 9 }}>
-				<Text color="whiteAlpha.800" fontSize="xs" fontWeight="bold" letterSpacing=".18em">{number} / {itemType === "HOUSE" ? "PROPERTY" : "MOTORING"}</Text>
+				<Text color="whiteAlpha.800" fontSize="xs" fontWeight="bold" letterSpacing=".18em">{number} / {itemType === "HOUSE" ? "PROPERTY" : itemType === "CAR" ? "MOTORING" : "BUSINESS"}</Text>
 				<Box>
 					<Heading fontSize={{ base: "3xl", md: "4xl" }} letterSpacing="-.03em">{title}</Heading>
 					<Text mt="3" maxW="420px" color="whiteAlpha.800" fontSize={{ base: "sm", md: "md" }} lineHeight="1.7" fontWeight="normal">{description}</Text>

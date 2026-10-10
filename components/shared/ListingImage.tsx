@@ -1,6 +1,6 @@
 import { Box, Image, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { MdDirectionsCar, MdHomeWork, MdImageNotSupported } from "react-icons/md";
+import { MdDirectionsCar, MdHomeWork, MdImageNotSupported, MdStorefront } from "react-icons/md";
 import { getMediaUrl } from "@libs/helpers/media";
 
 interface ListingImageProps {
@@ -45,7 +45,8 @@ export function ListingImage({
 	const imageUrl = getMediaUrl(src, "items");
 	const [failed, setFailed] = useState(!imageUrl);
 	const isCar = itemType?.toUpperCase() === "CAR";
-	const Icon = imageUrl ? MdImageNotSupported : isCar ? MdDirectionsCar : MdHomeWork;
+	const isBusinessSpace = itemType?.toUpperCase() === "BUSINESS_SPACE";
+	const Icon = imageUrl ? MdImageNotSupported : isCar ? MdDirectionsCar : isBusinessSpace ? MdStorefront : MdHomeWork;
 
 	useEffect(() => setFailed(!imageUrl), [imageUrl]);
 
@@ -91,7 +92,7 @@ export function ListingImage({
 				<Box position="relative" textAlign="center">
 					<Icon size={42} />
 					<Text mt="2" fontSize="xs" fontWeight="semibold" color="whiteAlpha.800">
-						{isCar ? "Vehicle listing" : "Property listing"}
+						{isCar ? "Vehicle listing" : isBusinessSpace ? "Business space listing" : "Property listing"}
 					</Text>
 				</Box>
 			</Box>

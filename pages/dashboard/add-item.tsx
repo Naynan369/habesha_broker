@@ -7,14 +7,17 @@ import {
 } from "@chakra-ui/react";
 import { AddCar } from "@components/dashboard/forms/AddCar";
 import { HouseAddForm } from "@components/dashboard/forms/AddHouse";
+import { AddBusinessSpace } from "@components/dashboard/forms/AddBusinessSpace";
+import { useLang } from "@libs/hooks/useLang";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { MyTheme } from "@config/theme/MyTheme";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { FC, ReactNode, useState } from "react";
 import { FaCar, FaWarehouse } from "react-icons/fa";
+import { MdStorefront } from "react-icons/md";
 
-type FormTypes = "HOUSE" | "CAR";
+type FormTypes = "HOUSE" | "CAR" | "BUSINESS_SPACE";
 
 export const getServerSideProps = withSessionSsr(async ({ req }) => {
 	const user = req.session.user;
@@ -43,6 +46,7 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => {
 
 export default function AddItem({ user }) {
 	const router = useRouter();
+	const text = useLang().businessListing;
 	const [type, setType] = useState("" as FormTypes);
 
 	const changeType = (type: FormTypes) => setType(type);
@@ -72,7 +76,7 @@ export default function AddItem({ user }) {
 							textTransform={"uppercase"}
 							fontSize={"xl"}
 						>
-							Add Items
+							{text.addListing}
 						</Heading>
 					</Flex>
 					<Box flex="1"></Box>
@@ -97,14 +101,14 @@ export default function AddItem({ user }) {
 						>
 							<ItemButton
 								icon={<FaCar size={"18"} />}
-								text="Car"
+								text={text.carCategory}
 								type="CAR"
 								changeType={changeType}
 								selected={type == "CAR"}
 							></ItemButton>
 							<ItemButton
 								icon={<FaWarehouse size={"18"} />}
-								text="House"
+								text={text.homeCategory}
 								type="HOUSE"
 								changeType={changeType}
 								selected={type == "HOUSE"}
@@ -116,6 +120,8 @@ export default function AddItem({ user }) {
 						<HouseAddForm user={user} />
 					) : type == "CAR" ? (
 						<AddCar user={user} />
+					) : type === "BUSINESS_SPACE" ? (
+						<AddBusinessSpace />
 					) : null}
 				</Flex>
 			</Flex>
@@ -143,9 +149,9 @@ const ItemButton: FC<ItemButtonProps> = ({
 		display="flex"
 		flexDirection="column"
 		gap="3"
-		minW={{ base: "140px", md: "200px" }}
+		minW={{ base: "130px", md: "200px" }}
 		minH={{ base: "120px", md: "150px" }}
-		mx="2"
+		mx="0"
 		py="6"
 		bg={selected ? "maingray" : "white"}
 		color={selected ? "mainyellow" : "maingray"}

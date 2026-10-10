@@ -20,7 +20,7 @@ export const sendMail = async (
 
 	return transponder.sendMail(
 		{
-			from: "habeshabrokers@gmail.com",
+			from: user,
 			to,
 			subject,
 			html,

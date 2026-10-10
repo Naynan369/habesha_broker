@@ -69,7 +69,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 		if (!title || title.length < 5 || title.length > 300) throw new Error("Title must be between 5 and 300 characters");
 		if (price < 0) throw new Error("Price must be non-negative");
 		if (!["FIXED", "NEGOTIABLE"].includes(priceType)) throw new Error("Invalid price type");
-		if (!["HOUSE", "CAR"].includes(itemType)) throw new Error("Invalid listing type");
+		if (!["HOUSE", "CAR", "BUSINESS_SPACE"].includes(itemType)) throw new Error("Invalid listing type");
 
 		const common = {
 			title,
@@ -87,34 +87,59 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 			if (area < 0 || room < 1 || !Number.isInteger(room)) throw new Error("House area or room count is invalid");
 			if (!body.region?.trim() || !body.city?.trim()) throw new Error("Region and city are required");
 			if (!["RENT", "FORSALE"].includes(body.type)) throw new Error("Invalid house type");
-			common.House = {
-				create: {
-					area,
-					room,
-					type: body.type,
-					region: body.region.trim().slice(0, 100),
-					city: body.city.trim().slice(0, 100),
-				},
-			};
-		} else {
+			common.House = { create: {
+				area,
+				room,
+				type: body.type,
+				region: body.region.trim().slice(0, 100),
+				city: body.city.trim().slice(0, 100),
+			} };
+		} else if (itemType === "CAR") {
 			const year = parseNumber(body.year, "year", true);
 			const cylinder = parseNumber(body.cylinder, "cylinder", true);
 			const fuel = parseNumber(body.fuel, "fuel", true);
 			if (!["USED", "NEW", "NEW_ETH"].includes(body.status)) throw new Error("Invalid car condition");
-			common.Car = {
-				create: {
-					model: String(body.model || "").slice(0, 100),
-					status: body.status,
-					manufacturer: String(body.manufacturer || "").slice(0, 100),
-					year: year === undefined ? null : year,
-					transmition: ["AUTO", "MANUAL"].includes(body.transmition) ? body.transmition : "AUTO",
-					color: String(body.color || "").slice(0, 50) || null,
-					cylinder: cylinder === undefined ? null : cylinder,
-					fuel: fuel === undefined ? null : fuel,
-				},
-			};
+			common.Car = { create: {
+				model: String(body.model || "").slice(0, 100),
+				status: body.status,
+				manufacturer: String(body.manufacturer || "").slice(0, 100),
+				year: year === undefined ? null : year,
+				transmition: ["AUTO", "MANUAL"].includes(body.transmition) ? body.transmition : "AUTO",
+				color: String(body.color || "").slice(0, 50) || null,
+				cylinder: cylinder === undefined ? null : cylinder,
+				fuel: fuel === undefined ? null : fuel,
+			} };
+		} else {
+			const area = parseNumber(body.area, "area");
+			const spaceTypes = ["SHOP", "OFFICE", "WAREHOUSE", "MARKET_STALL", "WORKSHOP", "LAND"];
+			if (!spaceTypes.includes(body.spaceType)) throw new Error("Choose a valid commercial space type");
+			if (!["RENT", "FORSALE"].includes(body.type)) throw new Error("Choose rent or sale");
+			if (area <= 0) throw new Error("Floor area must be greater than zero");
+			if (!body.region?.trim() || !body.city?.trim()) throw new Error("Region and city are required");
+			const frequencies = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
+			if (body.type === "RENT" && !frequencies.includes(body.priceFrequency)) throw new Error("Choose how often the rent is charged");
+			const facilityFields = ["electricity", "water", "roadAccess", "parking"];
+			for (const field of facilityFields) {
+				if (body[field] !== "true" && body[field] !== "false") throw new Error("Invalid facility selection");
+			}
+			const optionalText = (value: unknown) => String(value || "").trim().slice(0, 120) || null;
+			common.BusinessSpace = { create: {
+				spaceType: body.spaceType,
+				type: body.type,
+				priceFrequency: body.type === "RENT" ? body.priceFrequency : null,
+				area,
+				region: body.region.trim().slice(0, 100),
+				city: body.city.trim().slice(0, 100),
+				subcity: optionalText(body.subcity),
+				woreda: optionalText(body.woreda),
+				neighborhood: optionalText(body.neighborhood),
+				landmark: optionalText(body.landmark),
+				electricity: body.electricity === "true",
+				water: body.water === "true",
+				roadAccess: body.roadAccess === "true",
+				parking: body.parking === "true",
+			} };
 		}
-
 		const created = await prisma.item.create({ data: common, select: { id: true, userId: true } });
 		try {
 			await prisma.recentActions.create({
