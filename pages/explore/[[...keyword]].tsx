@@ -8,12 +8,14 @@ import { organizeFilters } from "@libs/store/useFilter";
 import axios from "axios";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { FormEvent, useEffect, useState } from "react";
-import { MdArrowForward, MdDirectionsCar, MdHomeWork, MdSearch, MdSearchOff, MdStorefront } from "react-icons/md";
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import { MdArrowForward, MdDirectionsCar, MdHomeWork, MdMiscellaneousServices, MdSearch, MdSearchOff, MdStorefront } from "react-icons/md";
 import { FilterNav } from "@components/explore/FilterNav";
 import { Navbar } from "@components/explore/Navbar";
 import { ItemCard, ItemLoader } from "@components/explore/ItemCard";
 import { withSessionSsr } from "@config/cookie/cookie";
+
+const SERVICE_CATEGORIES = ["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"] as const;
 
 export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	const user = req.session.user;
@@ -29,12 +31,57 @@ export default function ExplorePage({ user, keyword }) {
 	const lang = useLang();
 	const filter = useFilter();
 	const router = useRouter();
+	const applyFilters = useCallback(() => {
+		setFilterRevision((revision) => revision + 1);
+		const currentFilter = useFilter.getState();
+		const query: Record<string, string | string[]> = {};
+		if (router.query.keyword) query.keyword = router.query.keyword;
+		if (currentFilter.itemType) query.itemType = currentFilter.itemType;
+		const category = currentFilter.itemType === "SERVICE" ? currentFilter.Service?.some?.category : undefined;
+		if (category) query.serviceCategory = category;
+		const currentType = Array.isArray(router.query.itemType) ? router.query.itemType[0] : router.query.itemType;
+		const currentCategory = Array.isArray(router.query.serviceCategory) ? router.query.serviceCategory[0] : router.query.serviceCategory;
+		if (currentType !== currentFilter.itemType || currentCategory !== category) {
+			void router.replace({ pathname: router.pathname, query }, undefined, { shallow: true, scroll: false });
+		}
+	}, [router]);
+	const serviceCategoryFromQuery = Array.isArray(router.query.serviceCategory) ? router.query.serviceCategory[0] : router.query.serviceCategory;
+	const updateBrowseRoute = (itemType?: "HOUSE" | "CAR" | "BUSINESS_SPACE" | "SERVICE", serviceCategory?: typeof SERVICE_CATEGORIES[number]) => {
+		const query: Record<string, string | string[]> = {};
+		const currentKeyword = router.query.keyword;
+		if (currentKeyword) query.keyword = currentKeyword;
+		if (itemType) query.itemType = itemType;
+		if (itemType === "SERVICE" && serviceCategory) query.serviceCategory = serviceCategory;
+		const currentType = Array.isArray(router.query.itemType) ? router.query.itemType[0] : router.query.itemType;
+		const currentCategory = Array.isArray(router.query.serviceCategory) ? router.query.serviceCategory[0] : router.query.serviceCategory;
+		if (currentType === itemType && currentCategory === (itemType === "SERVICE" ? serviceCategory : undefined)) {
+			filter.setField("itemType", itemType);
+			filter.setField("Service", { some: itemType === "SERVICE" && serviceCategory ? { category: serviceCategory } : {} });
+			applyFilters();
+			return;
+		}
+		void router.push({ pathname: router.pathname, query }, undefined, { shallow: true, scroll: false });
+	};
 
 	useEffect(() => {
 		const nextKeyword = keyword || "";
 		setSearchInput(nextKeyword);
 		setSearch(nextKeyword);
 	}, [keyword]);
+
+	useEffect(() => {
+		if (!router.isReady) return;
+		const requestedType = Array.isArray(router.query.itemType) ? router.query.itemType[0] : router.query.itemType;
+		const selectedType = ["HOUSE", "CAR", "BUSINESS_SPACE", "SERVICE"].includes(requestedType || "") ? requestedType as "HOUSE" | "CAR" | "BUSINESS_SPACE" | "SERVICE" : undefined;
+		const currentFilter = useFilter.getState();
+		currentFilter.setField("itemType", selectedType);
+		if (selectedType === "SERVICE") {
+			currentFilter.setService("category", SERVICE_CATEGORIES.includes(serviceCategoryFromQuery as typeof SERVICE_CATEGORIES[number]) ? serviceCategoryFromQuery : undefined);
+		} else {
+			currentFilter.setField("Service", { some: {} });
+		}
+		applyFilters();
+	}, [router.isReady, router.query.itemType, router.query.serviceCategory, serviceCategoryFromQuery, applyFilters]);
 
 	const [data, loading, error] = useFetch({
 		fetchFunction: () => axios.post("/api/items", {
@@ -44,17 +91,27 @@ export default function ExplorePage({ user, keyword }) {
 		dependencies: [search, filterRevision, retryCount],
 	});
 
-	const applyFilters = () => setFilterRevision((revision) => revision + 1);
-	const selectCategory = (type: "HOUSE" | "CAR" | "BUSINESS_SPACE") => {
-		filter.setField("itemType", type);
-		applyFilters();
+	const selectCategory = (type: "HOUSE" | "CAR" | "BUSINESS_SPACE" | "SERVICE") => {
+		updateBrowseRoute(type);
+	};
+	const selectServiceCategory = (category?: typeof SERVICE_CATEGORIES[number]) => {
+		updateBrowseRoute("SERVICE", category);
 	};
 	const handleSearch = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const term = searchInput.trim();
-		setSearch(term);
-		void router.push(term ? `/explore/${encodeURIComponent(term)}` : "/explore");
+		const query: Record<string, string | string[]> = {};
+		if (filter.itemType) query.itemType = filter.itemType;
+		if (filter.itemType === "SERVICE" && filter.Service?.some?.category) query.serviceCategory = filter.Service.some.category;
+		void router.push({ pathname: term ? `/explore/${encodeURIComponent(term)}` : "/explore", query }, undefined, { scroll: false });
 	};
+	const selectedServiceCategory = filter.Service?.some?.category;
+	const activeResultLabel = filter.itemType === "SERVICE"
+		? selectedServiceCategory ? lang.serviceListing.categories[selectedServiceCategory] : lang.home.services_txt
+		: filter.itemType === "HOUSE" ? lang.explore.homes
+			: filter.itemType === "CAR" ? lang.explore.vehicles
+				: filter.itemType === "BUSINESS_SPACE" ? lang.explore.businessSpaces
+					: undefined;
 
 	return (
 		<>
@@ -103,6 +160,8 @@ export default function ExplorePage({ user, keyword }) {
 									<Box w="1px" h="4" bg="whiteAlpha.500" />
 									<Flex align="center" gap="2"><MdStorefront color="#f2b64e" /> {lang.explore.businessSpaces}</Flex>
 									<Box w="1px" h="4" bg="whiteAlpha.500" />
+									<Flex align="center" gap="2"><MdMiscellaneousServices color="#f2b64e" /> {lang.home.services_txt}</Flex>
+									<Box w="1px" h="4" bg="whiteAlpha.500" />
 									<Text>{lang.explore.directConnections}</Text>
 								</Flex>
 							</Box>
@@ -121,7 +180,7 @@ export default function ExplorePage({ user, keyword }) {
 							</Box>
 							<Text color="gray.600" maxW="430px" fontSize="sm" lineHeight="1.7">{lang.explore.categoryDescription}</Text>
 						</Flex>
-						<SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={{ base: 4, md: 6 }}>
+						<SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={{ base: 4, md: 6 }}>
 							<Box
 								as="button"
 								type="button"
@@ -171,8 +230,40 @@ export default function ExplorePage({ user, keyword }) {
 									<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.businessCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.businessCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
 								</Flex>
 							</Box>
+										<Box
+											as="button"
+											type="button"
+											textAlign="left"
+											aria-pressed={filter.itemType === "SERVICE"}
+											onClick={() => selectCategory("SERVICE")}
+											position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
+											bg="linear-gradient(135deg, #143a45, #345d5b 58%, #c66b36)"
+											boxShadow={filter.itemType === "SERVICE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
+											transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
+										>
+											<Flex position="absolute" inset="0" align="center" justify="center" color="whiteAlpha.200"><MdMiscellaneousServices size="150" /></Flex>
+											<Flex position="relative" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
+												<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.home.services_txt}</Text>
+												<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.servicesCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.servicesCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
+											</Flex>
+										</Box>
 						</SimpleGrid>
 					</Box>
+
+					{filter.itemType === "SERVICE" && <Box as="section" mt={{ base: 8, md: 10 }}>
+						<Flex align={{ base: "flex-start", md: "flex-end" }} justify="space-between" gap="4" mb="5" direction={{ base: "column", md: "row" }}>
+							<Box><Text color="#ad6348" textTransform="uppercase" letterSpacing=".15em" fontWeight="bold" fontSize="xs">{lang.home.services_txt}</Text><Heading mt="2" color="#21383e" fontSize={{ base: "xl", md: "2xl" }}>{lang.explore.serviceCategoryHeading}</Heading></Box>
+							<Text color="gray.600" maxW="520px" fontSize="sm" lineHeight="1.7">{lang.explore.serviceCategoryDescription}</Text>
+						</Flex>
+						<Flex wrap="wrap" gap="3" mb="5"><Button variant={filter.Service?.some?.category ? "outline" : "solid"} color={filter.Service?.some?.category ? "maingray" : "white"} bg={filter.Service?.some?.category ? "white" : "maingray"} borderColor="gray.300" onClick={() => selectServiceCategory()}>{lang.explore.allServices}</Button></Flex>
+						<SimpleGrid columns={{ base: 1, sm: 2, xl: 3 }} spacing="4">
+							{SERVICE_CATEGORIES.map((category, index) => {
+								const card = lang.home.service_cards[index];
+								const selected = filter.Service?.some?.category === category;
+								return <Box as="button" type="button" key={category} onClick={() => selectServiceCategory(category)} aria-pressed={selected} textAlign="left" p="5" minH="130px" bg="white" border="1px solid" borderColor={selected ? "#d7783f" : "gray.200"} borderRadius="xl" boxShadow={selected ? "0 0 0 2px #d7783f" : "sm"} transition="all 160ms ease" _hover={{ transform: "translateY(-2px)", boxShadow: "md" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "2px" }}><Flex align="center" gap="3"><Box flexShrink={0} w="10" h="10" display="grid" placeItems="center" borderRadius="xl" bg="#fbede4" color="#bc6332"><MdMiscellaneousServices size="21" /></Box><Text color="#21383e" fontWeight="bold" lineHeight="1.4">{lang.serviceListing.categories[category]}</Text></Flex><Text mt="3" color="gray.600" fontSize="sm" lineHeight="1.6">{card.description}</Text></Box>;
+							})}
+						</SimpleGrid>
+					</Box>}
 
 					<Box as="section" mt={{ base: 12, md: 16 }}>
 						<Flex align={{ base: "flex-start", md: "end" }} justify="space-between" gap="4" mb="6" direction={{ base: "column", md: "row" }}>
@@ -180,7 +271,10 @@ export default function ExplorePage({ user, keyword }) {
 								<Text color="#ad6348" textTransform="uppercase" letterSpacing=".16em" fontWeight="bold" fontSize="xs">{lang.explore.marketplaceKicker}</Text>
 								<Heading mt="2" color="#21383e" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.04em">{lang.explore.listingHeading}</Heading>
 							</Box>
-							<Text color="gray.600" fontSize="sm" fontWeight="medium">{error ? lang.explore.unavailable : loading ? lang.explore.loading : `${data?.length || 0} ${data?.length === 1 ? lang.explore.foundSingular : lang.explore.foundPlural}`}</Text>
+							<Flex align="center" gap="3" wrap="wrap">
+								{activeResultLabel && <Badge color="#29464b" bg="#e8efec" borderRadius="full" px="3" py="1">{activeResultLabel}</Badge>}
+								<Text color="gray.600" fontSize="sm" fontWeight="medium">{error ? lang.explore.unavailable : loading ? lang.explore.loading : `${data?.length || 0} ${data?.length === 1 ? lang.explore.foundSingular : lang.explore.foundPlural}`}</Text>
+							</Flex>
 						</Flex>
 						<Grid templateColumns={{ base: "1fr", lg: "290px minmax(0, 1fr)" }} gap={{ base: 5, lg: 7 }} alignItems="start">
 							<FilterNav applyFilters={applyFilters} />
@@ -197,7 +291,7 @@ export default function ExplorePage({ user, keyword }) {
 									<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">{[...Array(4)].map((_, index) => <ItemLoader key={index} />)}</SimpleGrid>
 								) : data.length ? (
 									<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
-										{data.map((item) => <ItemCard key={item.id} id={item.id} title={item.title} date={item.createdAt} photoURL={item.images?.[0]} ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")} ownerPhoto={item?.user?.profile_url} price={item.price} itemType={item.itemType} priceFrequency={item.BusinessSpace?.priceFrequency} featured={item.featured} status={item.status} />)}
+										{data.map((item) => <ItemCard key={item.id} id={item.id} title={item.title} date={item.createdAt} photoURL={item.images?.[0]} ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")} ownerPhoto={item?.user?.profile_url} price={item.price} itemType={item.itemType} priceFrequency={item.BusinessSpace?.priceFrequency} featured={item.featured} status={item.status} serviceCategory={item.Service?.category} />)}
 									</SimpleGrid>
 								) : (
 									<Flex align="center" justify="center" direction="column" bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.200" p={{ base: 8, md: 12 }} textAlign="center">

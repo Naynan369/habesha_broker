@@ -31,6 +31,7 @@ const itemInclude = {
 	Car: true,
 	House: true,
 	BusinessSpace: true,
+	Service: true,
 	user: {
 		select: {
 			id: true,
@@ -126,7 +127,7 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 	if (user && body.userId === user.id) where.userId = user.id;
 	else where.status = "APPROVED";
 
-	const validTypes = ["HOUSE", "CAR", "BUSINESS_SPACE"];
+	const validTypes = ["HOUSE", "CAR", "BUSINESS_SPACE", "SERVICE"];
 	if (validTypes.includes(body.itemType)) where.itemType = body.itemType;
 	else if (Array.isArray(body.itemType?.in)) {
 		const types = body.itemType.in.filter((type: unknown) => validTypes.includes(String(type)));
@@ -147,6 +148,7 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 		House: { numeric: ["area", "room"], strings: ["region", "city"], enums: { type: ["RENT", "FORSALE"] } },
 		Car: { numeric: ["year", "cylinder", "fuel"], strings: ["model", "manufacturer", "color"], enums: { status: ["USED", "NEW", "NEW_ETH"] } },
 		BusinessSpace: { numeric: ["area"], strings: ["region", "city", "subcity", "neighborhood"], enums: { spaceType: ["SHOP", "OFFICE", "WAREHOUSE", "MARKET_STALL", "WORKSHOP", "LAND"], type: ["RENT", "FORSALE"], priceFrequency: ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"] } },
+		Service: { numeric: [], strings: ["region", "city", "serviceArea"], enums: { category: ["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"] } },
 	};
 	for (const [relation, rules] of Object.entries(relationRules)) {
 		const input = body[relation]?.some;
@@ -463,6 +465,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				HOUSE: ["area", "room", "type", "region", "city"],
 				CAR: ["model", "status", "manufacturer", "year", "transmition", "color", "cylinder", "fuel"],
 				BUSINESS_SPACE: ["spaceType", "type", "priceFrequency", "area", "region", "city", "subcity", "woreda", "neighborhood", "landmark", "electricity", "water", "roadAccess", "parking"],
+				SERVICE: ["category", "region", "city", "serviceArea"],
 			};
 			const allowed = allowedByType[item.itemType] || [];
 			const specific: any = {};
@@ -480,6 +483,9 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 					specific[key] = value;
 				} else if (key === "spaceType") {
 					if (!["SHOP", "OFFICE", "WAREHOUSE", "MARKET_STALL", "WORKSHOP", "LAND"].includes(value)) return error(res, 400, "Invalid commercial space type");
+					specific[key] = value;
+				} else if (key === "category" && item.itemType === "SERVICE") {
+					if (!["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"].includes(value)) return error(res, 400, "Invalid service category");
 					specific[key] = value;
 				} else if (key === "priceFrequency") {
 					if (!["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].includes(value)) return error(res, 400, "Invalid rent frequency");
@@ -504,6 +510,9 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				} else if (item.itemType === "CAR") {
 					const detail = await prisma.car.findUnique({ where: { itemId: item.id } });
 					if (detail) await prisma.car.update({ where: { itemId: item.id }, data: specific });
+				} else if (item.itemType === "SERVICE") {
+					const detail = await prisma.service.findUnique({ where: { itemId: item.id } });
+					if (detail) await prisma.service.update({ where: { itemId: item.id }, data: specific });
 				} else {
 					const detail = await prisma.businessSpace.findUnique({ where: { itemId: item.id } });
 					if (detail) await prisma.businessSpace.update({ where: { itemId: item.id }, data: specific });
@@ -536,15 +545,16 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 	if (!admin) return;
 
 	if (route === "stat" && req.method === "GET") {
-		const [users, approvedItems, waitingItems, houses, cars, businessSpaces] = await Promise.all([
+		const [users, approvedItems, waitingItems, houses, cars, businessSpaces, services] = await Promise.all([
 			prisma.user.count(),
 			prisma.item.count({ where: { status: "APPROVED" } }),
 			prisma.item.count({ where: { status: "PENDING" } }),
 			prisma.item.count({ where: { itemType: "HOUSE" } }),
 			prisma.item.count({ where: { itemType: "CAR" } }),
 			prisma.item.count({ where: { itemType: "BUSINESS_SPACE" } }),
+			prisma.item.count({ where: { itemType: "SERVICE" } }),
 		]);
-		return res.status(200).json({ users, approvedItems, waitingItems, houses, cars, businessSpaces });
+		return res.status(200).json({ users, approvedItems, waitingItems, houses, cars, businessSpaces, services });
 	}
 
 	if (route === "changeItemStatus" && req.method === "POST") {

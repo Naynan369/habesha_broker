@@ -31,6 +31,7 @@ export const HomeNavbar: FC<INavbar> = ({ background, openFunc }) => {
 			<IconButton onClick={openFunc} display={{ base: "flex", lg: "none" }} color="white" bg="whiteAlpha.200" _hover={{ bg: "whiteAlpha.300" }} aria-label={lang.common.menu} icon={<HamburgerIcon />} />
 			<Flex display={{ base: "none", lg: "flex" }} align="center">
 				<LinkItem title={lang.nav.home} href="#home" />
+				<LinkItem title={lang.home.services_txt} href="/explore?itemType=SERVICE" />
 				<LinkItem title={lang.nav.explore} href="/explore" />
 				<LinkItem title={lang.nav.contact} href="#Contact" />
 				<Menu>
@@ -55,7 +56,7 @@ export const MobileMenu: FC<IMobMenu> = ({ open, closeFunc }) => {
 			<Box position="fixed" inset="0" bg="blackAlpha.600" zIndex="1002" opacity={open ? 1 : 0} visibility={open ? "visible" : "hidden"} pointerEvents={open ? "auto" : "none"} transition="all 220ms ease" onClick={closeFunc} aria-hidden="true" />
 			<Flex position="fixed" right={open ? "0" : "-100%"} top="0" height="100vh" boxShadow="dark-lg" bg="#102f39" color="white" direction="column" w={{ base: "84%", sm: "55%", md: "40%", lg: "20%" }} maxW="420px" zIndex="1003" p="6" transition="right 280ms ease-in-out" aria-hidden={!open}>
 				<IconButton color="white" bg="whiteAlpha.200" _hover={{ bg: "whiteAlpha.300" }} alignSelf="flex-end" aria-label={lang.common.close} icon={<ArrowBackIcon />} mb="7" onClick={closeFunc} />
-				<Flex direction="column" gap="5"><MobMenuItem title={lang.nav.home} href="/#home" onClick={closeFunc} /><MobMenuItem title={lang.nav.explore} href="/explore" onClick={closeFunc} /><MobMenuItem title={lang.nav.contact} href="/#Contact" onClick={closeFunc} /></Flex>
+				<Flex direction="column" gap="5"><MobMenuItem title={lang.nav.home} href="/#home" onClick={closeFunc} /><MobMenuItem title={lang.home.services_txt} href="/explore?itemType=SERVICE" onClick={closeFunc} /><MobMenuItem title={lang.nav.explore} href="/explore" onClick={closeFunc} /><MobMenuItem title={lang.nav.contact} href="/#Contact" onClick={closeFunc} /></Flex>
 				<Flex mt="9" gap="3"><Button onClick={() => changeLocale("am")} colorScheme={locale === "am" ? "orange" : "whiteAlpha"} variant={locale === "am" ? "solid" : "outline"} aria-label={lang.common.amharic}>{lang.common.amharic}</Button><Button onClick={() => changeLocale("en")} colorScheme={locale === "en" ? "orange" : "whiteAlpha"} variant={locale === "en" ? "solid" : "outline"} aria-label={lang.common.english}>{lang.common.english}</Button></Flex>
 				<Link href="/auth/login" passHref><Button as="a" mt="auto" size="lg" bg="mainyellow" color="maingray" onClick={closeFunc}>{lang.common.signIn}</Button></Link>
 			</Flex>

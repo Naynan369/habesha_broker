@@ -17,7 +17,7 @@ export const HomeFooter = () => {
 					<Flex align="center" gap="3" mb="4"><Flex w="10" h="10" borderRadius="xl" bg="whiteAlpha.100" color="mainyellow" align="center" justify="center" fontWeight="black">HB</Flex><Heading textTransform="uppercase" fontSize="sm" letterSpacing=".08em">{lang.title}</Heading></Flex>
 					<Text color="whiteAlpha.700" lineHeight="1.8" maxW="300px">{lang.home.footer_description}</Text>
 				</Flex>
-				<FooterColumn title={lang.home.services_txt}><FooterLink href="/#categories">{lang.home.browse_categories}</FooterLink><FooterLink href="/explore">{lang.home.explore_all}</FooterLink><FooterLink href="/auth/login">{lang.home.work_btn}</FooterLink></FooterColumn>
+				<FooterColumn title={lang.home.services_txt}><FooterLink href="/#categories">{lang.home.browse_categories}</FooterLink><FooterLink href="/explore?itemType=SERVICE">{lang.home.services_txt}</FooterLink><FooterLink href="/explore">{lang.home.explore_all}</FooterLink><FooterLink href="/auth/login">{lang.home.work_btn}</FooterLink></FooterColumn>
 				<FooterColumn title={lang.home.footer.links}><FooterLink href="/">{lang.nav.home}</FooterLink><FooterLink href="/explore">{lang.nav.explore}</FooterLink><FooterLink href="/#Contact">{lang.home.contacttxt}</FooterLink></FooterColumn>
 				<FooterColumn title={lang.home.contacttxt}><ContactLink icon={<PhoneIcon />} href="tel:0973723769">0973723769</ContactLink><ContactLink icon={<EmailIcon />} href="mailto:naolchala6@gmail.com">naolchala6@gmail.com</ContactLink><ContactLink icon={<ChatIcon />} href="https://t.me/stepphenwolf">@stepphenwolf</ContactLink></FooterColumn>
 			</SimpleGrid>

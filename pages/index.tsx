@@ -5,6 +5,7 @@ import { HomeFooter } from "@components/home/Footer";
 import { HomeHero } from "@components/home/Hero";
 import { HomeNavbar, MobileMenu } from "@components/home/Navbar";
 import { PricingSection } from "@components/home/Pricing";
+import { ServicesSection } from "@components/home/ServicesSection";
 import { WhyChooseSection } from "@components/home/WhyChooseSection";
 import React, { useState } from "react";
 
@@ -19,6 +20,7 @@ export default function Home() {
 			<main>
 				<HomeHero />
 				<CategoriesSection />
+				<ServicesSection />
 				<WhyChooseSection />
 				<PricingSection />
 				<HomeContact />

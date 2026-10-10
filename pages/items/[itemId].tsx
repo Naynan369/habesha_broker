@@ -131,10 +131,12 @@ const SaveButton = ({ user }) => {
 
 const ItemDetail = ({ itemId, user, item }) => {
 	const router = useRouter();
-	const businessText = useLang().businessListing;
+	const lang = useLang();
+	const businessText = lang.businessListing;
+	const serviceText = lang.serviceListing;
 	const [preview, setPreview] = useState(item?.images[0]);
 	const data = item;
-	const detailRelation = data.itemType === "HOUSE" ? "House" : data.itemType === "CAR" ? "Car" : "BusinessSpace";
+	const detailRelation = data.itemType === "HOUSE" ? "House" : data.itemType === "CAR" ? "Car" : data.itemType === "BUSINESS_SPACE" ? "BusinessSpace" : "Service";
 	const relationData = data[detailRelation];
 	const listingDetails = Array.isArray(relationData) ? relationData[0] : relationData;
 
@@ -237,7 +239,7 @@ const ItemDetail = ({ itemId, user, item }) => {
 										variant={"subtle"}
 										colorScheme={"green"}
 									>
-										{data.itemType}
+										{data.itemType === "SERVICE" ? lang.explore.card.service : data.itemType === "HOUSE" ? lang.explore.card.home : data.itemType === "CAR" ? lang.explore.card.vehicle : lang.explore.card.businessSpace}
 									</Badge>
 								</WrapItem>
 								<WrapItem>
@@ -312,8 +314,8 @@ const ItemDetail = ({ itemId, user, item }) => {
 								<Wrap p="4" spacing="5">
 									{Object.entries(listingDetails || {}).map(([key, value]) => {
 									if (["id", "itemId"].includes(key)) return null;
-									const label = data.itemType === "BUSINESS_SPACE" ? businessText.detailLabels[key] || key : key.replace(/([A-Z])/g, " $1");
-									const displayValue = key === "spaceType" ? businessText.spaceTypes[value as string] : key === "type" && data.itemType === "BUSINESS_SPACE" ? value === "RENT" ? businessText.rent : businessText.sale : key === "priceFrequency" ? businessText.frequencies[value as string] : typeof value === "boolean" ? value ? businessText.yes : businessText.no : key === "area" && data.itemType === "BUSINESS_SPACE" ? `${value} m²` : String(value ?? "");
+									const label = data.itemType === "BUSINESS_SPACE" ? businessText.detailLabels[key] || key : data.itemType === "SERVICE" ? serviceText.detailLabels[key] || key : key.replace(/([A-Z])/g, " $1");
+									const displayValue = key === "category" && data.itemType === "SERVICE" ? serviceText.categories[value as string] || String(value) : key === "spaceType" ? businessText.spaceTypes[value as string] : key === "type" && data.itemType === "BUSINESS_SPACE" ? value === "RENT" ? businessText.rent : businessText.sale : key === "priceFrequency" ? businessText.frequencies[value as string] : typeof value === "boolean" ? value ? businessText.yes : businessText.no : key === "area" && data.itemType === "BUSINESS_SPACE" ? `${value} m²` : String(value ?? "");
 									return <WrapItem key={key}><Stat p="4" minW="40" boxShadow="md" borderRadius="xl"><StatLabel textTransform="capitalize">{label}</StatLabel><StatNumber fontSize="md">{displayValue}</StatNumber></Stat></WrapItem>;
 								})}</Wrap>
 							</Box>
@@ -501,6 +503,7 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 			Car: true,
 			House: true,
 			BusinessSpace: true,
+			Service: true,
 			user: {
 				select: {
 					id: true,

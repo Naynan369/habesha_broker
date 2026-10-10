@@ -18,7 +18,7 @@ export interface IFilterInput {
 export const FilterInput: FC<IFilterInput> = ({ name, title, isSingleInput, isSelect, isSpecific, itemType, children }) => {
 	const filter: any = useFilter();
 	const text = useLang().explore.filters;
-	const relation = itemType === "CAR" ? "Car" : itemType === "BUSINESS_SPACE" ? "BusinessSpace" : "House";
+	const relation = itemType === "CAR" ? "Car" : itemType === "BUSINESS_SPACE" ? "BusinessSpace" : itemType === "SERVICE" ? "Service" : "House";
 	const handleFunction = isSpecific ? filter[`set${relation}`] : filter.setField;
 	const fieldName: any = isSpecific ? filter?.[relation]?.some?.[name] : filter[name];
 

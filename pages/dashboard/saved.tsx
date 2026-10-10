@@ -81,6 +81,7 @@ export default function SavedItems({ user }) {
 									ownerName={savedItem.item.user.firstName + " " + savedItem.item.user.lastName}
 									photoURL={savedItem.item.images?.[0]}
 									price={savedItem.item.price}
+											serviceCategory={savedItem.item.Service?.category}
 								/>
 							))
 						) : (

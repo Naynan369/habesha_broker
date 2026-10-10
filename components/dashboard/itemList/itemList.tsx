@@ -51,6 +51,7 @@ export const ItemList: FC<IItemsList> = ({ user, filters, keyword = "", orderBy 
 						price={item.price}
 						itemType={item.itemType}
 						priceFrequency={item.BusinessSpace?.priceFrequency}
+						serviceCategory={item.Service?.category}
 						featured={item.featured}
 						status={item.status}
 					/>

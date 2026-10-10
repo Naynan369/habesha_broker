@@ -4,20 +4,22 @@ import {
 	Flex,
 	FormControl,
 	Heading,
+	SimpleGrid,
 } from "@chakra-ui/react";
 import { AddCar } from "@components/dashboard/forms/AddCar";
 import { HouseAddForm } from "@components/dashboard/forms/AddHouse";
 import { AddBusinessSpace } from "@components/dashboard/forms/AddBusinessSpace";
+import { AddService } from "@components/dashboard/forms/AddService";
 import { useLang } from "@libs/hooks/useLang";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { MyTheme } from "@config/theme/MyTheme";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { FC, ReactNode, useState } from "react";
-import { FaCar, FaWarehouse } from "react-icons/fa";
-import { MdStorefront } from "react-icons/md";
+import { FaCar } from "react-icons/fa";
+import { MdHomeWork, MdMiscellaneousServices, MdStorefront } from "react-icons/md";
 
-type FormTypes = "HOUSE" | "CAR" | "BUSINESS_SPACE";
+type FormTypes = "HOUSE" | "CAR" | "BUSINESS_SPACE" | "SERVICE";
 
 export const getServerSideProps = withSessionSsr(async ({ req }) => {
 	const user = req.session.user;
@@ -46,7 +48,8 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => {
 
 export default function AddItem({ user }) {
 	const router = useRouter();
-	const text = useLang().businessListing;
+	const lang = useLang();
+	const text = lang.businessListing;
 	const [type, setType] = useState("" as FormTypes);
 
 	const changeType = (type: FormTypes) => setType(type);
@@ -94,26 +97,12 @@ export default function AddItem({ user }) {
 					direction={"column"}
 				>
 					<FormControl mb="10">
-						<Flex
-							justifyContent={"center"}
-							width={"full"}
-							alignItems="center"
-						>
-							<ItemButton
-								icon={<FaCar size={"18"} />}
-								text={text.carCategory}
-								type="CAR"
-								changeType={changeType}
-								selected={type == "CAR"}
-							></ItemButton>
-							<ItemButton
-								icon={<FaWarehouse size={"18"} />}
-								text={text.homeCategory}
-								type="HOUSE"
-								changeType={changeType}
-								selected={type == "HOUSE"}
-							></ItemButton>
-						</Flex>
+						<SimpleGrid columns={{ base: 2, md: 4 }} spacing="4" maxW="1100px" mx="auto" w="full">
+							<ItemButton icon={<MdHomeWork size="22" />} text={text.homeCategory} type="HOUSE" changeType={changeType} selected={type === "HOUSE"} />
+							<ItemButton icon={<FaCar size="22" />} text={text.carCategory} type="CAR" changeType={changeType} selected={type === "CAR"} />
+							<ItemButton icon={<MdStorefront size="22" />} text={text.category} type="BUSINESS_SPACE" changeType={changeType} selected={type === "BUSINESS_SPACE"} />
+							<ItemButton icon={<MdMiscellaneousServices size="22" />} text={lang.serviceListing.chooseCategory} type="SERVICE" changeType={changeType} selected={type === "SERVICE"} />
+						</SimpleGrid>
 					</FormControl>
 
 					{type == "HOUSE" ? (
@@ -122,6 +111,8 @@ export default function AddItem({ user }) {
 						<AddCar user={user} />
 					) : type === "BUSINESS_SPACE" ? (
 						<AddBusinessSpace />
+					) : type === "SERVICE" ? (
+						<AddService />
 					) : null}
 				</Flex>
 			</Flex>

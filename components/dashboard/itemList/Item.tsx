@@ -18,9 +18,10 @@ export interface IItem {
 	ownerName: string;
 	featured?: boolean;
 	priceFrequency?: string;
+	serviceCategory?: string;
 }
 
-export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, priceFrequency }) => (
+export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, priceFrequency, serviceCategory }) => (
 	<Link href={"/items/" + id} passHref>
 		<Flex as="a" borderRadius="2xl" boxShadow="lg" direction="column" position="relative" w="full" minH="360px" overflow="hidden" bg="maingray" cursor="pointer" _hover={{ boxShadow: "2xl", transform: "translateY(-3px)" }} transition="all 180ms ease" textDecoration="none">
 			<ListingImage src={photoURL} alt={title} itemType={itemType} fill />
@@ -31,7 +32,7 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 				<Wrap mt="5" spacing="5">
 					<Flex direction="column"><Heading fontSize="x-small" textTransform="uppercase" fontWeight="medium" color="whiteAlpha.700">Price</Heading><Heading fontSize="sm">{Intl.NumberFormat("en-US").format(Number(price) || 0)} ETB{itemType === "BUSINESS_SPACE" && priceFrequency ? ` / ${priceFrequency.toLowerCase()}` : ""}</Heading></Flex>
 					{status && <Flex direction="column"><Heading fontSize="x-small" textTransform="uppercase" fontWeight="medium" color="whiteAlpha.700">Status</Heading><Heading fontSize="sm">{status}</Heading></Flex>}
-					<Flex direction="column"><Heading fontSize="x-small" textTransform="uppercase" fontWeight="medium" color="whiteAlpha.700">Type</Heading><Heading fontSize="sm">{itemType}</Heading></Flex>
+					<Flex direction="column"><Heading fontSize="x-small" textTransform="uppercase" fontWeight="medium" color="whiteAlpha.700">Type</Heading><Heading fontSize="sm">{itemType === "SERVICE" ? (serviceCategory || "Service").replace(/_/g, " ") : itemType}</Heading></Flex>
 				</Wrap>
 				<Flex mt="5" alignItems="center" gap="3">
 					<Avatar size="sm" name={ownerName} src={getMediaUrl(ownerPhoto, "profile")} />

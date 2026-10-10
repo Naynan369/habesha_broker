@@ -71,6 +71,7 @@ model Item {
   House         House?
   Car           Car?
   BusinessSpace BusinessSpace?
+  Service       Service?
   SavedItems    SavedItems[]
   RecentActions RecentActions[]
 
@@ -125,6 +126,18 @@ model BusinessSpace {
   parking        Boolean              @default(false)
 }
 
+model Service {
+  id          String          @id @default(cuid())
+  itemId      String          @unique
+  item        Item            @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  category    ServiceCategory
+  region      String
+  city        String
+  serviceArea String?
+
+  @@index([category, region, city])
+}
+
 model SavedItems {
   id      String   @id @default(cuid())
   savedAt DateTime @default(now())
@@ -152,6 +165,16 @@ enum ItemType {
   HOUSE
   CAR
   BUSINESS_SPACE
+  SERVICE
+}
+
+enum ServiceCategory {
+  BROKER_SUPPORT
+  PROPERTY_PHOTOGRAPHY
+  MOVING
+  CLEANING
+  REPAIRS
+  PROPERTY_MANAGEMENT
 }
 
 enum Role {

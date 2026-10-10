@@ -10,6 +10,7 @@ export function FilterNav({ applyFilters }) {
 	const lang = useLang();
 	const text = lang.explore.filters;
 	const business = lang.businessListing;
+	const service = lang.serviceListing;
 	const [expanded, setExpanded] = useState(false);
 	const resetFilters = () => {
 		filter.setField("itemType", undefined);
@@ -18,6 +19,7 @@ export function FilterNav({ applyFilters }) {
 		filter.setField("House", { some: {} });
 		filter.setField("Car", { some: {} });
 		filter.setField("BusinessSpace", { some: {} });
+		filter.setField("Service", { some: {} });
 		applyFilters();
 		setExpanded(false);
 	};
@@ -35,6 +37,11 @@ export function FilterNav({ applyFilters }) {
 					<FilterInput name="priceType" title={text.priceType} isSelect><option value="">{text.anyPriceType}</option><option value="FIXED">{text.fixed}</option><option value="NEGOTIABLE">{text.negotiable}</option></FilterInput>
 					{filter.itemType === "HOUSE" && <><FilterInput name="area" title={text.area} itemType="HOUSE" isSpecific /><FilterInput itemType="HOUSE" isSpecific name="room" title={text.rooms} /><FilterInput name="region" title={text.region} isSingleInput itemType="HOUSE" isSpecific /><FilterInput name="city" title={text.city} isSingleInput itemType="HOUSE" isSpecific /><FilterInput name="type" title={business.rentOrSale} isSelect isSpecific itemType="HOUSE"><option value="">{business.any}</option><option value="RENT">{business.rent}</option><option value="FORSALE">{business.sale}</option></FilterInput></>}
 					{filter.itemType === "CAR" && <><FilterInput name="model" title={text.model} isSingleInput isSpecific itemType="CAR" /><FilterInput name="manufacturer" title={text.manufacturer} isSingleInput isSpecific itemType="CAR" /><FilterInput name="status" title={text.condition} isSelect isSpecific itemType="CAR"><option value="">{text.anyCondition}</option><option value="NEW">{text.brandNew}</option><option value="NEW_ETH">{text.newInEthiopia}</option><option value="USED">{text.used}</option></FilterInput><FilterInput name="year" title={text.year} isSpecific itemType="CAR" /><FilterInput name="color" title={text.color} isSingleInput isSpecific itemType="CAR" /></>}
+					{filter.itemType === "SERVICE" && <>
+						<FilterInput name="category" title={service.category} isSelect isSpecific itemType="SERVICE"><option value="">{service.selectCategory}</option>{Object.entries(service.categories).map(([value, label]) => <option key={value} value={value}>{label as string}</option>)}</FilterInput>
+						<FilterInput name="region" title={service.region} isSingleInput itemType="SERVICE" isSpecific />
+						<FilterInput name="city" title={service.city} isSingleInput itemType="SERVICE" isSpecific />
+					</>}
 					{filter.itemType === "BUSINESS_SPACE" && <>
 						<FilterInput name="spaceType" title={business.spaceType} isSelect isSpecific itemType="BUSINESS_SPACE"><option value="">{business.anySpaceType}</option>{Object.entries(business.spaceTypes).map(([value, label]) => <option key={value} value={value}>{label as string}</option>)}</FilterInput>
 						<FilterInput name="type" title={business.rentOrSale} isSelect isSpecific itemType="BUSINESS_SPACE"><option value="">{business.any}</option><option value="RENT">{business.rent}</option><option value="FORSALE">{business.sale}</option></FilterInput>

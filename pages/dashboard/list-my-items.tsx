@@ -42,7 +42,7 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => {
 export default function MyItemsList({ user }) {
 	const [search, setSearch] = useState("");
 	const [keyword, setKeyword] = useState("");
-	const [filters, setFilters] = useState(["HOUSE", "CAR", "BUSINESS_SPACE"]);
+	const [filters, setFilters] = useState(["HOUSE", "CAR", "BUSINESS_SPACE", "SERVICE"]);
 	const [orderBy, setOrderBy] = useState({
 		createdAt: "desc",
 	} as any);
@@ -131,6 +131,11 @@ export default function MyItemsList({ user }) {
 									setFilters={setFilters}
 									filters={filters}
 									value="BUSINESS_SPACE"
+								/>
+								<FilterButton
+									setFilters={setFilters}
+									filters={filters}
+									value="SERVICE"
 								/>
 							</Stack>
 						</Flex>
@@ -223,7 +228,7 @@ function FilterButton({ filters, setFilters, value }) {
 			variant={filters.indexOf(value) !== -1 ? "solid" : "outline"}
 			onClick={handleToggle}
 		>
-			{value === "BUSINESS_SPACE" ? "Business spaces" : value === "HOUSE" ? "Homes" : "Cars"}
+			{value === "BUSINESS_SPACE" ? "Business spaces" : value === "HOUSE" ? "Homes" : value === "SERVICE" ? "Services" : "Cars"}
 		</Button>
 	);
 }

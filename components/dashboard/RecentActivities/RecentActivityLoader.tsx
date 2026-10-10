@@ -8,12 +8,13 @@ import {
 	MdCarRental,
 	MdHouse,
 	MdStorefront,
+	MdMiscellaneousServices,
 } from "react-icons/md";
 
 interface IRecentActivity {
 	title: string;
 	action: string;
-	type: "CAR" | "HOUSE" | "BUSINESS_SPACE";
+	type: "CAR" | "HOUSE" | "BUSINESS_SPACE" | "SERVICE";
 	iconColor: string;
 	date: string;
 	status: "PENDING" | "APPROVED" | "SOLD";
@@ -27,7 +28,7 @@ export const RecentActivity: FC<IRecentActivity> = ({
 	date,
 	status,
 }: IRecentActivity) => {
-	const icon = type === "CAR" ? <MdCarRental fontSize="1.6em" /> : type === "BUSINESS_SPACE" ? <MdStorefront fontSize="1.6em" /> : <MdHouse fontSize="1.6em" />;
+	const icon = type === "CAR" ? <MdCarRental fontSize="1.6em" /> : type === "BUSINESS_SPACE" ? <MdStorefront fontSize="1.6em" /> : type === "SERVICE" ? <MdMiscellaneousServices fontSize="1.6em" /> : <MdHouse fontSize="1.6em" />;
 
 	return (
 		<Flex

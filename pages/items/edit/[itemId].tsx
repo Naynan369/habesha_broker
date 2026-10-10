@@ -13,6 +13,7 @@ import { MyTheme } from "@config/theme/MyTheme";
 import { prisma } from "@config/prisma";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import { useLang } from "@libs/hooks/useLang";
 
 export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	const user = req.session.user;
@@ -32,6 +33,7 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 			itemType: true,
 			House: { select: { area: true, room: true, type: true, region: true, city: true } },
 			Car: { select: { model: true, status: true, manufacturer: true, year: true, transmition: true, color: true, cylinder: true, fuel: true } },
+			Service: { select: { category: true, region: true, city: true, serviceArea: true } },
 			BusinessSpace: { select: { spaceType: true, type: true, priceFrequency: true, area: true, region: true, city: true, subcity: true, woreda: true, neighborhood: true, landmark: true, electricity: true, water: true, roadAccess: true, parking: true } },
 		},
 	});
@@ -42,7 +44,8 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 
 export default function EditItemPage({ item }) {
 	const router = useRouter();
-	const detail = item.itemType === "HOUSE" ? item.House : item.itemType === "CAR" ? item.Car : item.BusinessSpace;
+	const detail = item.itemType === "HOUSE" ? item.House : item.itemType === "CAR" ? item.Car : item.itemType === "BUSINESS_SPACE" ? item.BusinessSpace : item.Service;
+	const serviceText = useLang().serviceListing;
 
 	return (
 		<>
@@ -78,8 +81,17 @@ export default function EditItemPage({ item }) {
 						<EditInputField title="Description" name="description" defaultValues={item.description || ""} isTextarea />
 					</Box>
 					<Divider my="8" />
-					<Heading size="md" mb="5">{item.itemType === "HOUSE" ? "House details" : item.itemType === "CAR" ? "Car details" : "Business space details"}</Heading>
-					{item.itemType === "HOUSE" ? (
+					<Heading size="md" mb="5">{item.itemType === "HOUSE" ? "House details" : item.itemType === "CAR" ? "Car details" : item.itemType === "SERVICE" ? serviceText.category : "Business space details"}</Heading>
+					{item.itemType === "SERVICE" ? (
+						<SimpleGrid columns={[1, 2]} spacing="5">
+							<EditInputField title={serviceText.category} name="category" defaultValues={detail?.category || "BROKER_SUPPORT"} isProductSpecific isSelect>
+								{Object.entries(serviceText.categories).map(([value, label]) => <option key={value} value={value}>{label as string}</option>)}
+							</EditInputField>
+							<EditInputField title={serviceText.region} name="region" defaultValues={detail?.region || ""} isProductSpecific />
+							<EditInputField title={serviceText.city} name="city" defaultValues={detail?.city || ""} isProductSpecific />
+							<EditInputField title={serviceText.serviceArea} name="serviceArea" defaultValues={detail?.serviceArea || ""} isProductSpecific />
+						</SimpleGrid>
+					) : item.itemType === "HOUSE" ? (
 						<SimpleGrid columns={[1, 2]} spacing="5">
 							<EditInputField title="Area" name="area" type="number" defaultValues={String(detail?.area ?? "")} isProductSpecific />
 							<EditInputField title="Rooms" name="room" type="number" defaultValues={String(detail?.room ?? "")} isProductSpecific />

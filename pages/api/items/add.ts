@@ -69,7 +69,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 		if (!title || title.length < 5 || title.length > 300) throw new Error("Title must be between 5 and 300 characters");
 		if (price < 0) throw new Error("Price must be non-negative");
 		if (!["FIXED", "NEGOTIABLE"].includes(priceType)) throw new Error("Invalid price type");
-		if (!["HOUSE", "CAR", "BUSINESS_SPACE"].includes(itemType)) throw new Error("Invalid listing type");
+		if (!["HOUSE", "CAR", "BUSINESS_SPACE", "SERVICE"].includes(itemType)) throw new Error("Invalid listing type");
 
 		const common = {
 			title,
@@ -108,6 +108,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 				color: String(body.color || "").slice(0, 50) || null,
 				cylinder: cylinder === undefined ? null : cylinder,
 				fuel: fuel === undefined ? null : fuel,
+			} };
+		} else if (itemType === "SERVICE") {
+			const categories = ["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"];
+			if (!categories.includes(body.category)) throw new Error("Choose a valid service category");
+			if (!body.region?.trim() || !body.city?.trim()) throw new Error("Region and city are required");
+			common.Service = { create: {
+				category: body.category,
+				region: body.region.trim().slice(0, 100),
+				city: body.city.trim().slice(0, 100),
+				serviceArea: String(body.serviceArea || "").trim().slice(0, 240) || null,
 			} };
 		} else {
 			const area = parseNumber(body.area, "area");
