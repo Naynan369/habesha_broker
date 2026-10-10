@@ -1,17 +1,17 @@
 import { Box, Button, Flex, Heading, IconButton, Menu, MenuButton, MenuItem, MenuList, Text } from "@chakra-ui/react";
-import { ArrowBackIcon, ChevronDownIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon, CloseIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { MyTheme } from "@config/theme/MyTheme";
 import Link from "next/link";
-import { FC } from "react";
+import { FC, ReactNode } from "react";
 import styles from "@styles/Home.module.scss";
 import { useWindowPosition } from "@libs/hooks/useWindowPosition";
 import { useRouter } from "next/router";
 import { en } from "@locales/en";
 import { am } from "@locales/am";
-import { MdAccountBox, MdLogin } from "react-icons/md";
+import { MdAccountBox, MdBusinessCenter, MdExplore, MdHomeWork, MdLanguage, MdLogin, MdOutlineContactSupport } from "react-icons/md";
 
 interface INavbar { background: string; openFunc: () => void; blurred?: boolean; }
-interface INavItem { title: string; href: string; onClick?: () => void; }
+interface INavItem { title: string; href: string; onClick?: () => void; icon?: ReactNode; active?: boolean; }
 
 export const HomeNavbar: FC<INavbar> = ({ background, openFunc }) => {
 	const scrollPos = useWindowPosition();
@@ -31,7 +31,6 @@ export const HomeNavbar: FC<INavbar> = ({ background, openFunc }) => {
 			<IconButton onClick={openFunc} display={{ base: "flex", lg: "none" }} color="white" bg="whiteAlpha.200" _hover={{ bg: "whiteAlpha.300" }} aria-label={lang.common.menu} icon={<HamburgerIcon />} />
 			<Flex display={{ base: "none", lg: "flex" }} align="center">
 				<LinkItem title={lang.nav.home} href="#home" />
-				<LinkItem title={lang.home.services_txt} href="/explore?itemType=SERVICE" />
 				<LinkItem title={lang.nav.explore} href="/explore" />
 				<LinkItem title={lang.nav.contact} href="#Contact" />
 				<Menu>
@@ -53,16 +52,34 @@ export const MobileMenu: FC<IMobMenu> = ({ open, closeFunc }) => {
 	const changeLocale = (nextLocale: string) => { router.push(asPath, asPath, { locale: nextLocale }); closeFunc(); };
 	return (
 		<>
-			<Box position="fixed" inset="0" bg="blackAlpha.600" zIndex="1002" opacity={open ? 1 : 0} visibility={open ? "visible" : "hidden"} pointerEvents={open ? "auto" : "none"} transition="all 220ms ease" onClick={closeFunc} aria-hidden="true" />
-			<Flex position="fixed" right={open ? "0" : "-100%"} top="0" height="100vh" boxShadow="dark-lg" bg="#102f39" color="white" direction="column" w={{ base: "84%", sm: "55%", md: "40%", lg: "20%" }} maxW="420px" zIndex="1003" p="6" transition="right 280ms ease-in-out" aria-hidden={!open}>
-				<IconButton color="white" bg="whiteAlpha.200" _hover={{ bg: "whiteAlpha.300" }} alignSelf="flex-end" aria-label={lang.common.close} icon={<ArrowBackIcon />} mb="7" onClick={closeFunc} />
-				<Flex direction="column" gap="5"><MobMenuItem title={lang.nav.home} href="/#home" onClick={closeFunc} /><MobMenuItem title={lang.home.services_txt} href="/explore?itemType=SERVICE" onClick={closeFunc} /><MobMenuItem title={lang.nav.explore} href="/explore" onClick={closeFunc} /><MobMenuItem title={lang.nav.contact} href="/#Contact" onClick={closeFunc} /></Flex>
-				<Flex mt="9" gap="3"><Button onClick={() => changeLocale("am")} colorScheme={locale === "am" ? "orange" : "whiteAlpha"} variant={locale === "am" ? "solid" : "outline"} aria-label={lang.common.amharic}>{lang.common.amharic}</Button><Button onClick={() => changeLocale("en")} colorScheme={locale === "en" ? "orange" : "whiteAlpha"} variant={locale === "en" ? "solid" : "outline"} aria-label={lang.common.english}>{lang.common.english}</Button></Flex>
-				<Link href="/auth/login" passHref><Button as="a" mt="auto" size="lg" bg="mainyellow" color="maingray" onClick={closeFunc}>{lang.common.signIn}</Button></Link>
+			<Box position="fixed" inset="0" bg="rgba(17, 36, 39, .58)" backdropFilter="blur(3px)" zIndex="1002" opacity={open ? 1 : 0} visibility={open ? "visible" : "hidden"} pointerEvents={open ? "auto" : "none"} transition="all 220ms ease" onClick={closeFunc} aria-hidden="true" />
+			<Flex role="dialog" aria-modal={open || undefined} aria-label={lang.common.menu} position="fixed" right={open ? "0" : "-100%"} top="0" height="100vh" boxShadow="-20px 0 60px rgba(12, 28, 31, .2)" bg="#fbfaf7" color="#21383e" direction="column" w={{ base: "90vw", sm: "390px" }} maxW="390px" zIndex="1003" p="0 24px 24px" transition="right 280ms cubic-bezier(.2,.7,.2,1)" visibility={open ? "visible" : "hidden"} pointerEvents={open ? "auto" : "none"} aria-hidden={!open}>
+				<Flex align="center" justify="space-between" gap="4" py="6" borderBottom="1px solid" borderColor="#ece8df">
+					<Flex align="center" gap="3" minW="0">
+						<Box flexShrink={0} w="12" h="12" borderRadius="2xl" bg="#21383e" color="#f2b64e" display="grid" placeItems="center" fontWeight="black" fontSize="lg" boxShadow="0 8px 18px rgba(33,56,62,.16)">HB</Box>
+						<Box minW="0"><Heading color="#21383e" fontSize="sm" textTransform="uppercase" letterSpacing=".08em">{lang.title}</Heading><Text color="gray.500" fontSize="xs" mt="1">{lang.common.homesVehicles}</Text></Box>
+					</Flex>
+					<IconButton flexShrink={0} color="#21383e" bg="#f0ece3" _hover={{ bg: "#e8dfd2" }} _focus={{ outline: "none", boxShadow: "0 0 0 3px rgba(242,182,78,.48)" }} _focusVisible={{ outline: "2px solid #f2b64e", outlineOffset: "2px", boxShadow: "0 0 0 3px rgba(242,182,78,.35)" }} aria-label={lang.common.close} icon={<CloseIcon />} onClick={closeFunc} borderRadius="full" />
+				</Flex>
+				<Flex direction="column" gap="2" pt="6">
+					<MobMenuItem title={lang.nav.home} href="/#home" icon={<MdHomeWork size="19" />} active onClick={closeFunc} />
+					<MobMenuItem title={lang.nav.explore} href="/explore" icon={<MdExplore size="19" />} onClick={closeFunc} />
+					<MobMenuItem title={lang.nav.contact} href="/#Contact" icon={<MdOutlineContactSupport size="19" />} onClick={closeFunc} />
+				</Flex>
+				<Box mt="auto" pt="6">
+					<Box mb="5" p="4" bg="#f3efe7" border="1px solid" borderColor="#ebe5d9" borderRadius="2xl">
+						<Flex align="center" gap="2" color="#ad6348" mb="3"><MdLanguage size="17" /><Text color="#536467" fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing=".1em">{lang.common.language}</Text></Flex>
+						<Flex p="1" bg="white" border="1px solid" borderColor="#e7e1d5" borderRadius="xl" gap="1">
+							<Button flex="1" h="10" variant={locale === "en" ? "solid" : "ghost"} bg={locale === "en" ? "#21383e" : "transparent"} color={locale === "en" ? "white" : "#536467"} _hover={{ bg: locale === "en" ? "#142a30" : "#f5f3ee" }} borderRadius="lg" onClick={() => changeLocale("en")}>{lang.common.english}</Button>
+							<Button flex="1" h="10" variant={locale === "am" ? "solid" : "ghost"} bg={locale === "am" ? "#21383e" : "transparent"} color={locale === "am" ? "white" : "#536467"} _hover={{ bg: locale === "am" ? "#142a30" : "#f5f3ee" }} borderRadius="lg" onClick={() => changeLocale("am")}>{lang.common.amharic}</Button>
+						</Flex>
+					</Box>
+					<Link href="/auth/login" passHref><Button as="a" w="full" h="12" color="white" bg="#c96f3d" _hover={{ bg: "#b65e31" }} borderRadius="xl" leftIcon={<MdBusinessCenter size="19" />} onClick={closeFunc}>{lang.common.signIn}</Button></Link>
+				</Box>
 			</Flex>
 		</>
 	);
 };
 
 export const LinkItem: FC<INavItem> = ({ title, href }) => <Link href={href} passHref><Text as="a" className={styles.navLink} mx="5" fontSize="sm" fontWeight="semibold" userSelect="none" cursor="pointer" color="whiteAlpha.900" _hover={{ color: "white" }}>{title}</Text></Link>;
-export const MobMenuItem: FC<INavItem> = ({ title, href, onClick }) => <Link href={href} passHref><Text as="a" className={styles.navLink} fontSize="lg" py="1" userSelect="none" cursor="pointer" color="whiteAlpha.900" onClick={onClick}>{title}</Text></Link>;
+export const MobMenuItem: FC<INavItem> = ({ title, href, onClick, icon, active }) => <Link href={href} passHref><Button as="a" justifyContent="flex-start" h="12" px="4" gap="3" bg={active ? "#21383e" : "transparent"} color={active ? "white" : "#31494c"} fontWeight="semibold" borderRadius="xl" boxShadow={active ? "0 8px 18px rgba(33,56,62,.14)" : "none"} _hover={{ bg: active ? "#142a30" : "#f0ece3", color: active ? "white" : "#b85f36" }} leftIcon={icon as any} aria-current={active ? "page" : undefined} onClick={onClick}>{title}</Button></Link>;
