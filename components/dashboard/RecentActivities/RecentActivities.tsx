@@ -3,39 +3,42 @@ import {
 	AlertDescription,
 	AlertIcon,
 	AlertTitle,
+	Box,
+	Text,
 	Flex,
 	Heading,
+	useColorModeValue,
 } from "@chakra-ui/react";
 import { useFetch } from "@libs/hooks/useFetch";
 import axios from "axios";
 import { RecentActivity, RecentActivityLoader } from "./RecentActivityLoader";
 
 export const RecentActivities = () => {
+	const surface = useColorModeValue("white", "#17262b");
+	const border = useColorModeValue("gray.200", "whiteAlpha.200");
+	const muted = useColorModeValue("gray.600", "gray.400");
 	const [data, loading, error] = useFetch({
 		fetchFunction: () => axios.get("/api/recentActions/"),
 	});
 
 	return (
 		<Flex
-			background={"white"}
-			boxShadow="md"
-			borderRadius={"md"}
+			background={surface}
+			border="1px solid"
+			borderColor={border}
+			boxShadow="0 8px 28px rgba(21,42,44,.06)"
+			borderRadius="2xl"
 			direction="column"
-			flex={"1"}
-			p="5"
-			mx={{ base: "0", md: "5" }}
-			my={{ base: "5", md: "0" }}
+			flex="1"
+			h="full"
+			p={{ base: 5, md: 6 }}
 		>
-			<Heading mb="5" textTransform={"uppercase"} fontSize="xl">
+			<Heading mb="5" fontSize="lg" letterSpacing="-.02em">
 				Recent Activities
 			</Heading>
-			<Flex direction={"column"}>
+			<Flex direction="column" flex="1">
 				{loading && (
 					<>
-						<RecentActivityLoader />
-						<RecentActivityLoader />
-						<RecentActivityLoader />
-						<RecentActivityLoader />
 						<RecentActivityLoader />
 						<RecentActivityLoader />
 						<RecentActivityLoader />
@@ -44,9 +47,9 @@ export const RecentActivities = () => {
 				)}
 
 				{error && (
-					<Alert status="error" p="16" flexDirection={"column"}>
-						<AlertIcon boxSize={"48px"} />{" "}
-						<AlertTitle mt="8" mb="2">
+					<Alert status="error" p="8" borderRadius="xl" flexDirection="column" textAlign="center">
+						<AlertIcon boxSize="36px" />{" "}
+						<AlertTitle mt="4" mb="2">
 							Problem Loading Recent Activities
 						</AlertTitle>
 						<AlertDescription>
@@ -56,7 +59,7 @@ export const RecentActivities = () => {
 					</Alert>
 				)}
 
-				{data &&
+				{data && data.length > 0 &&
 					data.map((activity) => (
 						<RecentActivity
 							key={activity.id}
@@ -64,10 +67,17 @@ export const RecentActivities = () => {
 							action={activity.actionType}
 							date={activity.actionTime}
 							type={activity.item.itemType}
-							iconColor="mainred"
 							status={activity.item.status}
 						/>
 					))}
+				{data && data.length === 0 && !loading && !error && (
+					<Box flex="1" display="grid" placeItems="center" minH="180px" textAlign="center" px="4">
+						<Box>
+							<Text fontWeight="semibold">No recent activity yet</Text>
+							<Text mt="1" fontSize="sm" color={muted}>Your listing updates will appear here.</Text>
+						</Box>
+					</Box>
+				)}
 			</Flex>
 		</Flex>
 	);

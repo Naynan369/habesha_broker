@@ -119,7 +119,9 @@ function safeStringFilter(value: any) {
 function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 	const where: any = {};
 	if (isAdmin) {
-		where.status = body.status || "PENDING";
+		where.status = ["PENDING", "APPROVED", "DECLINED", "SOLD"].includes(body.status)
+			? body.status
+			: "PENDING";
 		if (typeof body.id === "string" && body.id) where.id = body.id;
 		return where;
 	}
@@ -394,7 +396,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		const user = await requireUser(req, res);
 		if (!user) return;
 		const saved = await prisma.savedItems.findMany({
-			where: { userId: user.id },
+			where: { userId: user.id, item: { status: "APPROVED" } },
 			include: { item: { include: itemInclude } },
 			orderBy: { savedAt: "desc" },
 		});
@@ -446,6 +448,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		for (const key of ["title", "description", "price", "priceType"]) {
 			if (body[key] === undefined) continue;
 			if (key === "price") {
+				if (body.price === "" || body.price === null) return error(res, 400, "Price is required");
 				const price = Number(body.price);
 				if (!Number.isFinite(price) || price < 0) return error(res, 400, "Price must be a non-negative number");
 				data.price = price;
@@ -453,14 +456,15 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				if (!["FIXED", "NEGOTIABLE"].includes(body.priceType)) return error(res, 400, "Invalid price type");
 				data.priceType = body.priceType;
 			} else if (key === "title") {
-				if (typeof body.title !== "string" || !body.title.trim()) return error(res, 400, "Title is required");
-				data.title = body.title.trim().slice(0, 300);
+				const title = typeof body.title === "string" ? body.title.trim() : "";
+				if (title.length < 5 || title.length > 300) return error(res, 400, "Title must be between 5 and 300 characters");
+				data.title = title;
 			} else if (typeof body.description === "string") {
 				data.description = body.description.slice(0, 10000);
 			}
 		}
-		if (Object.keys(data).length) data.status = "PENDING";
-		if (body.specificProps && typeof body.specificProps === "object") {
+		let specific: Record<string, any> = {};
+		if (body.specificProps && typeof body.specificProps === "object" && !Array.isArray(body.specificProps)) {
 			const allowedByType: Record<string, string[]> = {
 				HOUSE: ["area", "room", "type", "region", "city"],
 				CAR: ["model", "status", "manufacturer", "year", "transmition", "color", "cylinder", "fuel"],
@@ -468,15 +472,23 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				SERVICE: ["category", "region", "city", "serviceArea"],
 			};
 			const allowed = allowedByType[item.itemType] || [];
-			const specific: any = {};
 			for (const key of allowed) {
 				const value = body.specificProps[key];
-				if (value === undefined || value === "") continue;
+				if (value === undefined) continue;
 				if (["area", "room", "year", "cylinder", "fuel"].includes(key)) {
+					if (value === "" || value === null) {
+						if (item.itemType === "BUSINESS_SPACE" && key === "area") return error(res, 400, "Floor area is required");
+						specific[key] = null;
+						continue;
+					}
 					const number = Number(value);
 					if (!Number.isFinite(number) || number < 0 || (["room", "year"].includes(key) && !Number.isInteger(number))) {
 						return error(res, 400, "A listing detail has an invalid number");
 					}
+					if (item.itemType === "HOUSE" && key === "room" && number < 1) return error(res, 400, "Room count must be at least one");
+					if (item.itemType === "HOUSE" && key === "area" && number === 0) return error(res, 400, "Area must be greater than zero");
+					if (item.itemType === "BUSINESS_SPACE" && key === "area" && number === 0) return error(res, 400, "Floor area must be greater than zero");
+					if (item.itemType === "CAR" && key === "year" && number > new Date().getFullYear() + 2) return error(res, 400, "Vehicle year is not valid");
 					specific[key] = number;
 				} else if (key === "type") {
 					if (!["RENT", "FORSALE"].includes(value)) return error(res, 400, "Invalid listing purpose");
@@ -488,8 +500,11 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 					if (!["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"].includes(value)) return error(res, 400, "Invalid service category");
 					specific[key] = value;
 				} else if (key === "priceFrequency") {
-					if (!["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].includes(value)) return error(res, 400, "Invalid rent frequency");
-					specific[key] = value;
+					if (value === "" || value === null) specific[key] = null;
+					else {
+						if (!["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].includes(value)) return error(res, 400, "Invalid rent frequency");
+						specific[key] = value;
+					}
 				} else if (["electricity", "water", "roadAccess", "parking"].includes(key)) {
 					if (value !== "true" && value !== "false" && typeof value !== "boolean") return error(res, 400, "Invalid facility value");
 					specific[key] = value === true || value === "true";
@@ -500,28 +515,32 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 					if (!["AUTO", "MANUAL"].includes(value)) return error(res, 400, "Invalid transmission");
 					specific[key] = value;
 				} else if (typeof value === "string") {
-					specific[key] = value.trim().slice(0, 500);
+					const normalized = value.trim().slice(0, 500);
+					const requiredStrings: Record<string, string[]> = {
+						SERVICE: ["category", "region", "city"],
+						BUSINESS_SPACE: ["region", "city"],
+					};
+					if (!normalized && (requiredStrings[item.itemType] || []).includes(key)) return error(res, 400, `${key} is required`);
+					specific[key] = normalized || (item.itemType === "CAR" && ["model", "manufacturer"].includes(key) ? "" : null);
 				}
 			}
-			if (Object.keys(specific).length) {
-				if (item.itemType === "HOUSE") {
-					const detail = await prisma.house.findUnique({ where: { itemId: item.id } });
-					if (detail) await prisma.house.update({ where: { itemId: item.id }, data: specific });
-				} else if (item.itemType === "CAR") {
-					const detail = await prisma.car.findUnique({ where: { itemId: item.id } });
-					if (detail) await prisma.car.update({ where: { itemId: item.id }, data: specific });
-				} else if (item.itemType === "SERVICE") {
-					const detail = await prisma.service.findUnique({ where: { itemId: item.id } });
-					if (detail) await prisma.service.update({ where: { itemId: item.id }, data: specific });
-				} else {
-					const detail = await prisma.businessSpace.findUnique({ where: { itemId: item.id } });
-					if (detail) await prisma.businessSpace.update({ where: { itemId: item.id }, data: specific });
-				}
-				data.status = "PENDING";
+			if (item.itemType === "BUSINESS_SPACE") {
+				if (body.specificProps.type === "RENT" && !specific.priceFrequency) return error(res, 400, "Choose a rent frequency");
+				if (body.specificProps.type === "FORSALE") specific.priceFrequency = null;
 			}
 		}
-		if (!Object.keys(data).length) return error(res, 400, "No listing changes were provided");
-		await prisma.item.update({ where: { id: item.id }, data });
+		const hasSpecificChanges = Object.keys(specific).length > 0;
+		if (!Object.keys(data).length && !hasSpecificChanges) return error(res, 400, "No listing changes were provided");
+		data.status = "PENDING";
+		data.approvedId = null;
+		if (hasSpecificChanges) {
+			const relation = item.itemType === "HOUSE" ? "House" : item.itemType === "CAR" ? "Car" : item.itemType === "BUSINESS_SPACE" ? "BusinessSpace" : "Service";
+			data[relation] = { update: specific };
+		}
+		await prisma.$transaction(async (tx) => {
+			await tx.item.update({ where: { id: item.id }, data });
+			await tx.savedItems.deleteMany({ where: { itemId: item.id } });
+		});
 		return res.status(200).json({ ok: true });
 	}
 
@@ -565,13 +584,20 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 		const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true, userId: true, status: true } });
 		if (!item) return error(res, 404, "Listing not found");
 		if (item.status !== "PENDING") return error(res, 409, "Only pending listings can be moderated");
-		await prisma.item.update({
-			where: { id: itemId },
-			data: { status, approvedId: status === "APPROVED" ? admin.id : null },
+		const changed = await prisma.$transaction(async (tx) => {
+			const result = await tx.item.updateMany({
+				where: { id: itemId, status: "PENDING" },
+				data: { status, approvedId: status === "APPROVED" ? admin.id : null },
+			});
+			if (!result.count) return false;
+			if (status === "APPROVED") {
+				await tx.recentActions.create({ data: { userId: item.userId, itemId, actionType: "APPROVED" } });
+			} else {
+				await tx.savedItems.deleteMany({ where: { itemId } });
+			}
+			return true;
 		});
-		if (status === "APPROVED") {
-			await prisma.recentActions.create({ data: { userId: item.userId, itemId, actionType: "APPROVED" } });
-		}
+		if (!changed) return error(res, 409, "This listing was already reviewed. Refresh the queue and try again.");
 		return res.status(200).json({ ok: true });
 	}
 

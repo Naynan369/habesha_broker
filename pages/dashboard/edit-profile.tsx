@@ -1,9 +1,10 @@
 import { ArrowBackIcon } from "@chakra-ui/icons";
-import { Box, Flex, Heading, IconButton, SimpleGrid } from "@chakra-ui/react";
+import { Box, Flex, Heading, IconButton, SimpleGrid, useColorModeValue } from "@chakra-ui/react";
 import { ChangePassword } from "@components/dashboard/editProfile/ChangePassword";
 import { ContactInfoEdit } from "@components/dashboard/editProfile/ContactInfoEdit";
 import { PersonalInfoUpdate } from "@components/dashboard/editProfile/ProfileInfoUpdate";
 import { ProfileUpdate } from "@components/dashboard/editProfile/ProfileUpdate";
+import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { MyTheme } from "@config/theme/MyTheme";
 import Head from "next/head";
@@ -28,6 +29,10 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => {
 
 export default function EditProfilePage({ user }) {
 	const router = useRouter();
+	const pageBg = useColorModeValue("#f5f5f1", "#10191d");
+	const surface = useColorModeValue("white", "#17262b");
+	const border = useColorModeValue("gray.200", "whiteAlpha.200");
+	const textColor = useColorModeValue("maingray", "gray.100");
 
 	return (
 		<>
@@ -35,11 +40,14 @@ export default function EditProfilePage({ user }) {
 				<title>Edit Profile - Habesha Brokers</title>
 			</Head>
 			<Flex
+				bg={surface}
+				borderBottom="1px solid"
+				borderColor={border}
 				height={MyTheme.size.navbarHeightCompact}
 				alignItems="center"
 				boxShadow="md"
 				px={MyTheme.paddings.pagePadding}
-				color="maingray"
+				color={textColor}
 			>
 				<IconButton
 					boxSize="10"
@@ -50,8 +58,12 @@ export default function EditProfilePage({ user }) {
 					<ArrowBackIcon />
 				</IconButton>
 				<Heading fontSize="xl">Edit Profile</Heading>
+				<Box flex="1" />
+				<ColorModeToggle />
 			</Flex>
 			<SimpleGrid
+				minH="calc(100vh - 64px)"
+				bg={pageBg}
 				px={MyTheme.paddings.pagePadding}
 				py="10"
 				columns={[1, 2]}

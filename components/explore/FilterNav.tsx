@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, VStack, Button, Text } from "@chakra-ui/react";
+import { Box, Flex, Heading, VStack, Button, Text, useColorModeValue } from "@chakra-ui/react";
 import { ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
 import { useFilter } from "@libs/store";
 import { useLang } from "@libs/hooks/useLang";
@@ -12,6 +12,10 @@ export function FilterNav({ applyFilters }) {
 	const business = lang.businessListing;
 	const service = lang.serviceListing;
 	const [expanded, setExpanded] = useState(false);
+	const surface = useColorModeValue("white", "#1b2a30");
+	const textColor = useColorModeValue("#21383e", "#e7eff0");
+	const mutedColor = useColorModeValue("gray.500", "gray.300");
+	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
 	const resetFilters = () => {
 		filter.setField("itemType", undefined);
 		filter.setField("price", undefined);
@@ -25,13 +29,13 @@ export function FilterNav({ applyFilters }) {
 	};
 
 	return (
-		<Flex direction="column" align="stretch" bg="white" border="1px solid" borderColor="gray.200" borderRadius="2xl" boxShadow="0 14px 34px rgba(27,47,48,.06)" p={{ base: 4, md: 6 }}>
+		<Flex direction="column" align="stretch" bg={surface} border="1px solid" borderColor={borderColor} borderRadius="2xl" boxShadow="0 14px 34px rgba(27,47,48,.12)" p={{ base: 4, md: 6 }}>
 			<Flex display={{ base: "flex", lg: "none" }} align="center" justify="space-between" gap="4">
-				<Box><Heading fontSize="md" color="#21383e">{text.panelTitle}</Heading><Text color="gray.500" fontSize="sm" mt="1">{text.panelDescription}</Text></Box>
-				<Button size="sm" variant="outline" color="#21383e" borderColor="gray.300" rightIcon={expanded ? <ChevronUpIcon /> : <ChevronDownIcon />} onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>{text.filtersButton}</Button>
+				<Box><Heading fontSize="md" color={textColor}>{text.panelTitle}</Heading><Text color={mutedColor} fontSize="sm" mt="1">{text.panelDescription}</Text></Box>
+				<Button size="sm" variant="outline" color={textColor} borderColor={borderColor} rightIcon={expanded ? <ChevronUpIcon /> : <ChevronDownIcon />} onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>{text.filtersButton}</Button>
 			</Flex>
 			<Box display={{ base: expanded ? "block" : "none", lg: "block" }} mt={{ base: 5, lg: 0 }}>
-				<Box display={{ base: "none", lg: "block" }} mb="6"><Text color="#ad6348" textTransform="uppercase" letterSpacing=".15em" fontWeight="bold" fontSize="xs">{text.heading}</Text><Heading fontSize="lg" mt="2" color="#21383e">{text.subtitle}</Heading><Text color="gray.500" fontSize="sm" mt="1">{text.caption}</Text></Box>
+				<Box display={{ base: "none", lg: "block" }} mb="6"><Text color="#ad6348" textTransform="uppercase" letterSpacing=".15em" fontWeight="bold" fontSize="xs">{text.heading}</Text><Heading fontSize="lg" mt="2" color={textColor}>{text.subtitle}</Heading><Text color={mutedColor} fontSize="sm" mt="1">{text.caption}</Text></Box>
 				<VStack align="stretch" spacing="5">
 					<FilterInput name="price" title={text.price} />
 					<FilterInput name="priceType" title={text.priceType} isSelect><option value="">{text.anyPriceType}</option><option value="FIXED">{text.fixed}</option><option value="NEGOTIABLE">{text.negotiable}</option></FilterInput>
@@ -54,7 +58,7 @@ export function FilterNav({ applyFilters }) {
 					</>}
 					<Flex direction={{ base: "column", sm: "row", lg: "column" }} gap="2" pt="2">
 						<Button onClick={() => { applyFilters(); setExpanded(false); }} bg="#21383e" color="white" _hover={{ bg: "#142a30" }} size="md" w="full" borderRadius="lg">{text.apply}</Button>
-						<Button onClick={resetFilters} variant="outline" color="#21383e" borderColor="gray.300" size="md" w="full" borderRadius="lg">{text.clear}</Button>
+						<Button onClick={resetFilters} variant="outline" color={textColor} borderColor={borderColor} size="md" w="full" borderRadius="lg">{text.clear}</Button>
 					</Flex>
 				</VStack>
 			</Box>

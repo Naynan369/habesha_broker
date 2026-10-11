@@ -1,4 +1,4 @@
-import { Box, Button, useToast, Flex, FormControl, FormLabel, Heading, Input, Text, Textarea } from "@chakra-ui/react";
+import { Box, Button, useToast, Flex, FormControl, FormLabel, Heading, Input, Text, Textarea, useColorModeValue } from "@chakra-ui/react";
 import { am } from "@locales/am";
 import { en } from "@locales/en";
 import { useRouter } from "next/router";
@@ -11,6 +11,11 @@ export const HomeContact = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
 	const toast = useToast();
+	const surface = useColorModeValue("white", "#1b2a30");
+	const fieldBg = useColorModeValue("gray.50", "#142126");
+	const fieldBorder = useColorModeValue("gray.200", "whiteAlpha.300");
+	const textColor = useColorModeValue("#143A45", "#e7eff0");
+	const mutedColor = useColorModeValue("gray.600", "gray.300");
 
 	const submitContact = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -43,13 +48,13 @@ export const HomeContact = () => {
 						></iframe>
 					</Box>
 				</Flex>
-				<Box flex="1" bg="white" color="maingray" borderRadius="2xl" p={{ base: 6, md: 8 }}>
+				<Box flex="1" bg={surface} color={textColor} border="1px solid" borderColor={fieldBorder} borderRadius="2xl" p={{ base: 6, md: 8 }}>
 					<Flex align="center" gap="3"><Box color="mainred"><MdEmail size={22} /></Box><Heading fontSize="xl">{lang.home.msgus}</Heading></Flex>
-					<Text color="gray.600" mt="3" mb="5" lineHeight="1.7">{lang.home.contact_form_description}</Text>
+					<Text color={mutedColor} mt="3" mb="5" lineHeight="1.7">{lang.home.contact_form_description}</Text>
 					<form onSubmit={submitContact}>
-						<FormControl mb="4" isRequired><FormLabel htmlFor="name">{lang.home.contactForm.name}</FormLabel><Input id="name" name="name" type="text" autoComplete="name" placeholder={lang.home.contact_name_placeholder} bg="gray.50" borderColor="gray.200" _focus={{ borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
-						<FormControl mb="4" isRequired><FormLabel htmlFor="email">{lang.home.contactForm.email}</FormLabel><Input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" bg="gray.50" borderColor="gray.200" _focus={{ borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
-						<FormControl mb="5" isRequired><FormLabel htmlFor="msg">{lang.home.contactForm.msg}</FormLabel><Textarea id="msg" name="message" required rows={4} placeholder={lang.home.contact_message_placeholder} bg="gray.50" borderColor="gray.200" _focus={{ borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
+						<FormControl mb="4" isRequired><FormLabel htmlFor="name">{lang.home.contactForm.name}</FormLabel><Input id="name" name="name" type="text" autoComplete="name" placeholder={lang.home.contact_name_placeholder} bg={fieldBg} borderColor={fieldBorder} color={textColor} _hover={{ bg: fieldBg }} _focus={{ bg: fieldBg, borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
+						<FormControl mb="4" isRequired><FormLabel htmlFor="email">{lang.home.contactForm.email}</FormLabel><Input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" bg={fieldBg} borderColor={fieldBorder} color={textColor} _hover={{ bg: fieldBg }} _focus={{ bg: fieldBg, borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
+						<FormControl mb="5" isRequired><FormLabel htmlFor="msg">{lang.home.contactForm.msg}</FormLabel><Textarea id="msg" name="message" required rows={4} placeholder={lang.home.contact_message_placeholder} bg={fieldBg} borderColor={fieldBorder} color={textColor} _hover={{ bg: fieldBg }} _focus={{ bg: fieldBg, borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
 						<Flex justify="space-between" align="center" gap="4" flexWrap="wrap"><Text color="gray.500" fontSize="xs">{lang.home.contact_email_note}</Text><Button type="submit" bg="mainred" color="white" borderRadius="xl" rightIcon={<MdArrowOutward />} _hover={{ bg: "#ae2020" }}>{lang.home.contactForm.sbmt}</Button></Flex>
 					</form>
 				</Box>

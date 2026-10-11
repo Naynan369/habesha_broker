@@ -6,7 +6,6 @@ import {
 	FormLabel,
 	Input,
 	Image,
-	InputRightElement,
 	Select,
 	SimpleGrid,
 	Text,
@@ -20,8 +19,9 @@ import {
 	ModalContent,
 	ModalOverlay,
 	useToast,
+	useColorModeValue,
 } from "@chakra-ui/react";
-import { useUser } from "@libs/store";
+import { useLang } from "@libs/hooks/useLang";
 import axios from "axios";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
@@ -31,17 +31,22 @@ import * as yup from "yup";
 import { InputField } from "./InputField";
 
 const CarSchema = yup.object().shape({
-	title: yup.string().required("You have to add string"),
-	description: yup.string(),
+	title: yup.string().trim().min(5, "Use at least 5 characters").max(300, "Keep the title under 300 characters").required("A listing title is required"),
+	description: yup.string().max(10000, "Keep the description under 10,000 characters"),
 	model: yup.string(),
-	price: yup.number().min(0).required(),
-	files: yup.array().min(1, "Add at least one photo"),
+	price: yup.number().typeError("Enter a valid price").min(0, "Price cannot be negative").required("A price is required"),
+	files: yup.array().min(1, "Add at least one photo before submitting").max(10, "You can add up to 10 photos"),
 	rent: yup.boolean(),
 });
 
 export const AddCar = ({ user }) => {
 	const router = useRouter();
 	const toast = useToast();
+	const lang = useLang();
+	const common = lang.businessListing;
+	const text = lang.vehicleListing;
+	const uploadButtonBg = useColorModeValue("orange.50", "whiteAlpha.100");
+	const uploadButtonText = useColorModeValue("orange.800", "orange.100");
 	const [uploadProgress, setUploadProgress] = useState(0);
 
 	const initialValues = {
@@ -82,7 +87,7 @@ export const AddCar = ({ user }) => {
 				},
 
 				onUploadProgress: (event) => {
-					setUploadProgress((event.loaded * 100) / event.total);
+					if (event.total) setUploadProgress(Math.round((event.loaded * 100) / event.total));
 				},
 			})
 			.then((res) => {
@@ -118,7 +123,7 @@ export const AddCar = ({ user }) => {
 		>
 			{(formik) => (
 				<form onSubmit={formik.handleSubmit}>
-					<Flex direction={"column"}>
+					<Flex direction="column" gap={{ base: 5, md: 6 }}>
 						<Modal
 							closeOnOverlayClick={false}
 							closeOnEsc={false}
@@ -142,123 +147,127 @@ export const AddCar = ({ user }) => {
 										</CircularProgressLabel>
 									</CircularProgress>
 									<Heading mt="4" fontSize="lg">
-										Uploading Images...
+										{text.uploading}
 									</Heading>
 								</ModalBody>
 							</ModalContent>
 						</Modal>
-						<SimpleGrid spacing="5" mb="2">
+						<SimpleGrid spacing="5">
 							<InputField
 								formik={formik}
-								label="Title"
+								label={common.title}
 								name="title"
 								type="text"
 							/>
 						</SimpleGrid>
-						<SimpleGrid columns={[1, 2, 3]} spacing="5" my="2">
+						<SimpleGrid columns={[1, 2, 3]} spacing="5">
 							<FormControl>
-								<FormLabel>Price Type</FormLabel>
+								<FormLabel htmlFor="priceType">{common.priceType}</FormLabel>
 								<Select
+									id="priceType"
 									name="priceType"
 									value={formik.values.priceType}
 									onChange={formik.handleChange}
 									variant={"filled"}
 								>
-									<option value="FIXED">Fixed</option>
+									<option value="FIXED">{common.fixed}</option>
 									<option value="NEGOTIABLE">
-										Negotiable
+										{common.negotiable}
 									</option>
 								</Select>
 							</FormControl>
 							<InputField
 								formik={formik}
-								label="Price"
+								label={common.price}
 								name="price"
 								type="number"
 								suffix={<Text>ETB</Text>}
 							/>
 							<FormControl>
-								<FormLabel>Car Status</FormLabel>
+								<FormLabel htmlFor="status">{text.status}</FormLabel>
 								<Select
+									id="status"
 									name="status"
 									value={formik.values.status}
 									onChange={formik.handleChange}
 									variant={"filled"}
 								>
-									<option value="USED">Used Car</option>
-									<option value="NEW">Brand New</option>
+									<option value="USED">{text.used}</option>
+									<option value="NEW">{text.new}</option>
 									<option value="NEW_ETH">
-										New in Ethiopia
+										{text.newInEthiopia}
 									</option>
 								</Select>
 							</FormControl>
 						</SimpleGrid>
-						<SimpleGrid columns={[1, 2, 3]} spacing="5" my="2">
+						<SimpleGrid columns={[1, 2, 3]} spacing="5">
 							<InputField
 								formik={formik}
-								label="Manufacturer"
+								label={text.manufacturer}
 								name="manufacturer"
 								type="text"
 							/>
 							<InputField
 								formik={formik}
-								label="Model"
+								label={text.model}
 								name="model"
 								type="text"
 							/>
 							<InputField
 								formik={formik}
-								label="Year"
+								label={text.year}
 								name="year"
-								type="year"
+								type="number"
 							/>
 						</SimpleGrid>
-						<SimpleGrid columns={[1, 2]} spacing="5" my="2">
+						<SimpleGrid columns={[1, 2]} spacing="5">
 							<FormControl>
-								<FormLabel>Car Transmission</FormLabel>
+								<FormLabel htmlFor="transmition">{text.transmission}</FormLabel>
 								<Select
+									id="transmition"
 									name="transmition"
 									value={formik.values.transmition}
 									onChange={formik.handleChange}
 									variant={"filled"}
 								>
-									<option value="MANUAL">Manual</option>
-									<option value="AUTO">Automatic</option>
+									<option value="MANUAL">{text.manual}</option>
+									<option value="AUTO">{text.automatic}</option>
 								</Select>
 							</FormControl>
 
 							<InputField
 								formik={formik}
-								label="Color"
+								label={text.color}
 								name="color"
 								type="text"
 							/>
 						</SimpleGrid>
-						<SimpleGrid columns={[1, 2]} spacing="5" my="2">
+						<SimpleGrid columns={[1, 2]} spacing="5">
 							<InputField
 								formik={formik}
-								label="Fuel"
+								label={text.fuel}
 								name="fuel"
 								type="number"
-								suffix={<Text>lt/km</Text>}
+					suffix={<Text>{text.fuelUnit}</Text>}
 							/>
 							<InputField
 								formik={formik}
-								label="Cylinder size"
+								label={text.cylinder}
 								name="cylinder"
 								type="number"
 							/>
 						</SimpleGrid>
 						<FormControl
-							my="2"
 							isInvalid={!!formik.errors.description}
 						>
-							<FormLabel>Description</FormLabel>
+							<FormLabel htmlFor="description">{common.description}</FormLabel>
 							<Textarea
+								id="description"
 								variant="filled"
 								name="description"
 								value={formik.values.description}
 								onChange={formik.handleChange}
+								placeholder={common.description}
 							></Textarea>
 							{!!formik.errors.description && (
 								<FormErrorMessage>
@@ -266,28 +275,38 @@ export const AddCar = ({ user }) => {
 								</FormErrorMessage>
 							)}
 						</FormControl>
-						<FormControl my="2">
-							<FormLabel>Photos</FormLabel>
+						<FormControl isInvalid={!!formik.errors.files && !!formik.touched.files}>
+							<FormLabel htmlFor="car-photos">{common.photos}</FormLabel>
 							<Input
+								id="car-photos"
 								onChange={(ev) => {
-									let files = ev.target.files;
+									const files = ev.target.files;
 									formik.setFieldValue(
 										"files",
-										Array.from(files)
+									Array.from(files || [])
 									);
+								formik.setFieldTouched("files", true, false);
 								}}
 								variant={"filled"}
+								h="auto"
+								minH="12"
+								py="2"
+								sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }}
 								type="file"
 								name="files"
-								accept="image/*"
+								accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
 								placeholder="images"
 								multiple
 							></Input>
+							{formik.errors.files && formik.touched.files ? (
+								<FormErrorMessage>{String(formik.errors.files)}</FormErrorMessage>
+							) : (
+								<Text mt="2" color="gray.500" fontSize="sm">Choose 1–10 JPG, PNG, WebP, or GIF photos (up to 8 MB each).</Text>
+							)}
 						</FormControl>
 						<Grid
 							gridTemplateColumns="repeat(auto-fit, 200px)"
 							gap={"5"}
-							my="4"
 						>
 							{formik.values.files.map((file, index) => {
 								return (
@@ -305,19 +324,17 @@ export const AddCar = ({ user }) => {
 								);
 							})}
 						</Grid>
-						<Flex mt="10" justifyContent={"flex-end"}>
+						<Flex justifyContent={{ base: "stretch", sm: "flex-end" }} gap="3" direction={{ base: "column-reverse", sm: "row" }}>
 							<Button
-								mr="5"
-								colorScheme={"red"}
+								colorScheme="orange"
+								w={{ base: "full", sm: "auto" }}
 								leftIcon={<MdSave />}
 								type="submit"
 								isDisabled={formik.isSubmitting}
 							>
-								{formik.isSubmitting
-									? "Submitting..."
-									: "Submit"}
+								{formik.isSubmitting ? text.submitting : text.submit}
 							</Button>
-							<Button type="button" leftIcon={<MdClose />} onClick={() => router.push("/dashboard")}>Cancel</Button>
+							<Button type="button" w={{ base: "full", sm: "auto" }} leftIcon={<MdClose />} onClick={() => router.push("/dashboard")}>{common.cancel}</Button>
 						</Flex>{" "}
 					</Flex>
 				</form>

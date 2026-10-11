@@ -18,7 +18,9 @@ import {
 	Text,
 	Textarea,
 	useToast,
+	useColorModeValue,
 } from "@chakra-ui/react";
+import { useLang } from "@libs/hooks/useLang";
 import axios from "axios";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
@@ -50,6 +52,9 @@ const HouseAddItemSchema = yup.object().shape({
 export const HouseAddForm = ({ user }) => {
 	const router = useRouter();
 	const toast = useToast();
+	const text = useLang().businessListing;
+	const uploadButtonBg = useColorModeValue("orange.50", "whiteAlpha.100");
+	const uploadButtonText = useColorModeValue("orange.800", "orange.100");
 	const [uploadProgress, setUploadProgress] = useState(0);
 
 	const initialValues = {
@@ -127,7 +132,7 @@ export const HouseAddForm = ({ user }) => {
 					onSubmit={formik.handleSubmit}
 					onReset={formik.handleReset}
 				>
-					<Flex direction={"column"}>
+					<Flex direction="column" gap={{ base: 5, md: 6 }}>
 						<Modal
 							closeOnOverlayClick={false}
 							closeOnEsc={false}
@@ -151,58 +156,60 @@ export const HouseAddForm = ({ user }) => {
 										</CircularProgressLabel>
 									</CircularProgress>
 									<Heading mt="4" fontSize="lg">
-										Uploading Images...
+										{text.uploading}
 									</Heading>
 								</ModalBody>
 							</ModalContent>
 						</Modal>
-						<SimpleGrid spacing="5" mb="2">
+						<SimpleGrid spacing="5">
 							<InputField
 								formik={formik}
-								label="Title"
+								label={text.title}
 								name="title"
 								type="text"
 							/>
 						</SimpleGrid>
-						<SimpleGrid columns={[1, 2, 3]} spacing="5" my="2">
+						<SimpleGrid columns={[1, 2, 3]} spacing="5" my="0">
 							<FormControl>
-								<FormLabel>Price Type</FormLabel>
+								<FormLabel htmlFor="priceType">{text.priceType}</FormLabel>
 								<Select
+									id="priceType"
 									name="priceType"
 									value={formik.values.priceType}
 									onChange={formik.handleChange}
 									variant={"filled"}
 								>
-									<option value="FIXED">Fixed</option>
+										<option value="FIXED">{text.fixed}</option>
 									<option value="NEGOTIABLE">
-										Negotiable
+											{text.negotiable}
 									</option>
 								</Select>
 							</FormControl>
 							<InputField
 								formik={formik}
-								label="Price"
+								label={text.price}
 								name="price"
 								type="number"
 								suffix={<Text>ETB</Text>}
 							/>
 							<FormControl>
-								<FormLabel>House Type</FormLabel>
+								<FormLabel htmlFor="type">{text.rentOrSale}</FormLabel>
 								<Select
+									id="type"
 									name="type"
 									value={formik.values.type}
 									onChange={formik.handleChange}
 									variant={"filled"}
 								>
-									<option value="RENT">For Rent</option>
-									<option value="FORSALE">For Sale</option>
+										<option value="RENT">{text.rent}</option>
+										<option value="FORSALE">{text.sale}</option>
 								</Select>
 							</FormControl>
 						</SimpleGrid>
-						<SimpleGrid columns={[1, 2]} spacing="5" my="2">
+						<SimpleGrid columns={[1, 2]} spacing="5" my="0">
 							<InputField
 								formik={formik}
-								label="Area"
+								label={text.floorArea}
 								name="area"
 								type="number"
 								suffix={
@@ -213,39 +220,42 @@ export const HouseAddForm = ({ user }) => {
 							/>
 							<InputField
 								formik={formik}
-								label="Rooms"
+								label={text.rooms}
 								name="room"
 								type="number"
 							/>
 						</SimpleGrid>
-						<SimpleGrid columns={[1, 2]} spacing="5" my="2">
+						<SimpleGrid columns={[1, 2]} spacing="5" my="0">
 							<InputField
 								formik={formik}
-								label="Region"
+								label={text.region}
 								name="region"
 								type="text"
 							/>
 							<InputField
 								formik={formik}
-								label="City"
+								label={text.city}
 								name="city"
 								type="text"
 							/>
 						</SimpleGrid>
 
-						<FormControl my="2">
-							<FormLabel>Description</FormLabel>
+						<FormControl>
+							<FormLabel htmlFor="description">{text.description}</FormLabel>
 							<Textarea
+								id="description"
 								name="description"
 								onChange={formik.handleChange}
 								value={formik.values.description}
+								placeholder={text.description}
 								variant={"filled"}
 							></Textarea>
 						</FormControl>
 
 						<FormControl>
-							<FormLabel>Photos</FormLabel>
+							<FormLabel htmlFor="house-photos">{text.photos}</FormLabel>
 							<Input
+								id="house-photos"
 								onChange={(ev) => {
 									let files = ev.target.files;
 									formik.setFieldValue(
@@ -254,6 +264,10 @@ export const HouseAddForm = ({ user }) => {
 									);
 								}}
 								variant={"filled"}
+								h="auto"
+								minH="12"
+								py="2"
+								sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }}
 								type="file"
 								name="files"
 								accept="image/*"
@@ -264,7 +278,6 @@ export const HouseAddForm = ({ user }) => {
 						<Grid
 							gridTemplateColumns="repeat(auto-fit, 200px)"
 							gap={"5"}
-							my="4"
 						>
 							{formik.values.files.map((file, index) => {
 								return (
@@ -282,29 +295,27 @@ export const HouseAddForm = ({ user }) => {
 								);
 							})}
 						</Grid>
-						<Flex alignSelf={"flex-end"} mt="5">
+						<Flex alignSelf={{ base: "stretch", sm: "flex-end" }} gap="3" direction={{ base: "column-reverse", sm: "row" }}>
 							<Button
-								mr={"5"}
 								type="submit"
-								alignSelf={"flex-end"}
-								colorScheme="red"
+								w={{ base: "full", sm: "auto" }}
+								colorScheme="orange"
 								leftIcon={<MdSave />}
 								disabled={
 									formik.isSubmitting || !formik.isValid
 								}
 							>
-								{formik.isSubmitting ? "Adding..." : "Add Item"}
+								{formik.isSubmitting ? text.uploading : text.submit}
 							</Button>
 							<Button
-								mt="16"
 								type="button"
-								alignSelf={"flex-end"}
+								w={{ base: "full", sm: "auto" }}
 								leftIcon={<MdClose />}
 								onClick={() => {
 									router.push("/dashboard");
 								}}
 							>
-								Cancel
+								{text.cancel}
 							</Button>
 						</Flex>
 					</Flex>

@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Heading, Image, SimpleGrid, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Image, SimpleGrid, Text, useColorModeValue } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { am } from "@locales/am";
 import { en } from "@locales/en";
@@ -10,23 +10,29 @@ const businessSpacesImage = "https://images.unsplash.com/photo-1497366216548-375
 export const CategoriesSection = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
+	const sectionBg = useColorModeValue("#f3f2ed", "#121e22");
+	const titleColor = useColorModeValue("#20383d", "#e7eff0");
+	const bodyColor = useColorModeValue("gray.600", "gray.300");
+	const surface = useColorModeValue("white", "#1b2a30");
+	const border = useColorModeValue("gray.200", "whiteAlpha.200");
+	const kickerColor = useColorModeValue("#a84c3d", "#e6a17c");
 
 	return (
-		<Box id="categories" as="section" scrollMarginTop="96px" bg="#f5f3ee" px={{ base: 5, md: 10, xl: 14 }} py={{ base: 14, md: 20 }}>
+		<Box id="categories" as="section" scrollMarginTop="96px" bg={sectionBg} px={{ base: 5, md: 10, xl: 14 }} py={{ base: 14, md: 20 }}>
 			<Box maxW="1440px" mx="auto">
-				<Text color="#a84c3d" textTransform="uppercase" letterSpacing=".18em" fontWeight="bold" fontSize="xs">
+				<Text color={kickerColor} textTransform="uppercase" letterSpacing=".18em" fontWeight="bold" fontSize="xs">
 					{lang.home.category_kicker}
 				</Text>
 				<Flex align={{ base: "flex-start", lg: "flex-end" }} justify="space-between" gap="6" mt="3" direction={{ base: "column", lg: "row" }}>
 					<Box>
-						<Heading color="#20383d" fontSize={{ base: "3xl", md: "4xl" }} letterSpacing="-.045em" lineHeight="1.1" maxW="760px">
+						<Heading color={titleColor} fontSize={{ base: "3xl", md: "4xl" }} letterSpacing="-.045em" lineHeight="1.1" maxW="760px">
 							{lang.home.category_title}
 						</Heading>
-						<Text mt="4" color="gray.600" maxW="680px" fontSize={{ base: "sm", md: "md" }} lineHeight="1.75">
+						<Text mt="4" color={bodyColor} maxW="680px" fontSize={{ base: "sm", md: "md" }} lineHeight="1.75">
 							{lang.home.category_description}
 						</Text>
 					</Box>
-					<Flex align="center" gap="3" bg="white" border="1px solid" borderColor="gray.200" borderRadius="full" px="4" py="2.5" color="#536266" fontSize="sm" fontWeight="medium" boxShadow="0 5px 18px rgba(27,47,48,.05)">
+					<Flex align="center" gap="3" bg={surface} border="1px solid" borderColor={border} borderRadius="full" px="4" py="2.5" color={bodyColor} fontSize="sm" fontWeight="medium" boxShadow="0 5px 18px rgba(27,47,48,.05)">
 						<Box w="2" h="2" borderRadius="full" bg="#bd6748" />
 						{lang.home.category_hint}
 					</Flex>

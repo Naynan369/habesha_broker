@@ -1,4 +1,5 @@
 import {
+	Box,
 	Button,
 	Flex,
 	FormControl,
@@ -7,7 +8,9 @@ import {
 	Input,
 	Text,
 	useToast,
+	useColorModeValue,
 } from "@chakra-ui/react";
+import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 import axios from "axios";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -21,6 +24,12 @@ export default function ResetPasswordPage() {
 	const [confirmation, setConfirmation] = useState("");
 	const [submitting, setSubmitting] = useState(false);
 	const [complete, setComplete] = useState(false);
+	const canvas = useColorModeValue("#f5f5f1", "#10191d");
+	const surface = useColorModeValue("white", "#1b2a30");
+	const textColor = useColorModeValue("#143A45", "#e7eff0");
+	const bodyColor = useColorModeValue("gray.600", "gray.300");
+	const fieldBg = useColorModeValue("white", "#142126");
+	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
 
 	const submit = async (event) => {
 		event.preventDefault();
@@ -46,8 +55,9 @@ export default function ResetPasswordPage() {
 	return (
 		<>
 			<Head><title>Reset Password - Habesha Brokers</title></Head>
-			<Flex minH="100vh" align="center" justify="center" bg="red.50" px="5">
-				<Flex as="section" bg="white" p="10" borderRadius="2xl" boxShadow="2xl" direction="column" w="full" maxW="xl">
+			<Flex minH="100vh" align="center" justify="center" bg={canvas} px="5" position="relative">
+				<Box position="absolute" top="5" right="5"><ColorModeToggle /></Box>
+				<Flex as="section" bg={surface} color={textColor} p={{ base: 6, md: 10 }} border="1px solid" borderColor={borderColor} borderRadius="2xl" boxShadow="2xl" direction="column" w="full" maxW="xl">
 					<Heading mb="5">Reset your password</Heading>
 					{complete ? (
 						<>
@@ -58,14 +68,14 @@ export default function ResetPasswordPage() {
 						<form onSubmit={submit}>
 							<FormControl mb="5" isDisabled={submitting}>
 								<FormLabel>New password</FormLabel>
-								<Input type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} />
+								<Input bg={fieldBg} color={textColor} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} />
 							</FormControl>
 							<FormControl mb="6" isDisabled={submitting}>
 								<FormLabel>Confirm new password</FormLabel>
-								<Input type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
+								<Input bg={fieldBg} color={textColor} type="password" autoComplete="new-password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
 							</FormControl>
 							<Button w="full" type="submit" colorScheme="red" isLoading={submitting}>Update password</Button>
-							<Text mt="4" fontSize="sm" color="gray.600">Reset links expire after one hour.</Text>
+							<Text mt="4" fontSize="sm" color={bodyColor}>Reset links expire after one hour.</Text>
 						</form>
 					)}
 				</Flex>

@@ -3,6 +3,7 @@ import {
 	FormLabel,
 	Input,
 	FormErrorMessage,
+	useColorModeValue,
 } from "@chakra-ui/react";
 import { FormikProps } from "formik";
 import { FC } from "react";
@@ -22,12 +23,16 @@ export const AuthInputField: FC<IAuthInputField> = ({
 	type,
 	autoComplete,
 }) => {
+	const labelColor = useColorModeValue("gray.700", "gray.200");
+	const fieldBg = useColorModeValue("gray.50", "#142126");
+	const fieldBorder = useColorModeValue("gray.200", "whiteAlpha.300");
+	const hoverBg = useColorModeValue("white", "#1b2a30");
 	return (
 		<FormControl
 			isRequired
 			isInvalid={!!formik.errors[name] && !!formik.touched[name]}
 		>
-			<FormLabel htmlFor={name} mb="2" fontSize="sm" fontWeight="600" color="gray.700">
+			<FormLabel htmlFor={name} mb="2" fontSize="sm" fontWeight="600" color={labelColor}>
 				{label}
 			</FormLabel>
 			<Input
@@ -39,9 +44,11 @@ export const AuthInputField: FC<IAuthInputField> = ({
 				variant="outline"
 				size="lg"
 				borderRadius="xl"
-				bg="gray.50"
-				_hover={{ bg: "white", borderColor: "gray.400" }}
-				_focus={{ bg: "white", borderColor: "mainorange", boxShadow: "0 0 0 1px #C66B36" }}
+				bg={fieldBg}
+				borderColor={fieldBorder}
+				color={labelColor}
+				_hover={{ bg: hoverBg, borderColor: "gray.400" }}
+				_focus={{ bg: hoverBg, borderColor: "mainorange", boxShadow: "0 0 0 1px #C66B36" }}
 				name={name}
 				id={name}
 			/>

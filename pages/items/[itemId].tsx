@@ -23,6 +23,7 @@ import {
 	useToast,
 	Wrap,
 	WrapItem,
+	useColorModeValue,
 } from "@chakra-ui/react";
 import { ContactInfo } from "@components/ContactInfo";
 import { withSessionSsr } from "@config/cookie/cookie";
@@ -40,6 +41,7 @@ import { NextSeo } from "next-seo";
 import { formatPrice } from "@libs/helpers/util.client";
 import { ListingImage } from "@components/shared/ListingImage";
 import { getMediaUrl } from "@libs/helpers/media";
+import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 
 const SaveButton = ({ user }) => {
 	const toast = useToast();
@@ -54,6 +56,7 @@ const SaveButton = ({ user }) => {
 			.then((res) => {
 				setData(res.data);
 			})
+			.catch(() => setData({ saved: false }))
 			.finally(() => {
 				setLoading(false);
 			});
@@ -72,7 +75,7 @@ const SaveButton = ({ user }) => {
 			.catch((err) => {
 				toast({
 					title: "Error Saving item",
-					description: "Please try again",
+					description: err?.response?.data?.err || "Please try again.",
 					status: "error",
 				});
 			});
@@ -95,7 +98,7 @@ const SaveButton = ({ user }) => {
 			.catch((err) => {
 				toast({
 					title: "Error deleting saved item",
-					description: "Please try again",
+					description: err?.response?.data?.err || "Please try again.",
 					status: "error",
 				});
 			});
@@ -134,6 +137,10 @@ const ItemDetail = ({ itemId, user, item }) => {
 	const lang = useLang();
 	const businessText = lang.businessListing;
 	const serviceText = lang.serviceListing;
+	const surface = useColorModeValue("white", "#1b2a30");
+	const subtleBorder = useColorModeValue("gray.200", "whiteAlpha.200");
+	const mutedText = useColorModeValue("gray.600", "gray.300");
+	const canvas = useColorModeValue("#f5f5f1", "#10191d");
 	const [preview, setPreview] = useState(item?.images[0]);
 	const data = item;
 	const detailRelation = data.itemType === "HOUSE" ? "House" : data.itemType === "CAR" ? "Car" : data.itemType === "BUSINESS_SPACE" ? "BusinessSpace" : "Service";
@@ -157,7 +164,7 @@ const ItemDetail = ({ itemId, user, item }) => {
 					})),
 				}}
 			/>
-			<Flex direction="column" overflow="auto">
+			<Flex direction="column" overflow="auto" minH="100vh" bg={canvas}>
 				<Flex
 					px={MyTheme.paddings.pagePadding}
 					height={MyTheme.size.navbarHeightCompact}
@@ -175,6 +182,7 @@ const ItemDetail = ({ itemId, user, item }) => {
 					</IconButton>
 					<Heading fontSize="lg">Habesha Brokers</Heading>
 					<Box flex={1}></Box>
+					<ColorModeToggle />
 					{data && (
 						<HStack>
 							{user && data.userId === user.id && (
@@ -182,7 +190,7 @@ const ItemDetail = ({ itemId, user, item }) => {
 									<Button as="a" size="md" colorScheme="whiteAlpha" leftIcon={<EditIcon />}>Edit Item</Button>
 								</Link>
 							)}
-							{user && <SaveButton user={user} />}
+							{user && data.status === "APPROVED" && <SaveButton user={user} />}
 						</HStack>
 					)}
 				</Flex>
@@ -256,16 +264,26 @@ const ItemDetail = ({ itemId, user, item }) => {
 									{data.status && (
 										<Badge
 											variant={"subtle"}
-											colorScheme={"red"}
+											colorScheme={data.status === "APPROVED" ? "green" : data.status === "DECLINED" ? "red" : data.status === "SOLD" ? "purple" : "orange"}
 										>
 											{data.status}
 										</Badge>
 									)}
 								</WrapItem>
 							</Wrap>
+							{data.status !== "APPROVED" && (user?.id === data.userId || user?.role === "ADMIN") && (
+								<Alert status={data.status === "DECLINED" ? "error" : "warning"} borderRadius="xl" mb="4">
+									<AlertIcon />
+									<AlertDescription>
+										{data.status === "DECLINED"
+											? "This listing was declined. Edit it and save to send it back for review."
+											: "This listing is waiting for admin review. It is not public or save-able until an admin approves it."}
+									</AlertDescription>
+								</Alert>
+							)}
 							<Text
 								fontWeight={"bold"}
-								color="gray"
+								color={mutedText}
 								fontSize={"sm"}
 								as="h3"
 							>
@@ -289,6 +307,9 @@ const ItemDetail = ({ itemId, user, item }) => {
 										p="4"
 										boxShadow="md"
 										borderRadius={"xl"}
+									bg={surface}
+									border="1px solid"
+									borderColor={subtleBorder}
 									>
 										<StatLabel>Price Type</StatLabel>
 										<StatNumber>
@@ -299,6 +320,9 @@ const ItemDetail = ({ itemId, user, item }) => {
 										boxShadow="md"
 										p="4"
 										borderRadius={"xl"}
+									bg={surface}
+									border="1px solid"
+									borderColor={subtleBorder}
 									>
 										<StatLabel>Price</StatLabel>
 										<StatNumber>
@@ -316,7 +340,7 @@ const ItemDetail = ({ itemId, user, item }) => {
 									if (["id", "itemId"].includes(key)) return null;
 									const label = data.itemType === "BUSINESS_SPACE" ? businessText.detailLabels[key] || key : data.itemType === "SERVICE" ? serviceText.detailLabels[key] || key : key.replace(/([A-Z])/g, " $1");
 									const displayValue = key === "category" && data.itemType === "SERVICE" ? serviceText.categories[value as string] || String(value) : key === "spaceType" ? businessText.spaceTypes[value as string] : key === "type" && data.itemType === "BUSINESS_SPACE" ? value === "RENT" ? businessText.rent : businessText.sale : key === "priceFrequency" ? businessText.frequencies[value as string] : typeof value === "boolean" ? value ? businessText.yes : businessText.no : key === "area" && data.itemType === "BUSINESS_SPACE" ? `${value} m²` : String(value ?? "");
-									return <WrapItem key={key}><Stat p="4" minW="40" boxShadow="md" borderRadius="xl"><StatLabel textTransform="capitalize">{label}</StatLabel><StatNumber fontSize="md">{displayValue}</StatNumber></Stat></WrapItem>;
+									return <WrapItem key={key}><Stat p="4" minW="40" bg={surface} border="1px solid" borderColor={subtleBorder} boxShadow="sm" borderRadius="xl"><StatLabel textTransform="capitalize" color={mutedText}>{label}</StatLabel><StatNumber fontSize="md">{displayValue}</StatNumber></Stat></WrapItem>;
 								})}</Wrap>
 							</Box>
 							<Box>
@@ -330,6 +354,9 @@ const ItemDetail = ({ itemId, user, item }) => {
 										alignItems="center"
 										p="4"
 										my="5"
+										bg={surface}
+										border="1px solid"
+										borderColor={subtleBorder}
 									>
 										<Avatar
 											mr="4"
@@ -353,6 +380,9 @@ const ItemDetail = ({ itemId, user, item }) => {
 										borderRadius={"md"}
 										p="4"
 										direction={"column"}
+										bg={surface}
+										border="1px solid"
+										borderColor={subtleBorder}
 									>
 										<Heading size="md" mb="4">
 											Contact Info

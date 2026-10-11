@@ -1,5 +1,6 @@
 import { CheckCircleIcon, EmailIcon } from "@chakra-ui/icons";
 import {
+	Box,
 	Button,
 	Flex,
 	Heading,
@@ -9,12 +10,14 @@ import {
 	Text,
 	useToast,
 	VStack,
+	useColorModeValue,
 } from "@chakra-ui/react";
 import axios from "axios";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { withSessionSsr } from "@config/cookie/cookie";
+import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 
 export const getServerSideProps = withSessionSsr(async ({ req }) => {
 	const user = req.session.user;
@@ -32,6 +35,10 @@ export default function VerifyAccountPage({ user }) {
 
 	const toast = useToast();
 	const router = useRouter();
+	const pageBg = useColorModeValue("gray.50", "#10191d");
+	const surface = useColorModeValue("white", "#17262b");
+	const textColor = useColorModeValue("maingray", "gray.100");
+	const cardBorder = useColorModeValue("gray.200", "whiteAlpha.200");
 
 	const sendEmail = async () => {
 		setSending(true);
@@ -80,18 +87,22 @@ export default function VerifyAccountPage({ user }) {
 				<title>Verify Account</title>
 			</Head>
 			<Flex
-				h="100vh"
+				minH="100vh"
+				position="relative"
 				direction="column"
 				justifyContent="center"
 				alignItems={"center"}
-				background="blackAlpha.100"
-				color={"maingray"}
+				background={pageBg}
+				color={textColor}
 			>
+				<Box position="absolute" top="5" right="5"><ColorModeToggle /></Box>
 				<Flex
-					background="white"
-					p="10"
+					background={surface}
+					p={{ base: 6, md: 10 }}
 					borderRadius="2xl"
-					boxShadow="2xl"
+					border="1px solid"
+					borderColor={cardBorder}
+					boxShadow="0 18px 48px rgba(8,24,30,.14)"
 					direction="column"
 					alignItems="center"
 				>

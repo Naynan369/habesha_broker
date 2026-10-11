@@ -1,4 +1,4 @@
-import { Alert, AlertDescription, AlertIcon, AlertTitle, Grid, Text } from "@chakra-ui/react";
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Grid, Text, useColorModeValue } from "@chakra-ui/react";
 import { useFetch } from "@libs/hooks/useFetch";
 import { IUser } from "@libs/types/user";
 import axios from "axios";
@@ -14,6 +14,7 @@ interface IItemsList {
 }
 
 export const ItemList: FC<IItemsList> = ({ user, filters, keyword = "", orderBy }) => {
+	const muted = useColorModeValue("gray.500", "gray.400");
 	const [data, loading, error] = useFetch({
 		fetchFunction: () => axios.post("/api/items/", {
 			orderBy,
@@ -35,7 +36,7 @@ export const ItemList: FC<IItemsList> = ({ user, filters, keyword = "", orderBy 
 	}
 
 	return (
-		<Grid justifyContent="center" columnGap="8" rowGap="8" templateColumns="repeat(auto-fill, minmax(18rem, 1fr))" w="full">
+		<Grid justifyContent="center" columnGap="8" rowGap="8" templateColumns={{ base: "minmax(0, 1fr)", sm: "repeat(auto-fill, minmax(18rem, 1fr))" }} w="full">
 			{loading || !data ? (
 				[...Array(6)].map((_, index) => <ItemLoader key={index} />)
 			) : data.length ? (
@@ -57,7 +58,7 @@ export const ItemList: FC<IItemsList> = ({ user, filters, keyword = "", orderBy 
 					/>
 				))
 			) : (
-				<Text gridColumn="1 / -1" py="14" textAlign="center" color="gray.500">No listings match these filters yet.</Text>
+				<Text gridColumn="1 / -1" py="14" textAlign="center" color={muted}>No listings match these filters yet.</Text>
 			)}
 		</Grid>
 	);

@@ -12,6 +12,7 @@ import {
 	MenuList,
 	Stack,
 	VStack,
+	useColorModeValue,
 } from "@chakra-ui/react";
 import { MyTheme } from "@config/theme/MyTheme";
 import { Dispatch, SetStateAction, useState } from "react";
@@ -21,6 +22,7 @@ import { withSessionSsr } from "@config/cookie/cookie";
 import { useRouter } from "next/router";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import Head from "next/head";
+import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 
 export const getServerSideProps = withSessionSsr(async ({ req }) => {
 	const user = req.session.user;
@@ -47,6 +49,7 @@ export default function MyItemsList({ user }) {
 		createdAt: "desc",
 	} as any);
 	const router = useRouter();
+	const pageBg = useColorModeValue("#f5f5f1", "#10191d");
 
 
 	return (
@@ -54,11 +57,11 @@ export default function MyItemsList({ user }) {
 			<Head>
 				<title>List My Items - Habesha Brokers</title>
 			</Head>
-			<Flex direction="column" justifyContent={"flex-start"}>
+			<Flex minH="100vh" bg={pageBg} direction="column" justifyContent={"flex-start"}>
 				{/* Navbar */}
 				<Flex
 					alignItems="center"
-					height={MyTheme.size.navbarHeight}
+					minH={MyTheme.size.navbarHeight}
 					px={MyTheme.paddings.pagePaddingArray}
 					background={MyTheme.colors.maingray}
 					color={"white"}
@@ -83,6 +86,7 @@ export default function MyItemsList({ user }) {
 						</Heading>
 					</Flex>
 					<Box flex={1}></Box>
+					<ColorModeToggle />
 				</Flex>
 
 				{/* Container */}

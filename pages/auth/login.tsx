@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Text, useColorModeValue } from "@chakra-ui/react";
 import Head from "next/head";
 import Link from "next/link";
 import { useLang } from "@libs/hooks/useLang";
@@ -23,6 +23,8 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => {
 
 export default function Login() {
 	const lang = useLang();
+	const headingColor = useColorModeValue("#143A45", "#e7eff0");
+	const mutedColor = useColorModeValue("gray.600", "gray.300");
 
 	return (
 		<>
@@ -32,15 +34,15 @@ export default function Login() {
 			</Head>
 			<AuthPageLayout>
 				<Box mb="8">
-					<Heading fontSize={{ base: "3xl", md: "4xl" }} color="maingray" letterSpacing="-0.035em">
+					<Heading fontSize={{ base: "3xl", md: "4xl" }} color={headingColor} letterSpacing="-0.035em">
 						{lang.auth.login}
 					</Heading>
-					<Text mt="3" color="gray.600" lineHeight="1.7">
+					<Text mt="3" color={mutedColor} lineHeight="1.7">
 						{lang.auth.login_description}
 					</Text>
 				</Box>
 				<LoginForm />
-				<Flex mt="8" align="center" gap="2" fontSize="sm" color="gray.600">
+				<Flex mt="8" align="center" gap="2" fontSize="sm" color={mutedColor}>
 					<Text>{lang.auth.new_to}</Text>
 					<Link href="/auth/sign_up" passHref>
 						<Button as="a" size="sm" variant="link" color="mainorange" fontWeight="700">

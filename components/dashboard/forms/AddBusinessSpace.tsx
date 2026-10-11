@@ -19,6 +19,7 @@ import {
 	Text,
 	Textarea,
 	useToast,
+	useColorModeValue,
 } from "@chakra-ui/react";
 import { InputField } from "@components/dashboard/forms/InputField";
 import { useLang } from "@libs/hooks/useLang";
@@ -50,6 +51,8 @@ export const AddBusinessSpace = () => {
 	const router = useRouter();
 	const toast = useToast();
 	const text = useLang().businessListing;
+	const uploadButtonBg = useColorModeValue("orange.50", "whiteAlpha.100");
+	const uploadButtonText = useColorModeValue("orange.800", "orange.100");
 	const [uploadProgress, setUploadProgress] = useState(0);
 
 	const initialValues = {
@@ -100,7 +103,7 @@ export const AddBusinessSpace = () => {
 	return (
 		<Formik initialValues={initialValues} onSubmit={onSubmit} validationSchema={schema} validateOnBlur>
 			{(formik) => (
-				<form onSubmit={formik.handleSubmit}>
+				<form onSubmit={formik.handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
 					<Modal isOpen={formik.isSubmitting} closeOnOverlayClick={false} closeOnEsc={false} onClose={() => {}}>
 						<ModalOverlay />
 						<ModalContent p="10"><ModalBody display="flex" flexDirection="column" alignItems="center" justifyContent="center">
@@ -109,25 +112,25 @@ export const AddBusinessSpace = () => {
 						</ModalBody></ModalContent>
 					</Modal>
 
-					<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5" mb="5">
+					<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
 						<InputField formik={formik} label={text.title} name="title" />
-						<FormControl><FormLabel>{text.spaceType}</FormLabel><Select name="spaceType" value={formik.values.spaceType} onChange={formik.handleChange} variant="filled">
+						<FormControl><FormLabel htmlFor="spaceType">{text.spaceType}</FormLabel><Select id="spaceType" name="spaceType" value={formik.values.spaceType} onChange={formik.handleChange} variant="filled">
 							<option value="SHOP">{text.spaceTypes.SHOP}</option><option value="OFFICE">{text.spaceTypes.OFFICE}</option><option value="WAREHOUSE">{text.spaceTypes.WAREHOUSE}</option><option value="MARKET_STALL">{text.spaceTypes.MARKET_STALL}</option><option value="WORKSHOP">{text.spaceTypes.WORKSHOP}</option><option value="LAND">{text.spaceTypes.LAND}</option>
 						</Select></FormControl>
 					</SimpleGrid>
 
-					<SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing="5" mb="5">
-						<FormControl><FormLabel>{text.rentOrSale}</FormLabel><Select name="type" value={formik.values.type} onChange={(event) => {
+					<SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing="5">
+						<FormControl><FormLabel htmlFor="type">{text.rentOrSale}</FormLabel><Select id="type" name="type" value={formik.values.type} onChange={(event) => {
 							formik.handleChange(event);
 							if (event.target.value === "FORSALE") formik.setFieldValue("priceFrequency", "");
 							else if (!formik.values.priceFrequency) formik.setFieldValue("priceFrequency", "MONTHLY");
 						}} variant="filled"><option value="RENT">{text.rent}</option><option value="FORSALE">{text.sale}</option></Select></FormControl>
-						<FormControl><FormLabel>{text.priceType}</FormLabel><Select name="priceType" value={formik.values.priceType} onChange={formik.handleChange} variant="filled"><option value="FIXED">{text.fixed}</option><option value="NEGOTIABLE">{text.negotiable}</option></Select></FormControl>
+						<FormControl><FormLabel htmlFor="priceType">{text.priceType}</FormLabel><Select id="priceType" name="priceType" value={formik.values.priceType} onChange={formik.handleChange} variant="filled"><option value="FIXED">{text.fixed}</option><option value="NEGOTIABLE">{text.negotiable}</option></Select></FormControl>
 						<InputField formik={formik} label={text.price} name="price" type="number" suffix={<Text>ETB</Text>} />
-						{formik.values.type === "RENT" && <FormControl><FormLabel>{text.priceFrequency}</FormLabel><Select name="priceFrequency" value={formik.values.priceFrequency} onChange={formik.handleChange} variant="filled"><option value="DAILY">{text.frequencies.DAILY}</option><option value="WEEKLY">{text.frequencies.WEEKLY}</option><option value="MONTHLY">{text.frequencies.MONTHLY}</option><option value="YEARLY">{text.frequencies.YEARLY}</option></Select></FormControl>}
+						{formik.values.type === "RENT" && <FormControl><FormLabel htmlFor="priceFrequency">{text.priceFrequency}</FormLabel><Select id="priceFrequency" name="priceFrequency" value={formik.values.priceFrequency} onChange={formik.handleChange} variant="filled"><option value="DAILY">{text.frequencies.DAILY}</option><option value="WEEKLY">{text.frequencies.WEEKLY}</option><option value="MONTHLY">{text.frequencies.MONTHLY}</option><option value="YEARLY">{text.frequencies.YEARLY}</option></Select></FormControl>}
 					</SimpleGrid>
 
-					<SimpleGrid columns={{ base: 1, sm: 2, xl: 3 }} spacing="5" mb="5">
+					<SimpleGrid columns={{ base: 1, sm: 2, xl: 3 }} spacing="5">
 						<InputField formik={formik} label={text.floorArea} name="area" type="number" suffix={<Text>m²</Text>} />
 						<InputField formik={formik} label={text.region} name="region" />
 						<InputField formik={formik} label={text.city} name="city" />
@@ -137,23 +140,23 @@ export const AddBusinessSpace = () => {
 						<InputField formik={formik} label={text.landmark} name="landmark" />
 					</SimpleGrid>
 
-					<FormControl mb="5"><FormLabel>{text.facilities}</FormLabel><Flex gap={{ base: 3, md: 6 }} wrap="wrap">
+					<FormControl><FormLabel>{text.facilities}</FormLabel><Flex gap={{ base: 3, md: 6 }} wrap="wrap">
 						<Checkbox name="electricity" isChecked={formik.values.electricity} onChange={formik.handleChange}>{text.electricity}</Checkbox>
 						<Checkbox name="water" isChecked={formik.values.water} onChange={formik.handleChange}>{text.water}</Checkbox>
 						<Checkbox name="roadAccess" isChecked={formik.values.roadAccess} onChange={formik.handleChange}>{text.roadAccess}</Checkbox>
 						<Checkbox name="parking" isChecked={formik.values.parking} onChange={formik.handleChange}>{text.parking}</Checkbox>
 					</Flex></FormControl>
 
-					<FormControl mb="5"><FormLabel>{text.description}</FormLabel><Textarea name="description" value={formik.values.description} onChange={formik.handleChange} variant="filled" maxLength={10000} /></FormControl>
-					<FormControl><FormLabel>{text.photos}</FormLabel><Input type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple variant="filled" onChange={(event) => formik.setFieldValue("files", Array.from(event.currentTarget.files || []))} />
+					<FormControl><FormLabel htmlFor="description">{text.description}</FormLabel><Textarea id="description" name="description" value={formik.values.description} onChange={formik.handleChange} placeholder={text.description} variant="filled" maxLength={10000} /></FormControl>
+					<FormControl><FormLabel htmlFor="business-photos">{text.photos}</FormLabel><Input id="business-photos" type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} onChange={(event) => formik.setFieldValue("files", Array.from(event.currentTarget.files || []))} />
 						{formik.touched.files && formik.errors.files && <Text mt="2" color="red.500" fontSize="sm">{text.photosRequired}</Text>}
 					</FormControl>
-					<Grid gridTemplateColumns="repeat(auto-fit, 160px)" gap="4" my="4">
+					<Grid gridTemplateColumns="repeat(auto-fit, 160px)" gap="4">
 						{formik.values.files.map((file, index) => <Image alt={`${text.photoPreview} ${index + 1}`} key={`${file.name}-${index}`} borderRadius="lg" width="160px" height="160px" objectFit="cover" src={URL.createObjectURL(file)} />)}
 					</Grid>
-					<Flex justify="flex-end" gap="3" mt="5">
-						<Button type="submit" colorScheme="orange" leftIcon={<MdSave />} isLoading={formik.isSubmitting} isDisabled={!formik.isValid}>{text.submit}</Button>
-						<Button type="button" leftIcon={<MdClose />} onClick={() => router.push("/dashboard")}>{text.cancel}</Button>
+					<Flex justify={{ base: "stretch", sm: "flex-end" }} direction={{ base: "column-reverse", sm: "row" }} gap="3">
+						<Button type="submit" w={{ base: "full", sm: "auto" }} colorScheme="orange" leftIcon={<MdSave />} isLoading={formik.isSubmitting} isDisabled={!formik.isValid}>{text.submit}</Button>
+						<Button type="button" w={{ base: "full", sm: "auto" }} leftIcon={<MdClose />} onClick={() => router.push("/dashboard")}>{text.cancel}</Button>
 					</Flex>
 				</form>
 			)}

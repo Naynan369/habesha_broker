@@ -1,5 +1,6 @@
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import {
+	Box,
 	Button,
 	Flex,
 	FormControl,
@@ -11,7 +12,9 @@ import {
 	Text,
 	useToast,
 	VStack,
+	useColorModeValue,
 } from "@chakra-ui/react";
+import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 import { MyTheme } from "@config/theme/MyTheme";
 import axios from "axios";
 import Head from "next/head";
@@ -27,6 +30,11 @@ export default function ForgetPassword() {
 
 	const router = useRouter();
 	const toast = useToast();
+	const canvas = useColorModeValue("#f5f5f1", "#10191d");
+	const surface = useColorModeValue("white", "#1b2a30");
+	const textColor = useColorModeValue("#143A45", "#e7eff0");
+	const fieldBg = useColorModeValue("white", "#142126");
+	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
 
 	const requestLink = async () => {
 		setSending(true);
@@ -64,15 +72,20 @@ export default function ForgetPassword() {
 				direction="column"
 				alignItems="center"
 				justifyContent="center"
-				background="red.100"
+				background={canvas}
 				height="100vh"
 				px={MyTheme.paddings.pagePadding}
+				position="relative"
 			>
+				<Box position="absolute" top="5" right="5"><ColorModeToggle /></Box>
 				<Flex
 					p="10"
 					borderRadius="2xl"
 					boxShadow="2xl"
-					background="white"
+					background={surface}
+					color={textColor}
+					border="1px solid"
+					borderColor={borderColor}
 					direction="column"
 				>
 					<Heading>Forget Password 🤷‍♂️</Heading>
@@ -111,6 +124,8 @@ export default function ForgetPassword() {
 							>
 								<FormLabel>Email</FormLabel>
 								<Input
+									bg={fieldBg}
+									color={textColor}
 									value={email}
 									onChange={(e) => setEmail(e.target.value)}
 									type="email"

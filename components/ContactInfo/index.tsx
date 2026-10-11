@@ -1,4 +1,4 @@
-import { VStack, Button, Skeleton } from "@chakra-ui/react";
+import { VStack, Button, Skeleton, useColorModeValue } from "@chakra-ui/react";
 import { useFetch } from "@libs/hooks/useFetch";
 import type { ContactType } from "@prisma/client";
 import axios from "axios";
@@ -22,6 +22,7 @@ export interface ContactInfo {
 interface IContactInfo {
 	userID: string;
 	size?: any;
+	appearance?: "brand" | "subtle";
 }
 
 export const CONTACTTYPE = {
@@ -36,8 +37,10 @@ export const CONTACTTYPE = {
 	},
 };
 
-export const ContactInfo: FC<IContactInfo> = ({ userID, size }) => {
-	const [infos, loading, error] = useFetch({
+export const ContactInfo: FC<IContactInfo> = ({ userID, size, appearance = "brand" }) => {
+	const subtleText = useColorModeValue("gray.700", "gray.200");
+	const subtleBorder = useColorModeValue("gray.200", "whiteAlpha.300");
+	const [infos, loading] = useFetch({
 		fetchFunction: () =>
 			axios.get<ContactInfo[]>(`/api/user/contactInfo/${userID}`),
 	});
@@ -54,7 +57,7 @@ export const ContactInfo: FC<IContactInfo> = ({ userID, size }) => {
 						/>
 				  ))
 				: infos &&
-				  infos.map((info, index) => (
+				  infos.map((info) => (
 						<Button
 							as="a"
 							key={info.id}
@@ -67,11 +70,18 @@ export const ContactInfo: FC<IContactInfo> = ({ userID, size }) => {
 									? "http://t.me/" + info.value
 									: info.value
 							}
-								size={size && size}
-								variant={"solid"}
+								size={size || "md"}
+								variant={appearance === "subtle" ? "outline" : "solid"}
+								color={appearance === "subtle" ? subtleText : undefined}
+								borderColor={appearance === "subtle" ? subtleBorder : undefined}
+								fontWeight="medium"
+								fontSize={size === "sm" ? "xs" : undefined}
+								whiteSpace="normal"
+								textAlign="left"
+								justifyContent="flex-start"
 								width={"full"}
 								colorScheme={
-									CONTACTTYPE[info.contactType].color
+									appearance === "subtle" ? "gray" : CONTACTTYPE[info.contactType].color
 								}
 								leftIcon={CONTACTTYPE[info.contactType].icon}
 							>

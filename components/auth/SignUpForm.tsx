@@ -6,6 +6,7 @@ import {
 	Spinner,
 	useToast,
 	Text,
+	useColorModeValue,
 } from "@chakra-ui/react";
 import { useLang } from "@libs/hooks/useLang";
 import axios from "axios";
@@ -21,6 +22,7 @@ export const SignUpForm = () => {
 	const lang = useLang();
 	const toast = useToast();
 	const router = useRouter();
+	const mutedColor = useColorModeValue("gray.600", "gray.300");
 	const signUpSchema = yup.object().shape({
 		firstName: yup
 			.string()
@@ -134,7 +136,7 @@ export const SignUpForm = () => {
 							alignItems="flex-start"
 							aria-label={lang.auth.agree}
 						>
-							<Text fontSize="sm" color="gray.600" lineHeight="1.6">
+							<Text fontSize="sm" color={mutedColor} lineHeight="1.6">
 								{lang.auth.agree}
 							</Text>
 						</Checkbox>
@@ -147,7 +149,7 @@ export const SignUpForm = () => {
 						alignItems="center"
 						justify="space-between"
 					>
-						<Flex gap="1" align="center" fontSize="sm" color="gray.600">
+						<Flex gap="1" align="center" fontSize="sm" color={mutedColor}>
 							<Text>{lang.auth.have_account}</Text>
 							<Link href="/auth/login" passHref>
 								<Button as="a" variant="link" size="sm" color="mainorange" fontWeight="700">

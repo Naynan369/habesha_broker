@@ -11,6 +11,7 @@ import {
 	Input,
 	Button,
 	Text,
+	useColorModeValue,
 } from "@chakra-ui/react";
 import { CONTACTTYPE } from "@components/ContactInfo";
 import { useFetch } from "@libs/hooks/useFetch";
@@ -24,6 +25,9 @@ export const ContactInfoEdit = ({ user }) => {
 	const [value, setValue] = useState("");
 	const [update, setUpdate] = useState(0);
 	const toast = useToast();
+	const surface = useColorModeValue("white", "#17262b");
+	const border = useColorModeValue("gray.200", "whiteAlpha.200");
+	const textColor = useColorModeValue("maingray", "gray.100");
 
 	const [contactInfos, contactLoading, contactError] = useFetch({
 		fetchFunction: async () =>
@@ -89,8 +93,11 @@ export const ContactInfoEdit = ({ user }) => {
 							alignItems="center"
 							p="5"
 							my="1"
-							boxShadow={"md"}
-							color="maingray"
+							boxShadow="0 6px 18px rgba(21,42,44,.06)"
+							bg={surface}
+							border="1px solid"
+							borderColor={border}
+							color={textColor}
 						>
 							<Icon boxSize="10" mr="2">
 								{CONTACTTYPE[info.contactType].icon}

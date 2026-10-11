@@ -1,5 +1,5 @@
 import {
-	Alert, AlertDescription, AlertIcon, Badge, Box, Button, Flex, Grid, Heading, Input, SimpleGrid, Text,
+	Alert, AlertDescription, AlertIcon, Badge, Box, Button, Flex, Grid, Heading, Input, SimpleGrid, Text, useColorModeValue,
 } from "@chakra-ui/react";
 import { useFetch } from "@libs/hooks/useFetch";
 import { useLang } from "@libs/hooks/useLang";
@@ -31,6 +31,16 @@ export default function ExplorePage({ user, keyword }) {
 	const lang = useLang();
 	const filter = useFilter();
 	const router = useRouter();
+	const canvas = useColorModeValue("#f3f2ed", "#10191d");
+	const surface = useColorModeValue("white", "#1b2a30");
+	const titleColor = useColorModeValue("#21383e", "#e7eff0");
+	const bodyColor = useColorModeValue("gray.600", "gray.300");
+	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
+	const accentSurface = useColorModeValue("#fbede4", "rgba(198,107,54,.18)");
+	const accentText = useColorModeValue("#bc6332", "#f0b078");
+	const errorSurface = useColorModeValue("#fff5f1", "#321f1d");
+	const errorText = useColorModeValue("#783e32", "#f3c1b5");
+	const badgeSurface = useColorModeValue("#e8efec", "#263a40");
 	const applyFilters = useCallback(() => {
 		setFilterRevision((revision) => revision + 1);
 		const currentFilter = useFilter.getState();
@@ -119,7 +129,7 @@ export default function ExplorePage({ user, keyword }) {
 				<title>{lang.explore.pageTitle}</title>
 				<meta name="description" content={lang.explore.metaDescription} />
 			</Head>
-			<Box lang={router.locale || "en"} minH="100vh" bg="#f5f3ee" pb={{ base: 12, md: 20 }}>
+			<Box lang={router.locale || "en"} minH="100vh" bg={canvas} pb={{ base: 12, md: 20 }}>
 				<Navbar user={user} />
 				<Box maxW="1480px" mx="auto" px={{ base: 4, md: 8, xl: 12 }} pt={{ base: 5, md: 8 }}>
 					<Box
@@ -166,19 +176,19 @@ export default function ExplorePage({ user, keyword }) {
 								</Flex>
 							</Box>
 						</Flex>
-						<Flex position="absolute" right={{ base: 5, md: 10, xl: 14 }} bottom={{ base: 5, md: 8 }} display={{ base: "none", md: "flex" }} align="center" gap="3" bg="rgba(255,255,255,.92)" backdropFilter="blur(12px)" borderRadius="2xl" px="5" py="4" boxShadow="0 12px 30px rgba(0,0,0,.18)">
-							<Box w="10" h="10" borderRadius="xl" bg="#f7ead7" color="#bc6332" display="grid" placeItems="center"><MdHomeWork size="20" /></Box>
-							<Box><Text color="#254047" fontSize="sm" fontWeight="bold">{lang.explore.heroCardTitle}</Text><Text color="gray.600" fontSize="xs" mt="1">{lang.explore.heroCardSubtitle}</Text></Box>
+						<Flex position="absolute" right={{ base: 5, md: 10, xl: 14 }} bottom={{ base: 5, md: 8 }} display={{ base: "none", md: "flex" }} align="center" gap="3" bg={surface} color={titleColor} border="1px solid" borderColor="whiteAlpha.300" backdropFilter="blur(12px)" borderRadius="2xl" px="5" py="4" boxShadow="0 12px 30px rgba(0,0,0,.18)">
+							<Box w="10" h="10" borderRadius="xl" bg={accentSurface} color={accentText} display="grid" placeItems="center"><MdHomeWork size="20" /></Box>
+							<Box><Text color={titleColor} fontSize="sm" fontWeight="bold">{lang.explore.heroCardTitle}</Text><Text color={bodyColor} fontSize="xs" mt="1">{lang.explore.heroCardSubtitle}</Text></Box>
 						</Flex>
 					</Box>
 
 					<Box as="section" mt={{ base: 10, md: 14 }}>
 						<Flex align={{ base: "flex-start", md: "end" }} justify="space-between" gap="4" mb="5" direction={{ base: "column", md: "row" }}>
 							<Box>
-								<Text color="#ad6348" textTransform="uppercase" letterSpacing=".16em" fontWeight="bold" fontSize="xs">{lang.explore.categoryKicker}</Text>
-								<Heading mt="2" color="#21383e" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.04em">{lang.explore.categoryHeading}</Heading>
+								<Text color={accentText} textTransform="uppercase" letterSpacing=".16em" fontWeight="bold" fontSize="xs">{lang.explore.categoryKicker}</Text>
+								<Heading mt="2" color={titleColor} fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.04em">{lang.explore.categoryHeading}</Heading>
 							</Box>
-							<Text color="gray.600" maxW="430px" fontSize="sm" lineHeight="1.7">{lang.explore.categoryDescription}</Text>
+							<Text color={bodyColor} maxW="430px" fontSize="sm" lineHeight="1.7">{lang.explore.categoryDescription}</Text>
 						</Flex>
 						<SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={{ base: 4, md: 6 }}>
 							<Box
@@ -220,7 +230,9 @@ export default function ExplorePage({ user, keyword }) {
 								aria-pressed={filter.itemType === "BUSINESS_SPACE"}
 								onClick={() => selectCategory("BUSINESS_SPACE")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bg="linear-gradient(135deg, #243f43, #48625d 58%, #b96a43)"
+								bgImage="linear-gradient(90deg, rgba(14,34,38,.86), rgba(14,34,38,.22)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&h=800&q=85')"
+								bgSize="cover"
+								bgPosition="center"
 								boxShadow={filter.itemType === "BUSINESS_SPACE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
 								transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
@@ -252,15 +264,15 @@ export default function ExplorePage({ user, keyword }) {
 
 					{filter.itemType === "SERVICE" && <Box as="section" mt={{ base: 8, md: 10 }}>
 						<Flex align={{ base: "flex-start", md: "flex-end" }} justify="space-between" gap="4" mb="5" direction={{ base: "column", md: "row" }}>
-							<Box><Text color="#ad6348" textTransform="uppercase" letterSpacing=".15em" fontWeight="bold" fontSize="xs">{lang.home.services_txt}</Text><Heading mt="2" color="#21383e" fontSize={{ base: "xl", md: "2xl" }}>{lang.explore.serviceCategoryHeading}</Heading></Box>
-							<Text color="gray.600" maxW="520px" fontSize="sm" lineHeight="1.7">{lang.explore.serviceCategoryDescription}</Text>
+							<Box><Text color={accentText} textTransform="uppercase" letterSpacing=".15em" fontWeight="bold" fontSize="xs">{lang.home.services_txt}</Text><Heading mt="2" color={titleColor} fontSize={{ base: "xl", md: "2xl" }}>{lang.explore.serviceCategoryHeading}</Heading></Box>
+							<Text color={bodyColor} maxW="520px" fontSize="sm" lineHeight="1.7">{lang.explore.serviceCategoryDescription}</Text>
 						</Flex>
-						<Flex wrap="wrap" gap="3" mb="5"><Button variant={filter.Service?.some?.category ? "outline" : "solid"} color={filter.Service?.some?.category ? "maingray" : "white"} bg={filter.Service?.some?.category ? "white" : "maingray"} borderColor="gray.300" onClick={() => selectServiceCategory()}>{lang.explore.allServices}</Button></Flex>
+						<Flex wrap="wrap" gap="3" mb="5"><Button variant={filter.Service?.some?.category ? "outline" : "solid"} color={filter.Service?.some?.category ? titleColor : "white"} bg={filter.Service?.some?.category ? surface : "maingray"} borderColor={borderColor} onClick={() => selectServiceCategory()}>{lang.explore.allServices}</Button></Flex>
 						<SimpleGrid columns={{ base: 1, sm: 2, xl: 3 }} spacing="4">
 							{SERVICE_CATEGORIES.map((category, index) => {
 								const card = lang.home.service_cards[index];
 								const selected = filter.Service?.some?.category === category;
-								return <Box as="button" type="button" key={category} onClick={() => selectServiceCategory(category)} aria-pressed={selected} textAlign="left" p="5" minH="130px" bg="white" border="1px solid" borderColor={selected ? "#d7783f" : "gray.200"} borderRadius="xl" boxShadow={selected ? "0 0 0 2px #d7783f" : "sm"} transition="all 160ms ease" _hover={{ transform: "translateY(-2px)", boxShadow: "md" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "2px" }}><Flex align="center" gap="3"><Box flexShrink={0} w="10" h="10" display="grid" placeItems="center" borderRadius="xl" bg="#fbede4" color="#bc6332"><MdMiscellaneousServices size="21" /></Box><Text color="#21383e" fontWeight="bold" lineHeight="1.4">{lang.serviceListing.categories[category]}</Text></Flex><Text mt="3" color="gray.600" fontSize="sm" lineHeight="1.6">{card.description}</Text></Box>;
+								return <Box as="button" type="button" key={category} onClick={() => selectServiceCategory(category)} aria-pressed={selected} textAlign="left" p="5" minH="130px" bg={surface} border="1px solid" borderColor={selected ? "#d7783f" : borderColor} borderRadius="xl" boxShadow={selected ? "0 0 0 2px #d7783f" : "sm"} transition="all 160ms ease" _hover={{ transform: "translateY(-2px)", boxShadow: "md" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "2px" }}><Flex align="center" gap="3"><Box flexShrink={0} w="10" h="10" display="grid" placeItems="center" borderRadius="xl" bg={accentSurface} color={accentText}><MdMiscellaneousServices size="21" /></Box><Text color={titleColor} fontWeight="bold" lineHeight="1.4">{lang.serviceListing.categories[category]}</Text></Flex><Text mt="3" color={bodyColor} fontSize="sm" lineHeight="1.6">{card.description}</Text></Box>;
 							})}
 						</SimpleGrid>
 					</Box>}
@@ -268,22 +280,22 @@ export default function ExplorePage({ user, keyword }) {
 					<Box as="section" mt={{ base: 12, md: 16 }}>
 						<Flex align={{ base: "flex-start", md: "end" }} justify="space-between" gap="4" mb="6" direction={{ base: "column", md: "row" }}>
 							<Box>
-								<Text color="#ad6348" textTransform="uppercase" letterSpacing=".16em" fontWeight="bold" fontSize="xs">{lang.explore.marketplaceKicker}</Text>
-								<Heading mt="2" color="#21383e" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.04em">{lang.explore.listingHeading}</Heading>
+								<Text color={accentText} textTransform="uppercase" letterSpacing=".16em" fontWeight="bold" fontSize="xs">{lang.explore.marketplaceKicker}</Text>
+								<Heading mt="2" color={titleColor} fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.04em">{lang.explore.listingHeading}</Heading>
 							</Box>
 							<Flex align="center" gap="3" wrap="wrap">
-								{activeResultLabel && <Badge color="#29464b" bg="#e8efec" borderRadius="full" px="3" py="1">{activeResultLabel}</Badge>}
-								<Text color="gray.600" fontSize="sm" fontWeight="medium">{error ? lang.explore.unavailable : loading ? lang.explore.loading : `${data?.length || 0} ${data?.length === 1 ? lang.explore.foundSingular : lang.explore.foundPlural}`}</Text>
+								{activeResultLabel && <Badge color={titleColor} bg={badgeSurface} borderRadius="full" px="3" py="1">{activeResultLabel}</Badge>}
+								<Text color={bodyColor} fontSize="sm" fontWeight="medium">{error ? lang.explore.unavailable : loading ? lang.explore.loading : `${data?.length || 0} ${data?.length === 1 ? lang.explore.foundSingular : lang.explore.foundPlural}`}</Text>
 							</Flex>
 						</Flex>
 						<Grid templateColumns={{ base: "1fr", lg: "290px minmax(0, 1fr)" }} gap={{ base: 5, lg: 7 }} alignItems="start">
 							<FilterNav applyFilters={applyFilters} />
 							<Box minW="0">
 								{error ? (
-									<Alert status="error" borderRadius="2xl" border="1px solid #f1c6ba" bg="#fff5f1" py="5" alignItems="center">
+					<Alert status="error" borderRadius="2xl" border="1px solid #f1c6ba" bg={errorSurface} py="5" alignItems="center">
 										<AlertIcon color="#bd5d43" />
 										<Flex w="full" align={{ base: "flex-start", sm: "center" }} justify="space-between" direction={{ base: "column", sm: "row" }} gap="4">
-											<Box><Text color="#783e32" fontWeight="bold">{lang.explore.errorTitle}</Text><AlertDescription color="gray.600" fontSize="sm" mt="1">{lang.explore.errorDescription}</AlertDescription></Box>
+						<Box><Text color={errorText} fontWeight="bold">{lang.explore.errorTitle}</Text><AlertDescription color={bodyColor} fontSize="sm" mt="1">{lang.explore.errorDescription}</AlertDescription></Box>
 											<Button type="button" size="sm" bg="#21383e" color="white" _hover={{ bg: "#142a30" }} onClick={() => setRetryCount((count) => count + 1)} isLoading={loading}>{lang.explore.retry}</Button>
 										</Flex>
 									</Alert>
@@ -294,10 +306,10 @@ export default function ExplorePage({ user, keyword }) {
 										{data.map((item) => <ItemCard key={item.id} id={item.id} title={item.title} date={item.createdAt} photoURL={item.images?.[0]} ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")} ownerPhoto={item?.user?.profile_url} price={item.price} itemType={item.itemType} priceFrequency={item.BusinessSpace?.priceFrequency} featured={item.featured} status={item.status} serviceCategory={item.Service?.category} />)}
 									</SimpleGrid>
 								) : (
-									<Flex align="center" justify="center" direction="column" bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.200" p={{ base: 8, md: 12 }} textAlign="center">
-										<Box color="#b9603d" bg="#fbede4" borderRadius="full" p="4"><MdSearchOff size="28" /></Box>
-										<Heading mt="5" fontSize="xl" color="#21383e">{lang.explore.noMatchesTitle}</Heading>
-										<Text color="gray.600" mt="2" maxW="460px">{lang.explore.noMatchesDescription}</Text>
+					<Flex align="center" justify="center" direction="column" bg={surface} borderRadius="2xl" border="1px solid" borderColor={borderColor} p={{ base: 8, md: 12 }} textAlign="center">
+						<Box color={accentText} bg={accentSurface} borderRadius="full" p="4"><MdSearchOff size="28" /></Box>
+						<Heading mt="5" fontSize="xl" color={titleColor}>{lang.explore.noMatchesTitle}</Heading>
+						<Text color={bodyColor} mt="2" maxW="460px">{lang.explore.noMatchesDescription}</Text>
 									</Flex>
 								)}
 							</Box>

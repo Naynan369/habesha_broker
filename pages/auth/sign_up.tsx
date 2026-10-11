@@ -1,4 +1,4 @@
-import { Box, Heading, Text } from "@chakra-ui/react";
+import { Box, Heading, Text, useColorModeValue } from "@chakra-ui/react";
 import { SignUpForm } from "@components/auth/SignUpForm";
 import { AuthPageLayout } from "@components/auth/AuthPageLayout";
 import { withSessionSsr } from "@config/cookie/cookie";
@@ -22,6 +22,8 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => {
 
 export default function SignUp() {
 	const lang = useLang();
+	const headingColor = useColorModeValue("#143A45", "#e7eff0");
+	const mutedColor = useColorModeValue("gray.600", "gray.300");
 
 	return (
 		<>
@@ -31,10 +33,10 @@ export default function SignUp() {
 			</Head>
 			<AuthPageLayout>
 				<Box mb="7">
-					<Heading fontSize={{ base: "3xl", md: "4xl" }} color="maingray" letterSpacing="-0.035em">
+					<Heading fontSize={{ base: "3xl", md: "4xl" }} color={headingColor} letterSpacing="-0.035em">
 						{lang.auth.signUp}
 					</Heading>
-					<Text mt="3" color="gray.600" lineHeight="1.7">
+					<Text mt="3" color={mutedColor} lineHeight="1.7">
 						{lang.auth.signup_description}
 					</Text>
 				</Box>

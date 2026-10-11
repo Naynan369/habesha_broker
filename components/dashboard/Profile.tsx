@@ -1,9 +1,11 @@
 import {
 	Avatar,
+	Box,
 	Flex,
 	Heading,
 	IconButton,
 	Text,
+	useColorModeValue,
 } from "@chakra-ui/react";
 import { ContactInfo } from "@components/ContactInfo";
 import { IUser } from "@libs/types/user";
@@ -16,36 +18,47 @@ interface IProfile {
 	user: IUser;
 }
 export const Profile: FC<IProfile> = ({ user }) => {
+	const surface = useColorModeValue("white", "#17262b");
+	const border = useColorModeValue("gray.200", "whiteAlpha.200");
+	const nameColor = useColorModeValue("#25383d", "#e8eff0");
+	const muted = useColorModeValue("gray.600", "gray.400");
+	const iconHoverBg = useColorModeValue("gray.100", "whiteAlpha.100");
 	return (
 		<Flex
-			background={"white"}
-			boxShadow="md"
-			borderRadius={"md"}
+			background={surface}
+			border="1px solid"
+			borderColor={border}
+			boxShadow="0 8px 28px rgba(21,42,44,.06)"
+			borderRadius="2xl"
 			direction="column"
-			p="5"
+			p={{ base: 5, md: 6 }}
+			h="full"
 		>
-			<Heading mb="5" textTransform={"uppercase"} fontSize="xl">
-				Profile
+			<Flex mb="5" align="center" justify="space-between" gap="3">
+				<Heading fontSize="lg" letterSpacing="-.02em">
+					Profile
+				</Heading>
 				<Link href={"/dashboard/edit-profile"} passHref>
-					<IconButton as="a" float={"right"} aria-label="edit profile">
+					<IconButton as="a" variant="ghost" color={muted} _hover={{ bg: iconHoverBg, color: "mainorange" }} _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }} aria-label="Edit profile">
 						<MdEdit />
 					</IconButton>
 				</Link>
-			</Heading>
-			<Flex m="3" alignItems={"center"}>
-				<Avatar name={user.firstName + " " + user.lastName} src={getMediaUrl(user.profile_url, "profile")} />
-				<Flex direction={"column"} ml={"5"}>
-					<Text fontSize={"lg"}>
+			</Flex>
+			<Flex alignItems="center" minW="0" gap="4">
+				<Avatar flexShrink={0} size="lg" name={user.firstName + " " + user.lastName} src={getMediaUrl(user.profile_url, "profile")} />
+				<Flex direction="column" minW="0">
+					<Text noOfLines={1} fontSize="md" color={nameColor} fontWeight="semibold">
 						{user.firstName + " " + user.lastName}
 					</Text>
-					<Text color={"gray.500"} fontSize={"sm"}>
-						{user.bio ? user.bio : user.email}
+					<Text noOfLines={2} color={muted} fontSize="sm" mt="1" lineHeight="1.5">
+						{user.bio || user.email}
 					</Text>
 				</Flex>
 			</Flex>
-			<Flex mt="5">
-				<ContactInfo size="sm" userID={user.id}></ContactInfo>
-			</Flex>
+			<Box mt="6" pt="5" borderTop="1px solid" borderColor={border}>
+				<Text mb="3" fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing=".1em" color={muted}>Contact details</Text>
+				<ContactInfo size="sm" appearance="subtle" userID={user.id} />
+			</Box>
 		</Flex>
 	);
 };

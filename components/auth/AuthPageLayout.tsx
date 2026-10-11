@@ -1,10 +1,11 @@
 import { ArrowLeftIcon } from "@chakra-ui/icons";
-import { Box, Button, Flex, Heading, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Text, useColorModeValue } from "@chakra-ui/react";
 import { useLang } from "@libs/hooks/useLang";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { ReactNode } from "react";
 import styles from "@styles/Auth.module.scss";
+import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 
 interface AuthPageLayoutProps {
 	children: ReactNode;
@@ -13,6 +14,12 @@ interface AuthPageLayoutProps {
 export const AuthPageLayout = ({ children }: AuthPageLayoutProps) => {
 	const lang = useLang();
 	const router = useRouter();
+	const canvas = useColorModeValue("#f2f5f4", "#10191d");
+	const surface = useColorModeValue("white", "#1b2a30");
+	const textColor = useColorModeValue("#143A45", "#e7eff0");
+	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
+	const inactiveLanguageColor = useColorModeValue("gray.600", "gray.300");
+	const inactiveLanguageHover = useColorModeValue("gray.100", "whiteAlpha.100");
 
 	const imageContent = (
 		<Flex
@@ -77,13 +84,13 @@ export const AuthPageLayout = ({ children }: AuthPageLayoutProps) => {
 	);
 
 	return (
-		<Box minH="100vh" bg="#f2f5f4" px={{ base: 0, md: 6 }} py={{ base: 0, md: 6 }}>
+		<Box minH="100vh" bg={canvas} px={{ base: 0, md: 6 }} py={{ base: 0, md: 6 }}>
 			<Box
 				mx="auto"
 				w="full"
 				maxW="1280px"
 				minH={{ base: "100vh", md: "calc(100vh - 48px)" }}
-				bg="white"
+				bg={surface}
 				borderRadius={{ base: 0, md: "28px" }}
 				overflow="hidden"
 				boxShadow={{ base: "none", md: "0 24px 80px rgba(20, 58, 69, 0.12)" }}
@@ -137,13 +144,13 @@ export const AuthPageLayout = ({ children }: AuthPageLayoutProps) => {
 						pb={{ base: 10, lg: 12 }}
 						direction="column"
 					>
-						<Flex align="center" justify="space-between" mb={{ base: 8, md: 10 }}>
+						<Flex align="center" justify="space-between" gap="3" mb={{ base: 8, md: 10 }}>
 							<Link href="/" passHref>
 								<Button
 									as="a"
 									leftIcon={<ArrowLeftIcon />}
 									variant="ghost"
-									color="maingray"
+					color={textColor}
 									fontSize="sm"
 									px="2"
 									aria-label={lang.auth.home}
@@ -154,19 +161,20 @@ export const AuthPageLayout = ({ children }: AuthPageLayoutProps) => {
 							<Flex
 								align="center"
 								border="1px solid"
-								borderColor="gray.200"
+				borderColor={borderColor}
 								borderRadius="full"
 								p="1"
 								role="group"
 								aria-label={lang.auth.switch_language}
 							>
-								<Button size="xs" h="30px" minW="42px" borderRadius="full" bg={router.locale === "en" ? "mainorange" : "transparent"} color={router.locale === "en" ? "white" : "gray.600"} _hover={{ bg: router.locale === "en" ? "#ad582a" : "gray.100" }} onClick={() => void router.push(router.asPath, router.asPath, { locale: "en" })} aria-pressed={router.locale === "en"} aria-label="English">
+				<Button size="xs" h="30px" minW="42px" borderRadius="full" bg={router.locale === "en" ? "mainorange" : "transparent"} color={router.locale === "en" ? "white" : inactiveLanguageColor} _hover={{ bg: router.locale === "en" ? "#ad582a" : inactiveLanguageHover }} onClick={() => void router.push(router.asPath, router.asPath, { locale: "en" })} aria-pressed={router.locale === "en"} aria-label="English">
 									EN
 								</Button>
-								<Button size="xs" h="30px" minW="42px" borderRadius="full" bg={router.locale === "am" ? "mainorange" : "transparent"} color={router.locale === "am" ? "white" : "gray.600"} _hover={{ bg: router.locale === "am" ? "#ad582a" : "gray.100" }} onClick={() => void router.push(router.asPath, router.asPath, { locale: "am" })} aria-pressed={router.locale === "am"} aria-label="አማርኛ">
+				<Button size="xs" h="30px" minW="42px" borderRadius="full" bg={router.locale === "am" ? "mainorange" : "transparent"} color={router.locale === "am" ? "white" : inactiveLanguageColor} _hover={{ bg: router.locale === "am" ? "#ad582a" : inactiveLanguageHover }} onClick={() => void router.push(router.asPath, router.asPath, { locale: "am" })} aria-pressed={router.locale === "am"} aria-label="አማርኛ">
 									አማ
 								</Button>
 							</Flex>
+							<ColorModeToggle />
 						</Flex>
 
 						{children}
