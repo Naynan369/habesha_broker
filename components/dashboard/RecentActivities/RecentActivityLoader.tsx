@@ -9,6 +9,8 @@ import {
 } from "react-icons/md";
 
 interface IRecentActivity {
+	labels: Record<string, string>;
+	locale: string;
 	title: string;
 	action: string;
 	type: "CAR" | "HOUSE" | "BUSINESS_SPACE" | "SERVICE";
@@ -22,14 +24,16 @@ export const RecentActivity: FC<IRecentActivity> = ({
 	type,
 	date,
 	status,
+	labels,
+	locale,
 }: IRecentActivity) => {
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const iconBg = useColorModeValue("orange.50", "rgba(233,183,92,.14)");
 	const iconColor = useColorModeValue("orange.700", "orange.200");
 	const icon = type === "CAR" ? <MdCarRental fontSize="1.6em" /> : type === "BUSINESS_SPACE" ? <MdStorefront fontSize="1.6em" /> : type === "SERVICE" ? <MdMiscellaneousServices fontSize="1.6em" /> : <MdHouse fontSize="1.6em" />;
-	const statusLabel = status === "APPROVED" ? "Approved" : status === "DECLINED" ? "Declined" : status === "SOLD" ? "Sold" : "Pending review";
+	const statusLabel = status === "APPROVED" ? labels.statusApproved : status === "DECLINED" ? labels.statusDeclined : status === "SOLD" ? labels.statusSold : labels.statusPending;
 	const statusColor = status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange";
-	const actionLabel = action === "ADDED" ? "Listing added" : action === "SAVED" ? "Saved" : action === "APPROVED" ? "Listing approved" : action.replace(/_/g, " ").toLowerCase();
+	const actionLabel = action === "ADDED" ? labels.actionAdded : action === "SAVED" ? labels.actionSaved : action === "APPROVED" ? labels.actionApproved : action.replace(/_/g, " ").toLowerCase();
 
 	return (
 		<Flex
@@ -54,7 +58,7 @@ export const RecentActivity: FC<IRecentActivity> = ({
 			<Flex direction="column" flex="1" minW="0">
 				<Text noOfLines={1} fontSize="sm" fontWeight="semibold">{title}</Text>
 				<Text noOfLines={1} fontSize="xs" color={muted} mt="1">
-					{actionLabel} · {dayjs(date).fromNow()}
+					{actionLabel} · {dayjs(date).locale(locale).fromNow()}
 				</Text>
 			</Flex>
 			<Badge flexShrink={0} colorScheme={statusColor} variant="subtle" borderRadius="full" px="2.5" py="1" fontSize="xs">{statusLabel}</Badge>

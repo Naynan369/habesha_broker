@@ -5,12 +5,12 @@ import { withSessionSsr } from "@config/cookie/cookie";
 import { useLang } from "@libs/hooks/useLang";
 import Head from "next/head";
 
-export const getServerSideProps = withSessionSsr(async ({ req }) => {
+export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 	const user = req.session.user;
 	if (user) {
 		return {
 			redirect: {
-				destination: user.role === "ADMIN" ? "/admin" : "/dashboard",
+				destination: (locale === "am" ? "/am" : "") + (user.role === "ADMIN" ? "/admin" : "/dashboard"),
 			},
 			props: {},
 		};

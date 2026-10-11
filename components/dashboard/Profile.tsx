@@ -10,6 +10,7 @@ import {
 import { ContactInfo } from "@components/ContactInfo";
 import { IUser } from "@libs/types/user";
 import { FC } from "react";
+import { useLang } from "@libs/hooks/useLang";
 import { getMediaUrl } from "@libs/helpers/media";
 import Link from "next/link";
 import { MdEdit } from "react-icons/md";
@@ -18,6 +19,7 @@ interface IProfile {
 	user: IUser;
 }
 export const Profile: FC<IProfile> = ({ user }) => {
+	const dashboardText = useLang().dashboardPage;
 	const surface = useColorModeValue("white", "#17262b");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const nameColor = useColorModeValue("#25383d", "#e8eff0");
@@ -36,10 +38,10 @@ export const Profile: FC<IProfile> = ({ user }) => {
 		>
 			<Flex mb="5" align="center" justify="space-between" gap="3">
 				<Heading fontSize="lg" letterSpacing="-.02em">
-					Profile
+					{dashboardText.profile}
 				</Heading>
 				<Link href={"/dashboard/edit-profile"} passHref>
-					<IconButton as="a" variant="ghost" color={muted} _hover={{ bg: iconHoverBg, color: "mainorange" }} _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }} aria-label="Edit profile">
+					<IconButton as="a" variant="ghost" color={muted} _hover={{ bg: iconHoverBg, color: "mainorange" }} _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }} aria-label={dashboardText.editProfile}>
 						<MdEdit />
 					</IconButton>
 				</Link>
@@ -56,7 +58,7 @@ export const Profile: FC<IProfile> = ({ user }) => {
 				</Flex>
 			</Flex>
 			<Box mt="6" pt="5" borderTop="1px solid" borderColor={border}>
-				<Text mb="3" fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing=".1em" color={muted}>Contact details</Text>
+				<Text mb="3" fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing=".1em" color={muted}>{dashboardText.contactDetails}</Text>
 				<ContactInfo size="sm" appearance="subtle" userID={user.id} />
 			</Box>
 		</Flex>

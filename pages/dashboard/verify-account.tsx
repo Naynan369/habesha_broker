@@ -19,10 +19,10 @@ import { useState } from "react";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 
-export const getServerSideProps = withSessionSsr(async ({ req }) => {
+export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 	const user = req.session.user;
-	if (!user) return { redirect: { destination: "/auth/login" }, props: {} };
-	if (user.verfied) return { redirect: { destination: "/dashboard" }, props: {} };
+	if (!user) return { redirect: { destination: locale === "am" ? "/am/auth/login" : "/auth/login" }, props: {} };
+	if (user.verfied) return { redirect: { destination: locale === "am" ? "/am/dashboard" : "/dashboard" }, props: {} };
 	return { props: { user } };
 });
 

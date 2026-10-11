@@ -3,6 +3,7 @@ import { useFetch } from "@libs/hooks/useFetch";
 import type { ContactType } from "@prisma/client";
 import axios from "axios";
 import { FC } from "react";
+import { useLang } from "@libs/hooks/useLang";
 import {
 	FaTelegram,
 	FaFacebook,
@@ -38,6 +39,7 @@ export const CONTACTTYPE = {
 };
 
 export const ContactInfo: FC<IContactInfo> = ({ userID, size, appearance = "brand" }) => {
+	const dashboardText = useLang().dashboardPage;
 	const subtleText = useColorModeValue("gray.700", "gray.200");
 	const subtleBorder = useColorModeValue("gray.200", "whiteAlpha.300");
 	const [infos, loading] = useFetch({
@@ -89,7 +91,7 @@ export const ContactInfo: FC<IContactInfo> = ({ userID, size, appearance = "bran
 								info.contactType === "INSTAGRAM"
 									? "@" + info.value
 									: info.contactType === "FACEBOOK"
-									? "Facebook Account"
+									? dashboardText.facebookAccount
 									: info.value}
 						</Button>
 				  ))}

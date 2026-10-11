@@ -26,10 +26,10 @@ import { useRouter } from "next/router";
 import { FormEvent, useRef, useState } from "react";
 import { MdSave } from "react-icons/md";
 
-export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
+export const getServerSideProps = withSessionSsr(async ({ req, params, locale }) => {
 	const user = req.session.user;
-	if (!user) return { redirect: { destination: "/auth/login" }, props: {} };
-	if (!user.verfied) return { redirect: { destination: "/dashboard/verify-account" }, props: {} };
+	if (!user) return { redirect: { destination: locale === "am" ? "/am/auth/login" : "/auth/login" }, props: {} };
+	if (!user.verfied) return { redirect: { destination: locale === "am" ? "/am/dashboard/verify-account" : "/dashboard/verify-account" }, props: {} };
 	const itemId = params?.itemId;
 	if (typeof itemId !== "string" || !/^[A-Za-z0-9_-]{8,128}$/.test(itemId)) return { notFound: true };
 

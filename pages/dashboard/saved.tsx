@@ -14,12 +14,12 @@ import React from "react";
 import Link from "next/link";
 import { MdArrowForward, MdFavoriteBorder } from "react-icons/md";
 
-export const getServerSideProps = withSessionSsr(async ({ req }) => {
+export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 	const user = req.session.user;
 	if (!user) {
 		return {
 			redirect: {
-				destination: "/auth/login/",
+				destination: locale === "am" ? "/am/auth/login/" : "/auth/login/",
 			},
 			props: {},
 		};

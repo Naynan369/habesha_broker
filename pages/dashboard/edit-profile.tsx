@@ -10,12 +10,12 @@ import { MyTheme } from "@config/theme/MyTheme";
 import Head from "next/head";
 import { useRouter } from "next/router";
 
-export const getServerSideProps = withSessionSsr(async ({ req }) => {
+export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 	const user = req.session.user;
 	if (!user) {
 		return {
 			redirect: {
-				destination: "/auth/login/",
+				destination: locale === "am" ? "/am/auth/login/" : "/auth/login/",
 			},
 			props: {},
 		};

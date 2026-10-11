@@ -23,12 +23,12 @@ import { MdCheckCircle, MdHomeWork, MdMiscellaneousServices, MdStorefront } from
 
 type FormTypes = "HOUSE" | "CAR" | "BUSINESS_SPACE" | "SERVICE";
 
-export const getServerSideProps = withSessionSsr(async ({ req }) => {
+export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 	const user = req.session.user;
 	if (!user) {
 		return {
 			redirect: {
-				destination: "/auth/login/",
+				destination: locale === "am" ? "/am/auth/login/" : "/auth/login/",
 			},
 			props: {},
 		};
@@ -36,7 +36,7 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => {
 	if (!user.verfied) {
 		return {
 			redirect: {
-				destination: "/dashboard/verify-account",
+				destination: locale === "am" ? "/am/dashboard/verify-account" : "/dashboard/verify-account",
 			},
 			props: {},
 		};

@@ -24,12 +24,12 @@ import { ArrowBackIcon } from "@chakra-ui/icons";
 import Head from "next/head";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 
-export const getServerSideProps = withSessionSsr(async ({ req }) => {
+export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 	const user = req.session.user;
 	if (!user) {
 		return {
 			redirect: {
-				destination: "/auth/login/",
+				destination: locale === "am" ? "/am/auth/login/" : "/auth/login/",
 			},
 			props: {},
 		};

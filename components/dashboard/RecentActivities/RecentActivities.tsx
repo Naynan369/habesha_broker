@@ -11,9 +11,13 @@ import {
 } from "@chakra-ui/react";
 import { useFetch } from "@libs/hooks/useFetch";
 import axios from "axios";
+import { useRouter } from "next/router";
+import { useLang } from "@libs/hooks/useLang";
 import { RecentActivity, RecentActivityLoader } from "./RecentActivityLoader";
 
 export const RecentActivities = () => {
+	const dashboardText = useLang().dashboardPage;
+	const { locale } = useRouter();
 	const surface = useColorModeValue("white", "#17262b");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const muted = useColorModeValue("gray.600", "gray.400");
@@ -34,7 +38,7 @@ export const RecentActivities = () => {
 			p={{ base: 5, md: 6 }}
 		>
 			<Heading mb="5" fontSize="lg" letterSpacing="-.02em">
-				Recent Activities
+				{dashboardText.recentActivities}
 			</Heading>
 			<Flex direction="column" flex="1">
 				{loading && (
@@ -50,11 +54,10 @@ export const RecentActivities = () => {
 					<Alert status="error" p="8" borderRadius="xl" flexDirection="column" textAlign="center">
 						<AlertIcon boxSize="36px" />{" "}
 						<AlertTitle mt="4" mb="2">
-							Problem Loading Recent Activities
+							{dashboardText.activityErrorTitle}
 						</AlertTitle>
 						<AlertDescription>
-							Check your internet connection, and try refreshing
-							the page
+							{dashboardText.activityErrorDescription}
 						</AlertDescription>
 					</Alert>
 				)}
@@ -68,13 +71,15 @@ export const RecentActivities = () => {
 							date={activity.actionTime}
 							type={activity.item.itemType}
 							status={activity.item.status}
+							labels={dashboardText}
+							locale={locale || "en"}
 						/>
 					))}
 				{data && data.length === 0 && !loading && !error && (
 					<Box flex="1" display="grid" placeItems="center" minH="180px" textAlign="center" px="4">
 						<Box>
-							<Text fontWeight="semibold">No recent activity yet</Text>
-							<Text mt="1" fontSize="sm" color={muted}>Your listing updates will appear here.</Text>
+							<Text fontWeight="semibold">{dashboardText.noActivity}</Text>
+							<Text mt="1" fontSize="sm" color={muted}>{dashboardText.noActivityDescription}</Text>
 						</Box>
 					</Box>
 				)}

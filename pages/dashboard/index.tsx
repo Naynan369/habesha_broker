@@ -5,22 +5,24 @@ import { RecentActivities } from "@components/dashboard/RecentActivities/RecentA
 import { withSessionSsr } from "@config/cookie/cookie";
 import axios from "axios";
 import { useUser } from "@libs/store";
+import { useLang } from "@libs/hooks/useLang";
 import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { FC, ReactNode } from "react";
 import { MdAddShoppingCart, MdArrowForward, MdCheckCircle, MdListAlt, MdSave } from "react-icons/md";
 
-export const getServerSideProps = withSessionSsr(async ({ req }) => {
+export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
     const user = req.session.user;
     if (!user) {
-        return { redirect: { destination: "/auth/login/" }, props: {} };
+        return { redirect: { destination: locale === "am" ? "/am/auth/login/" : "/auth/login/" }, props: {} };
     }
     return { props: { user } };
 });
 
 export default function Dashboard({ user }) {
     const router = useRouter();
+    const dashboardText = useLang().dashboardPage;
     const logout = useUser((state) => state.logout);
     const pageBg = useColorModeValue("#f5f5f1", "#10191d");
     const muted = useColorModeValue("gray.600", "gray.400");
@@ -38,37 +40,37 @@ export default function Dashboard({ user }) {
         try {
             await axios.post("/api/user/logout");
         } finally {
-            router.replace("/auth/login");
+            router.replace("/auth/login", undefined, { locale: router.locale });
         }
     };
 
     return (
         <>
-            <Head><title>Dashboard - Habesha Brokers</title></Head>
+            <Head><title>{dashboardText.pageTitle}</title></Head>
             <Flex minH="100vh" direction="column" bg={pageBg}>
                 <NavBar logout={handleLogout} />
                 <Container maxW="7xl" flex="1" py={{ base: 8, md: 12 }} px={{ base: 5, md: 8 }}>
                     <Flex as="section" mb={{ base: 7, md: 9 }} p={{ base: 5, md: 8 }} bg={heroSurface} border="1px solid" borderColor={heroBorder} borderRadius="3xl" boxShadow="0 12px 36px rgba(21,42,44,.06)" align={{ base: "flex-start", md: "center" }} justify="space-between" gap="6" direction={{ base: "column", md: "row" }}>
                         <Box>
-                            <Text color="mainorange" fontSize="xs" fontWeight="bold" letterSpacing=".14em" textTransform="uppercase" mb="3">Your workspace</Text>
-                            <Heading as="h1" fontSize={{ base: "2xl", md: "4xl" }} letterSpacing="-.04em" lineHeight="1.1">Welcome back, {user.firstName}</Heading>
-                            <Text mt="3" color={muted} maxW="2xl" lineHeight="1.7">Manage your listings, keep your profile current, and pick up where you left off.</Text>
+                            <Text color="mainorange" fontSize="xs" fontWeight="bold" letterSpacing=".14em" textTransform="uppercase" mb="3">{dashboardText.workspace}</Text>
+                            <Heading as="h1" fontSize={{ base: "2xl", md: "4xl" }} letterSpacing="-.04em" lineHeight="1.1">{dashboardText.welcome}, {user.firstName}</Heading>
+                            <Text mt="3" color={muted} maxW="2xl" lineHeight="1.7">{dashboardText.description}</Text>
                         </Box>
                         <Flex flexShrink={0} align="center" gap="2.5" px="4" py="3" borderRadius="full" bg={statusBg} color={statusText} fontSize="sm" fontWeight="semibold" whiteSpace="nowrap">
                             <MdCheckCircle size="18" />
-                            {user.verfied ? "Verified account" : "Verification required"}
+                            {user.verfied ? dashboardText.verifiedAccount : dashboardText.verificationRequired}
                         </Flex>
                     </Flex>
-                    <SimpleGrid as="section" aria-label="Listing shortcuts" columns={{ base: 1, sm: 2, xl: 3 }} spacing={{ base: 4, md: 5 }}>
+                    <SimpleGrid as="section" aria-label={dashboardText.listingShortcuts} columns={{ base: 1, sm: 2, xl: 3 }} spacing={{ base: 4, md: 5 }}>
                         {user.verfied ? (
                             <>
-                                <ActionButton href="add-item" text="Create a listing" description="Share a home, vehicle, business space, or service." icon={<MdAddShoppingCart size="23" />} />
-                                <ActionButton href="list-my-items" text="Manage my listings" description="Review and update the items you have posted." icon={<MdListAlt size="23" />} />
+                                <ActionButton href="add-item" text={dashboardText.createListing} description={dashboardText.createListingDescription} icon={<MdAddShoppingCart size="23" />} />
+                                <ActionButton href="list-my-items" text={dashboardText.manageListings} description={dashboardText.manageListingsDescription} icon={<MdListAlt size="23" />} />
                             </>
                         ) : (
-                            <ActionButton href="verify-account" text="Verify your account" description="Confirm your email to unlock listing tools." icon={<MdCheckCircle size="23" />} />
+                            <ActionButton href="verify-account" text={dashboardText.verifyAccount} description={dashboardText.verifyAccountDescription} icon={<MdCheckCircle size="23" />} />
                         )}
-                        <ActionButton href="saved" text="Saved listings" description="Return to places and services you want to revisit." icon={<MdSave size="23" />} />
+                        <ActionButton href="saved" text={dashboardText.savedListings} description={dashboardText.savedListingsDescription} icon={<MdSave size="23" />} />
                     </SimpleGrid>
                     <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 5, lg: 6 }} mt={{ base: 7, md: 9 }} alignItems="stretch">
                         <Profile user={user} />
