@@ -194,7 +194,7 @@ export const am = {
 		photosRequired: "ቢያንስ አንድ ፎቶ ያክሉ።",
 		photoPreview: "የተመረጠ ፎቶ",
 		submit: "ዝርዝሩን ያስገቡ",
-		cancel: "ይቅር",
+		cancel: "ሰርዝ",
 		uploading: "ፎቶዎችን በመጫን ላይ…",
 		successTitle: "ዝርዝሩ ተልኳል",
 		errorTitle: "ዝርዝሩን ማስገባት አልተቻለም",

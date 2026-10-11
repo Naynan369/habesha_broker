@@ -19,7 +19,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { FC, ReactNode, useState } from "react";
 import { FaCar } from "react-icons/fa";
-import { MdCheckCircle, MdHomeWork, MdMiscellaneousServices, MdStorefront } from "react-icons/md";
+import { MdArrowBack, MdCheckCircle, MdHomeWork, MdMiscellaneousServices, MdStorefront } from "react-icons/md";
 
 type FormTypes = "HOUSE" | "CAR" | "BUSINESS_SPACE" | "SERVICE";
 
@@ -57,14 +57,15 @@ export default function AddItem({ user }) {
 	const textColor = useColorModeValue("#25383d", "#e8eff0");
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const formSurface = useColorModeValue("white", "#17262b");
-	const formBorder = useColorModeValue("gray.200", "whiteAlpha.200");
+	const formBorder = useColorModeValue("gray.300", "whiteAlpha.300");
+	const formShadow = useColorModeValue("0 12px 32px rgba(21,42,44,.08)", "0 14px 34px rgba(0,0,0,.32)");
 
 	const changeType = (type: FormTypes) => setType(type);
 
 	return (
 		<>
 			<Head>
-				<title>Add Item - Habesha Brokers</title>
+				<title>{text.addListing} - {lang.title}</title>
 			</Head>
 			<Flex direction={"column"} minH="100vh" bg={pageBg}>
 				<Flex
@@ -89,14 +90,28 @@ export default function AddItem({ user }) {
 							{text.addListing}
 						</Heading>
 					</Flex>
-					<Box flex="1"></Box>
-					<ColorModeToggle />
-					<Button
-						onClick={() => router.push("/dashboard")}
-						colorScheme={"whiteAlpha"}
-					>
-						Cancel
-					</Button>
+					<Box flex="1" minW={{ base: 2, sm: 4 }} />
+					<Flex align="center" gap={{ base: 2, sm: 3 }} flexShrink={0}>
+						<ColorModeToggle />
+						<Button
+							onClick={() => router.push("/dashboard")}
+							variant="outline"
+							size="sm"
+							h="10"
+							px={{ base: 3, sm: 4 }}
+							leftIcon={<MdArrowBack size="18" />}
+							bg="whiteAlpha.100"
+							borderColor="whiteAlpha.400"
+							color="white"
+							borderRadius="lg"
+							fontWeight="semibold"
+							_hover={{ bg: "whiteAlpha.200", borderColor: "whiteAlpha.700", transform: "translateY(-1px)" }}
+							_active={{ transform: "translateY(0)" }}
+							_focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }}
+						>
+							{text.cancel}
+						</Button>
+					</Flex>
 				</Flex>
 				<Flex
 					color={textColor}
@@ -117,7 +132,7 @@ export default function AddItem({ user }) {
 					</Box>
 
 					{type && (
-						<Box w="full" maxW="1100px" mx="auto" bg={formSurface} border="1px solid" borderColor={formBorder} borderRadius="3xl" p={{ base: 5, md: 8 }} boxShadow="0 10px 30px rgba(21,42,44,.06)">
+						<Box w="full" maxW="1100px" mx="auto" bg={formSurface} border="1px solid" borderColor={formBorder} borderRadius="3xl" p={{ base: 5, md: 8 }} boxShadow={formShadow}>
 							<Heading as="h2" fontSize="lg" letterSpacing="-.02em" mb={{ base: 5, md: 7 }}>{text.listingDetails}</Heading>
 							{type === "HOUSE" ? <HouseAddForm user={user} />
 								: type === "CAR" ? <AddCar user={user} />
@@ -146,10 +161,12 @@ const ItemButton: FC<ItemButtonProps> = ({
 }: ItemButtonProps) => {
 	const unselectedBg = useColorModeValue("white", "#17262b");
 	const unselectedColor = useColorModeValue("#25383d", "#e8eff0");
-	const border = useColorModeValue("gray.200", "whiteAlpha.300");
-	const selectedBg = useColorModeValue("#fffaf0", "rgba(233,183,92,.09)");
-	const iconBg = useColorModeValue("gray.50", "whiteAlpha.100");
+	const border = useColorModeValue("gray.300", "whiteAlpha.400");
+	const selectedBg = useColorModeValue("#fffaf0", "rgba(233,183,92,.12)");
+	const iconBg = useColorModeValue("gray.100", "whiteAlpha.200");
 	const iconColor = useColorModeValue("#9b6522", "#f0c978");
+	const cardShadow = useColorModeValue("0 8px 22px rgba(21,42,44,.10)", "0 9px 24px rgba(0,0,0,.30)");
+	const selectedShadow = useColorModeValue("0 0 0 2px rgba(201,111,61,.14), 0 12px 26px rgba(21,42,44,.15)", "0 0 0 2px rgba(233,183,92,.16), 0 12px 28px rgba(0,0,0,.38)");
 	return (
 	<Button
 		type="button"
@@ -171,9 +188,9 @@ const ItemButton: FC<ItemButtonProps> = ({
 		border="1px solid"
 		borderColor={selected ? "mainorange" : border}
 		borderRadius="2xl"
-		boxShadow={selected ? "0 8px 24px rgba(21,42,44,.10)" : "0 4px 14px rgba(21,42,44,.04)"}
+		boxShadow={selected ? selectedShadow : cardShadow}
 		transition="all 180ms ease"
-		_hover={{ bg: selectedBg, borderColor: "mainorange", transform: "translateY(-2px)" }}
+		_hover={{ bg: selectedBg, borderColor: "mainorange", transform: "translateY(-2px)", boxShadow: selectedShadow }}
 		_focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "3px" }}
 	>
 		<Flex align="center" justify="space-between" gap="3">
