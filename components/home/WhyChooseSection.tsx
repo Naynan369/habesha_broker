@@ -15,22 +15,22 @@ export const WhyChooseSection = () => {
 	const divider = useColorModeValue("gray.300", "whiteAlpha.300");
 
 	return (
-		<Box as="section" bg={sectionBg} px={{ base: 5, md: 10, xl: 14 }} py={{ base: 14, md: 20 }}>
+		<Box as="section" bg={sectionBg} px={{ base: 5, md: 10, xl: 14 }} py={{ base: 12, md: 18 }}>
 			<Box maxW="1440px" mx="auto">
-				<Box h="1px" w="full" mb={{ base: 8, md: 11 }} bgGradient="linear(to-r, transparent, #bd6748, #e9b75c, transparent)" opacity=".8" />
+				<Flex align="center" gap="3" mb="4">
+					<Box w="9" h="1.5" borderRadius="full" bgGradient="linear(to-r, #bd6748, #e9b75c)" />
+					<Text color={kickerColor} textTransform="uppercase" letterSpacing=".16em" fontWeight="bold" fontSize="xs">{lang.home.benefits_kicker}</Text>
+				</Flex>
 				<Flex align={{ base: "flex-start", lg: "flex-end" }} justify="space-between" gap={{ base: 4, lg: 10 }} direction={{ base: "column", lg: "row" }}>
-					<Box maxW="720px">
-						<Text color={kickerColor} textTransform="uppercase" letterSpacing=".18em" fontWeight="bold" fontSize="xs">{lang.home.benefits_kicker}</Text>
-						<Heading color={headingColor} fontSize={{ base: "3xl", md: "5xl" }} mt="3" letterSpacing="-.04em" lineHeight="1.12">{lang.home.benefits_title}</Heading>
-					</Box>
-					<Text maxW="470px" color={bodyColor} fontSize={{ base: "md", md: "lg" }} lineHeight="1.8" borderLeft={{ base: "none", lg: "2px solid" }} borderColor={divider} pl={{ base: 0, lg: 6 }}>
+					<Heading maxW="720px" color={headingColor} fontSize={{ base: "3xl", md: "5xl" }} letterSpacing="-.045em" lineHeight="1.08">{lang.home.benefits_title}</Heading>
+					<Text maxW="470px" color={bodyColor} fontSize={{ base: "md", md: "lg" }} lineHeight="1.75" borderLeft={{ base: "none", lg: "2px solid" }} borderColor={divider} pl={{ base: 0, lg: 6 }}>
 						{lang.home.benefits_description}
 					</Text>
 				</Flex>
-				<SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 4, md: 5 }} mt={{ base: 8, md: 12 }}>
-					<WhyCard number="01" title={lang.home.benefit_local_title} icon={<MdLocationOn size={27} />} desc={lang.home.benefit_local_description} />
-					<WhyCard number="02" title={lang.home.benefit_clear_title} icon={<MdOutlineVerifiedUser size={27} />} desc={lang.home.benefit_clear_description} />
-					<WhyCard number="03" title={lang.home.benefit_direct_title} icon={<MdHandshake size={27} />} desc={lang.home.benefit_direct_description} />
+				<SimpleGrid templateColumns={{ base: "1fr", sm: "repeat(auto-fit, minmax(190px, 1fr))" }} spacing={{ base: 3, md: 5 }} mt={{ base: 7, md: 10 }}>
+					<WhyCard number="01" title={lang.home.benefit_local_title} icon={<MdLocationOn size={25} />} desc={lang.home.benefit_local_description} />
+					<WhyCard number="02" title={lang.home.benefit_clear_title} icon={<MdOutlineVerifiedUser size={25} />} desc={lang.home.benefit_clear_description} />
+					<WhyCard number="03" title={lang.home.benefit_direct_title} icon={<MdHandshake size={25} />} desc={lang.home.benefit_direct_description} />
 				</SimpleGrid>
 			</Box>
 		</Box>
@@ -39,37 +39,37 @@ export const WhyChooseSection = () => {
 
 interface IWhyCard { number: string; title: string; icon: ReactNode; desc: string; }
 const WhyCard: FC<IWhyCard> = ({ number, title, icon, desc }) => {
-	const surface = useColorModeValue("white", "#17262b");
 	const headingColor = useColorModeValue("#143A45", "#e7eff0");
 	const bodyColor = useColorModeValue("gray.600", "gray.300");
-	const iconSurface = useColorModeValue("#fbf0e9", "rgba(198,107,54,.18)");
-	const border = useColorModeValue("gray.200", "whiteAlpha.200");
-	const iconColor = useColorModeValue("mainred", "#e6a17c");
+	const iconSurface = useColorModeValue("#143A45", "rgba(233,183,92,.16)");
+	const border = useColorModeValue("gray.300", "whiteAlpha.200");
+	const iconColor = useColorModeValue("#f0c978", "#f0c978");
 	const numberColor = useColorModeValue("gray.500", "gray.400");
-	const shadow = useColorModeValue("0 12px 32px rgba(23,39,34,.075)", "0 16px 36px rgba(0,0,0,.25)");
-	const hoverShadow = useColorModeValue("0 20px 42px rgba(21,42,44,.15)", "0 20px 42px rgba(0,0,0,.38)");
+	const shadow = useColorModeValue("0 10px 26px rgba(23,39,34,.08)", "0 14px 30px rgba(0,0,0,.24)");
+	const hoverShadow = useColorModeValue("0 18px 34px rgba(21,42,44,.14)", "0 18px 36px rgba(0,0,0,.38)");
+	const cardGradient = useColorModeValue("linear(to-br, #ffffff, #fbf8f1)", "linear(to-br, #1b2a30, #152328)");
 	return (
 		<Box
 			as="article"
 			position="relative"
 			overflow="hidden"
-			minH={{ base: "230px", md: "290px" }}
-			bg={surface}
+			minH={{ base: "auto", sm: "226px" }}
+			bgGradient={cardGradient}
 			border="1px solid"
 			borderColor={border}
 			borderRadius="2xl"
-			p={{ base: 6, md: 7 }}
+			p={{ base: 5, md: 6 }}
 			boxShadow={shadow}
 			transition="transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease"
-			_hover={{ transform: "translateY(-4px)", borderColor: "mainorange", boxShadow: hoverShadow }}
+			_hover={{ transform: "translateY(-3px)", borderColor: "mainorange", boxShadow: hoverShadow }}
 		>
-			<Box position="absolute" top="0" left="7" right="7" h="1px" bgGradient="linear(to-r, #bd6748, #e9b75c)" />
+			<Box position="absolute" top="0" left="6" right="6" h="1.5" borderBottomRadius="full" bgGradient="linear(to-r, #bd6748, #e9b75c)" />
 			<Flex align="center" justify="space-between" gap="4">
-				<Flex w="14" h="14" flexShrink={0} align="center" justify="center" color={iconColor} bg={iconSurface} borderRadius="2xl">{icon}</Flex>
-				<Text px="3" py="1.5" border="1px solid" borderColor={border} borderRadius="full" color={numberColor} fontSize="xs" fontWeight="bold" letterSpacing=".16em">{number}</Text>
+				<Flex w="12" h="12" flexShrink={0} align="center" justify="center" color={iconColor} bg={iconSurface} borderRadius="xl">{icon}</Flex>
+				<Text color={numberColor} fontSize="sm" fontWeight="bold" letterSpacing=".16em">{number}</Text>
 			</Flex>
-			<Heading mt={{ base: 6, md: 8 }} mb="3" color={headingColor} fontSize="xl" letterSpacing="-.02em">{title}</Heading>
-			<Text color={bodyColor} lineHeight="1.8">{desc}</Text>
+			<Heading mt="5" mb="2" color={headingColor} fontSize="lg" letterSpacing="-.02em" lineHeight="1.25">{title}</Heading>
+			<Text color={bodyColor} fontSize="sm" lineHeight="1.7">{desc}</Text>
 		</Box>
 	);
 };
