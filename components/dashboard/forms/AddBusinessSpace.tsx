@@ -92,7 +92,7 @@ export const AddBusinessSpace = () => {
 				},
 			});
 			toast({ title: text.successTitle, status: "success", description: response.data.msg, isClosable: true });
-			await router.push("/dashboard");
+			await router.push(`/items/${response.data.itemId}`);
 		} catch (error: any) {
 			toast({ title: text.errorTitle, status: "error", description: error?.response?.data?.err || error?.message || text.submitError, isClosable: true });
 		} finally {

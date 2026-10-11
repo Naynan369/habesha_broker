@@ -81,7 +81,7 @@ export const AddService = () => {
 				},
 			});
 			toast({ title: common.successTitle, status: "success", description: response.data.msg, isClosable: true });
-			await router.push("/dashboard");
+			await router.push(`/items/${response.data.itemId}`);
 		} catch (error: any) {
 			toast({ title: common.errorTitle, status: "error", description: error?.response?.data?.err || error?.message || common.submitError, isClosable: true });
 		} finally {

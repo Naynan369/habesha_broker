@@ -160,7 +160,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 		const listingFee = Number(process.env.LISTING_FEE_ETB ?? process.env.CAR_LISTING_FEE_ETB);
 		const feeLabel = Number.isFinite(listingFee) && listingFee > 0 ? "ETB " + listingFee.toLocaleString("en-US") : "the listing fee";
 		const message = "Listing created. Pay " + feeLabel + " from the listing page. Admin review starts after payment is confirmed.";
-		return res.status(201).json({ msg: message });
+		return res.status(201).json({ msg: message, itemId: created.id });
 	} catch (err: any) {
 		for (const file of files) {
 			try { fs.unlinkSync(file.path); } catch (_cleanupError) {}

@@ -99,7 +99,7 @@ export const AddCar = ({ user }) => {
 					description: msg,
 					isClosable: true,
 				});
-				router.push("/dashboard");
+				router.push(`/items/${res.data.itemId}`);
 			})
 			.catch((error) => {
 				const err = error?.response?.data?.err || error?.message || "Unable to submit your listing";
