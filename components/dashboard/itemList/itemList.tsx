@@ -55,6 +55,7 @@ export const ItemList: FC<IItemsList> = ({ user, filters, keyword = "", orderBy 
 						serviceCategory={item.Service?.category}
 						featured={item.featured}
 						status={item.status}
+						paymentStatus={item.paymentStatus}
 					/>
 				))
 			) : (

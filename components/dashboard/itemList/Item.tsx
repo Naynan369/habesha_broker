@@ -13,6 +13,7 @@ export interface IItem {
 	date: string;
 	ownerPhoto?: string;
 	status?: string;
+	paymentStatus?: string;
 	itemType: string;
 	ownerName: string;
 	featured?: boolean;
@@ -20,14 +21,14 @@ export interface IItem {
 	serviceCategory?: string;
 }
 
-export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, priceFrequency, serviceCategory }) => {
+export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, paymentStatus, priceFrequency, serviceCategory }) => {
 	const surface = useColorModeValue("white", "#17262b");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const headingColor = useColorModeValue("#25383d", "#e8eff0");
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const divider = useColorModeValue("gray.100", "whiteAlpha.200");
-	const statusColor = status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange";
-	const statusLabel = status === "APPROVED" ? "Approved" : status === "DECLINED" ? "Declined" : status === "SOLD" ? "Sold" : "Pending review";
+	const statusColor = itemType === "CAR" && paymentStatus === "DUE" ? "orange" : itemType === "CAR" && paymentStatus === "PROCESSING" ? "blue" : status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange";
+	const statusLabel = itemType === "CAR" && paymentStatus === "DUE" ? "Payment due" : itemType === "CAR" && paymentStatus === "PROCESSING" ? "Payment processing" : status === "APPROVED" ? "Approved" : status === "DECLINED" ? "Declined" : status === "SOLD" ? "Sold" : "Pending review";
 	const itemTypeLabel = itemType === "SERVICE"
 		? (serviceCategory || "Service").replace(/_/g, " ")
 		: itemType === "BUSINESS_SPACE" ? "Business space" : itemType === "CAR" ? "Vehicle" : "Home";

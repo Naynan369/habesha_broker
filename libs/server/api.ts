@@ -123,6 +123,15 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 			? body.status
 			: "PENDING";
 		if (typeof body.id === "string" && body.id) where.id = body.id;
+		if (body.paymentFilter === "AWAITING") {
+			where.itemType = "CAR";
+			where.paymentStatus = { in: ["DUE", "PROCESSING"] };
+		} else if (where.status === "PENDING") {
+			where.OR = [
+				{ itemType: { not: "CAR" } },
+				{ itemType: "CAR", paymentStatus: { in: ["PAID", "NOT_REQUIRED"] } },
+			];
+		}
 		return where;
 	}
 
@@ -193,7 +202,14 @@ async function listItems(req: SessionRequest, res: NextApiResponse) {
 		: { createdAt: "desc" };
 	const items = await prisma.item.findMany({
 		where: safeItemWhere(body, user as IUser | null, isAdmin),
-		include: itemInclude,
+		include: isAdmin ? {
+			...itemInclude,
+			ListingPayments: {
+				take: 1,
+				orderBy: { createdAt: "desc" },
+				select: { id: true, txRef: true, amount: true, currency: true, status: true, paymentMethod: true, providerRef: true, createdAt: true, verifiedAt: true },
+			},
+		} : itemInclude,
 		orderBy: sort,
 		skip: page * 30,
 		take: 30,
@@ -567,7 +583,15 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 		const [users, approvedItems, waitingItems, houses, cars, businessSpaces, services] = await Promise.all([
 			prisma.user.count(),
 			prisma.item.count({ where: { status: "APPROVED" } }),
-			prisma.item.count({ where: { status: "PENDING" } }),
+			prisma.item.count({
+				where: {
+					status: "PENDING",
+					OR: [
+						{ itemType: { not: "CAR" } },
+						{ itemType: "CAR", paymentStatus: { in: ["PAID", "NOT_REQUIRED"] } },
+					],
+				},
+			}),
 			prisma.item.count({ where: { itemType: "HOUSE" } }),
 			prisma.item.count({ where: { itemType: "CAR" } }),
 			prisma.item.count({ where: { itemType: "BUSINESS_SPACE" } }),
@@ -581,12 +605,24 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 		const status = req.body?.status;
 		if (!isValidRecordId(itemId)) return error(res, 400, "Listing ID is invalid");
 		if (!itemId || !["APPROVED", "DECLINED"].includes(status)) return error(res, 400, "Listing ID or status is invalid");
-		const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true, userId: true, status: true } });
+		const item = await prisma.item.findUnique({
+			where: { id: itemId },
+			select: { id: true, userId: true, status: true, itemType: true, paymentStatus: true },
+		});
 		if (!item) return error(res, 404, "Listing not found");
 		if (item.status !== "PENDING") return error(res, 409, "Only pending listings can be moderated");
+		if (status === "APPROVED" && item.itemType === "CAR" && !["PAID", "NOT_REQUIRED"].includes(item.paymentStatus)) {
+			return error(res, 409, "Chapa must confirm the car listing payment before it can be published");
+		}
 		const changed = await prisma.$transaction(async (tx) => {
 			const result = await tx.item.updateMany({
-				where: { id: itemId, status: "PENDING" },
+				where: {
+					id: itemId,
+					status: "PENDING",
+					...(status === "APPROVED" && item.itemType === "CAR"
+						? { paymentStatus: { in: ["PAID", "NOT_REQUIRED"] } }
+						: {}),
+				},
 				data: { status, approvedId: status === "APPROVED" ? admin.id : null },
 			});
 			if (!result.count) return false;

@@ -133,7 +133,7 @@ export default function AdminDashboard({ user }) {
 							<Box>
 								<Heading size="md">Listing review</Heading>
 								<Text mt="2" color={muted} fontSize="sm" maxW="3xl" lineHeight="1.6">
-									New listings start in the pending queue and stay out of public search. Review the details and photos, then approve to publish or decline. If an owner edits a listing, it returns to this queue.
+									Car listings must have a confirmed listing-fee payment before they enter review. Verify the listing details and photos, then approve to publish or decline. Other listing types continue directly to review.
 								</Text>
 							</Box>
 							<Flex flex="1" />
@@ -154,7 +154,7 @@ export default function AdminDashboard({ user }) {
 							</FormControl>
 						</Flex>
 						<ButtonGroup spacing="2" my="5" flexWrap="wrap">
-							{[["PENDING", "Pending review"], ["APPROVED", "Approved"], ["DECLINED", "Declined"]].map(([value, label]) => (
+							{[["PAYMENT", "Awaiting payment"], ["PENDING", "Pending review"], ["APPROVED", "Approved"], ["DECLINED", "Declined"]].map(([value, label]) => (
 								<Button key={value} size="sm" borderRadius="full" colorScheme={statusFilter === value ? "orange" : "gray"} variant={statusFilter === value ? "solid" : "outline"} onClick={() => setStatusFilter(value)}>
 									{label}
 								</Button>
@@ -185,7 +185,8 @@ interface IItemList {
 const ItemsList: FC<IItemList> = ({ searchQuery, statusFilter, refreshKey, onModerated }) => {
 	const [data, loading, error] = useFetch({
 		fetchFunction: () => axios.post("/api/items?page=0", {
-			status: statusFilter,
+			status: statusFilter === "PAYMENT" ? "PENDING" : statusFilter,
+			...(statusFilter === "PAYMENT" ? { paymentFilter: "AWAITING" } : {}),
 			...(searchQuery ? { id: searchQuery } : {}),
 		}),
 		dependencies: [searchQuery, statusFilter, refreshKey],
@@ -213,7 +214,8 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const [working, setWorking] = useState(false);
 	const toast = useToast();
-	const { id, title, featured, createdAt, itemType, status } = item;
+	const { id, title, featured, createdAt, itemType, status, paymentStatus } = item;
+	const latestPayment = item.ListingPayments?.[0];
 	const car = item.Car;
 	const subtitle = itemType === "CAR" && car
 		? [car.manufacturer, car.model, car.year].filter(Boolean).join(" · ")
@@ -221,6 +223,10 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 
 	const handleItem = async (newStatus: "APPROVED" | "DECLINED") => {
 		if (working || status !== "PENDING") return;
+		if (newStatus === "APPROVED" && itemType === "CAR" && !["PAID", "NOT_REQUIRED"].includes(paymentStatus)) {
+			toast({ title: "Payment must be confirmed first", description: "The car enters the review queue after Chapa verifies payment.", status: "warning" });
+			return;
+		}
 		setWorking(true);
 		try {
 			await axios.post("/api/admin/changeItemStatus", { itemId: id, status: newStatus });
@@ -254,12 +260,20 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 					</Flex>
 					<Text mt="1" fontSize="sm" color={muted}>{subtitle}</Text>
 					<Text mt="1" fontSize="xs" color={muted}>Posted {dayjs(createdAt).fromNow()} · ID {id}</Text>
+					{itemType === "CAR" && (
+						<Flex mt="2" direction="column" align="flex-start" gap="1">
+							<Badge colorScheme={paymentStatus === "PAID" ? "green" : paymentStatus === "PROCESSING" ? "blue" : paymentStatus === "DUE" ? "orange" : "gray"}>
+								{paymentStatus === "PAID" ? "Payment verified" : paymentStatus === "PROCESSING" ? "Payment in progress" : paymentStatus === "DUE" ? "Payment due" : "Existing listing"}
+							</Badge>
+							{latestPayment && <Text fontSize="xs" color={muted} noOfLines={1}>{latestPayment.status} · ETB {Number(latestPayment.amount).toLocaleString("en-US")} · {latestPayment.paymentMethod || "Chapa"} · Ref {latestPayment.txRef}</Text>}
+						</Flex>
+					)}
 				</Box>
 			</Flex>
 			<Flex align="center" gap="3" wrap="wrap" w={{ base: "full", lg: "auto" }} justify={{ base: "flex-end", lg: "flex-start" }}>
 				<Badge colorScheme={status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange"} borderRadius="full" px="3" py="1">{status}</Badge>
 				<Link href={`/items/${id}`} passHref><Button as="a" size="sm" variant="outline">Review details</Button></Link>
-				{status === "PENDING" && (
+				{status === "PENDING" && (itemType !== "CAR" || ["PAID", "NOT_REQUIRED"].includes(paymentStatus)) && (
 					<ButtonGroup size="sm">
 						<Button colorScheme="green" onClick={() => handleItem("APPROVED")} isLoading={working} leftIcon={<CheckIcon />}>Approve</Button>
 						<Button colorScheme="red" variant="outline" onClick={() => handleItem("DECLINED")} isLoading={working} leftIcon={<CloseIcon />}>Decline</Button>

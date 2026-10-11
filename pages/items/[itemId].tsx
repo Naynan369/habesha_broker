@@ -132,7 +132,53 @@ const SaveButton = ({ user }) => {
 	);
 };
 
-const ItemDetail = ({ itemId, user, item }) => {
+const CarListingPayment = ({ item, fee, enabled, labels }) => {
+	const toast = useToast();
+	const router = useRouter();
+	const [loading, setLoading] = useState(false);
+	const border = useColorModeValue("orange.200", "orange.900");
+	const surface = useColorModeValue("orange.50", "whiteAlpha.100");
+
+	const startPayment = async () => {
+		if (loading || !enabled) return;
+		setLoading(true);
+		try {
+			const response = await axios.post("/api/items/payment/initialize", {
+				itemId: item.id,
+				locale: router.locale === "am" ? "am" : "en",
+			});
+			if (typeof response.data?.checkoutUrl !== "string") throw new Error("Secure checkout link was not returned");
+			window.location.assign(response.data.checkoutUrl);
+		} catch (error: any) {
+			toast({
+				title: "Could not start payment",
+				description: error?.response?.data?.err || error?.message || "Please try again.",
+				status: "error",
+				isClosable: true,
+			});
+			setLoading(false);
+		}
+	};
+
+	return (
+		<Flex direction="column" gap="3" p={{ base: 4, md: 5 }} mb="5" border="1px solid" borderColor={border} borderRadius="2xl" bg={surface}>
+			<Box>
+				<Heading size="sm">{labels.title}</Heading>
+				<Text mt="2" fontSize="sm" color="gray.600">{labels.description}</Text>
+			</Box>
+			<Flex align="center" justify="space-between" gap="4" wrap="wrap">
+				<Text fontSize="sm" fontWeight="semibold">{labels.oneTime}</Text>
+				<Heading size="md" color="mainorange">{fee ? fee.toLocaleString("en-US") + " ETB" : "—"}</Heading>
+			</Flex>
+			<Button colorScheme="orange" onClick={startPayment} isLoading={loading} isDisabled={!enabled || !fee}>
+				{item.paymentStatus === "PROCESSING" ? labels.continueCheckout : labels.payButton}
+			</Button>
+			<Text fontSize="xs" color="gray.600">{enabled ? labels.methods : labels.notConfigured}</Text>
+		</Flex>
+	);
+};
+
+const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 	const router = useRouter();
 	const lang = useLang();
 	const businessText = lang.businessListing;
@@ -277,9 +323,18 @@ const ItemDetail = ({ itemId, user, item }) => {
 									<AlertDescription>
 										{data.status === "DECLINED"
 											? "This listing was declined. Edit it and save to send it back for review."
-											: "This listing is waiting for admin review. It is not public or save-able until an admin approves it."}
+											: data.itemType === "CAR" && data.paymentStatus === "DUE"
+												? lang.payments.paymentDue
+												: data.itemType === "CAR" && data.paymentStatus === "PROCESSING"
+													? lang.payments.processing
+													: data.itemType === "CAR" && data.paymentStatus === "PAID"
+														? lang.payments.paid
+														: "This listing is waiting for admin review. It is not public or save-able until an admin approves it."}
 									</AlertDescription>
 								</Alert>
+							)}
+							{data.itemType === "CAR" && user?.id === data.userId && !["PAID", "NOT_REQUIRED"].includes(data.paymentStatus) && data.status !== "APPROVED" && data.status !== "SOLD" && (
+								<CarListingPayment item={data} fee={paymentFee} enabled={paymentEnabled} labels={lang.payments} />
 							)}
 							<Text
 								fontWeight={"bold"}
@@ -553,8 +608,12 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	item["createdAt"] = item.createdAt.toString() as any;
 	if (!user) user = null;
 
+	const paymentFee = Number(process.env.CAR_LISTING_FEE_ETB);
+	const validPaymentFee = Number.isFinite(paymentFee) && paymentFee > 0 ? paymentFee : 0;
+	const paymentEnabled = Boolean(process.env.CHAPA_SECRET_KEY?.trim() && validPaymentFee);
+
 	return {
-		props: { itemId, item, user },
+		props: { itemId, item, user, paymentFee: validPaymentFee, paymentEnabled },
 	};
 });
 export default ItemDetail;

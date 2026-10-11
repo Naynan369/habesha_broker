@@ -54,29 +54,48 @@ model PasswordReset {
 }
 
 model Item {
-  id            String         @id @default(cuid())
-  title         String
-  featured      Boolean        @default(false)
-  description   String?
-  price         Float
-  priceType     PriceType
-  images        String[]       @default([])
-  createdAt     DateTime       @default(now())
-  itemType      ItemType
-  status        ItemStatus     @default(PENDING)
-  userId        String
-  user          User           @relation("Addes", fields: [userId], references: [id], onDelete: Cascade)
-  approvedId    String?
-  approvedUser  User?          @relation("Approves", fields: [approvedId], references: [id])
-  House         House?
-  Car           Car?
-  BusinessSpace BusinessSpace?
-  Service       Service?
-  SavedItems    SavedItems[]
-  RecentActions RecentActions[]
+  id              String               @id @default(cuid())
+  title           String
+  featured        Boolean              @default(false)
+  description     String?
+  price           Float
+  priceType       PriceType
+  images          String[]             @default([])
+  createdAt       DateTime             @default(now())
+  itemType        ItemType
+  status          ItemStatus           @default(PENDING)
+  paymentStatus   ListingPaymentStatus @default(NOT_REQUIRED)
+  userId          String
+  user            User                 @relation("Addes", fields: [userId], references: [id], onDelete: Cascade)
+  approvedId      String?
+  approvedUser    User?                @relation("Approves", fields: [approvedId], references: [id])
+  House           House?
+  Car             Car?
+  BusinessSpace   BusinessSpace?
+  Service         Service?
+  SavedItems      SavedItems[]
+  RecentActions   RecentActions[]
+  ListingPayments ListingPayment[]
 
   @@index([status, createdAt])
   @@index([itemType, status])
+}
+
+model ListingPayment {
+  id            String              @id @default(cuid())
+  itemId        String
+  item          Item                @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  txRef         String              @unique
+  amount        Float
+  currency      String              @default("ETB")
+  status        ListingPaymentState @default(INITIATED)
+  checkoutUrl   String?
+  providerRef   String?
+  paymentMethod String?
+  createdAt     DateTime            @default(now())
+  verifiedAt    DateTime?
+
+  @@index([itemId, createdAt])
 }
 
 model House {
@@ -107,9 +126,9 @@ model Car {
 }
 
 model BusinessSpace {
-  id             String               @id @default(cuid())
-  itemId         String               @unique
-  item           Item                 @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  id             String              @id @default(cuid())
+  itemId         String              @unique
+  item           Item                @relation(fields: [itemId], references: [id], onDelete: Cascade)
   spaceType      CommercialSpaceType
   type           HouseType
   priceFrequency PriceFrequency?
@@ -120,10 +139,10 @@ model BusinessSpace {
   woreda         String?
   neighborhood   String?
   landmark       String?
-  electricity    Boolean              @default(false)
-  water          Boolean              @default(false)
-  roadAccess     Boolean              @default(false)
-  parking        Boolean              @default(false)
+  electricity    Boolean             @default(false)
+  water          Boolean             @default(false)
+  roadAccess     Boolean             @default(false)
+  parking        Boolean             @default(false)
 }
 
 model Service {
@@ -187,6 +206,19 @@ enum ItemStatus {
   APPROVED
   DECLINED
   SOLD
+}
+
+enum ListingPaymentStatus {
+  NOT_REQUIRED
+  DUE
+  PROCESSING
+  PAID
+}
+
+enum ListingPaymentState {
+  INITIATED
+  PAID
+  FAILED
 }
 
 enum ContactType {
