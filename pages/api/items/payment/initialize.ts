@@ -82,7 +82,7 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
         return_url: paymentReturnUrl,
         customization: {
           title: "Habesha Brokers",
-          description: "Car listing publication fee",
+          description: "Fixed car listing fee",
         },
         meta: {
           payment_reason: "Car listing publication: " + item.title,

@@ -1,9 +1,9 @@
 export const en = {
 	title: "Habesha Brokers",
 	payments: {
-		title: "Car listing publication fee",
+		title: "Fixed car listing fee",
 		description: "Pay once to submit this car for admin review. It will remain private until payment is confirmed and an admin approves it.",
-		oneTime: "One-time listing fee",
+		oneTime: "FIXED LISTING FEE",
 		payButton: "Pay with Chapa",
 		continueCheckout: "Continue secure checkout",
 		methods: "Chapa checkout can offer Telebirr and card payments when enabled for the merchant account.",
