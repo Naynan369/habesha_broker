@@ -111,7 +111,7 @@ export async function verifyChapaListingPayment(txRef: string) {
       },
     });
     await tx.item.updateMany({
-      where: { id: payment.itemId, itemType: "CAR" },
+      where: { id: payment.itemId },
       data: { paymentStatus: "PAID" },
     });
   });

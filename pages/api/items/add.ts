@@ -77,7 +77,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 			price,
 			priceType,
 			itemType,
-			paymentStatus: itemType === "CAR" ? "DUE" : "NOT_REQUIRED",
+			paymentStatus: "DUE",
 			images: files.map((file) => file.filename),
 			user: { connect: { id: user.id } },
 		} as any;
@@ -157,10 +157,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 				data: { userId: created.userId, itemId: created.id, actionType: "ADDED" },
 			});
 		} catch (_activityError) {}
-		const listingFee = Number(process.env.CAR_LISTING_FEE_ETB);
-		const message = itemType === "CAR"
-			? "Car listing created. Pay the ETB " + (Number.isFinite(listingFee) && listingFee > 0 ? listingFee.toLocaleString("en-US") : "listing") + " fee from the listing page. Admin review starts after payment is confirmed."
-			: "Listing submitted for admin review";
+		const listingFee = Number(process.env.LISTING_FEE_ETB ?? process.env.CAR_LISTING_FEE_ETB);
+		const feeLabel = Number.isFinite(listingFee) && listingFee > 0 ? "ETB " + listingFee.toLocaleString("en-US") : "the listing fee";
+		const message = "Listing created. Pay " + feeLabel + " from the listing page. Admin review starts after payment is confirmed.";
 		return res.status(201).json({ msg: message });
 	} catch (err: any) {
 		for (const file of files) {

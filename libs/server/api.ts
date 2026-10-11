@@ -124,13 +124,9 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 			: "PENDING";
 		if (typeof body.id === "string" && body.id) where.id = body.id;
 		if (body.paymentFilter === "AWAITING") {
-			where.itemType = "CAR";
 			where.paymentStatus = { in: ["DUE", "PROCESSING"] };
 		} else if (where.status === "PENDING") {
-			where.OR = [
-				{ itemType: { not: "CAR" } },
-				{ itemType: "CAR", paymentStatus: { in: ["PAID", "NOT_REQUIRED"] } },
-			];
+			where.paymentStatus = "PAID";
 		}
 		return where;
 	}
@@ -586,10 +582,7 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 			prisma.item.count({
 				where: {
 					status: "PENDING",
-					OR: [
-						{ itemType: { not: "CAR" } },
-						{ itemType: "CAR", paymentStatus: { in: ["PAID", "NOT_REQUIRED"] } },
-					],
+					paymentStatus: "PAID",
 				},
 			}),
 			prisma.item.count({ where: { itemType: "HOUSE" } }),
@@ -611,17 +604,15 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 		});
 		if (!item) return error(res, 404, "Listing not found");
 		if (item.status !== "PENDING") return error(res, 409, "Only pending listings can be moderated");
-		if (status === "APPROVED" && item.itemType === "CAR" && !["PAID", "NOT_REQUIRED"].includes(item.paymentStatus)) {
-			return error(res, 409, "Chapa must confirm the car listing payment before it can be published");
+		if (status === "APPROVED" && item.paymentStatus !== "PAID") {
+			return error(res, 409, "The listing fee must be confirmed before this listing can be published");
 		}
 		const changed = await prisma.$transaction(async (tx) => {
 			const result = await tx.item.updateMany({
 				where: {
 					id: itemId,
 					status: "PENDING",
-					...(status === "APPROVED" && item.itemType === "CAR"
-						? { paymentStatus: { in: ["PAID", "NOT_REQUIRED"] } }
-						: {}),
+					...(status === "APPROVED" ? { paymentStatus: "PAID" } : {}),
 				},
 				data: { status, approvedId: status === "APPROVED" ? admin.id : null },
 			});

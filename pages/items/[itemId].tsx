@@ -132,16 +132,16 @@ const SaveButton = ({ user }) => {
 	);
 };
 
-const CarListingPayment = ({ item, fee, enabled, labels }) => {
+const ListingPaymentPanel = ({ item, fee, enabled, testMode, labels }) => {
 	const toast = useToast();
 	const router = useRouter();
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState<"chapa" | "simulate" | false>(false);
 	const border = useColorModeValue("orange.200", "orange.900");
 	const surface = useColorModeValue("orange.50", "whiteAlpha.100");
 
 	const startPayment = async () => {
 		if (loading || !enabled) return;
-		setLoading(true);
+		setLoading("chapa");
 		try {
 			const response = await axios.post("/api/items/payment/initialize", {
 				itemId: item.id,
@@ -150,12 +150,20 @@ const CarListingPayment = ({ item, fee, enabled, labels }) => {
 			if (typeof response.data?.checkoutUrl !== "string") throw new Error("Secure checkout link was not returned");
 			window.location.assign(response.data.checkoutUrl);
 		} catch (error: any) {
-			toast({
-				title: "Could not start payment",
-				description: error?.response?.data?.err || error?.message || "Please try again.",
-				status: "error",
-				isClosable: true,
-			});
+			toast({ title: "Could not start payment", description: error?.response?.data?.err || error?.message || "Please try again.", status: "error", isClosable: true });
+			setLoading(false);
+		}
+	};
+
+	const simulatePayment = async () => {
+		if (loading || !testMode) return;
+		setLoading("simulate");
+		try {
+			await axios.post("/api/items/payment/simulate", { itemId: item.id });
+			toast({ title: labels.testPaidTitle, description: labels.testPaidDescription, status: "success", isClosable: true });
+			router.reload();
+		} catch (error: any) {
+			toast({ title: labels.testPaymentFailed, description: error?.response?.data?.err || error?.message || "Please try again.", status: "error", isClosable: true });
 			setLoading(false);
 		}
 	};
@@ -170,15 +178,20 @@ const CarListingPayment = ({ item, fee, enabled, labels }) => {
 				<Text fontSize="sm" fontWeight="semibold">{labels.oneTime}</Text>
 				<Heading size="md" color="mainorange">{fee ? fee.toLocaleString("en-US") + " ETB" : "—"}</Heading>
 			</Flex>
-			<Button colorScheme="orange" onClick={startPayment} isLoading={loading} isDisabled={!enabled || !fee}>
+			{enabled && <Button colorScheme="orange" onClick={startPayment} isLoading={loading === "chapa"} isDisabled={Boolean(loading) || !fee}>
 				{item.paymentStatus === "PROCESSING" ? labels.continueCheckout : labels.payButton}
-			</Button>
-			<Text fontSize="xs" color="gray.600">{enabled ? labels.methods : labels.notConfigured}</Text>
+			</Button>}
+			{testMode && <Button variant="outline" colorScheme="blue" onClick={simulatePayment} isLoading={loading === "simulate"} isDisabled={Boolean(loading) || !fee}>
+				{labels.simulatePayment}
+			</Button>}
+			{enabled && <Text fontSize="xs" color="gray.600">{labels.methods}</Text>}
+			{!enabled && !testMode && <Text fontSize="xs" color="gray.600">{labels.notConfigured}</Text>}
+			{testMode && <Text fontSize="xs" color="blue.600">{labels.testModeNotice}</Text>}
 		</Flex>
 	);
 };
 
-const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
+const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, testPaymentEnabled }) => {
 	const router = useRouter();
 	const lang = useLang();
 	const businessText = lang.businessListing;
@@ -323,18 +336,18 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 									<AlertDescription>
 										{data.status === "DECLINED"
 											? "This listing was declined. Edit it and save to send it back for review."
-											: data.itemType === "CAR" && data.paymentStatus === "DUE"
+											: data.paymentStatus === "DUE"
 												? lang.payments.paymentDue
-												: data.itemType === "CAR" && data.paymentStatus === "PROCESSING"
+												: data.paymentStatus === "PROCESSING"
 													? lang.payments.processing
-													: data.itemType === "CAR" && data.paymentStatus === "PAID"
+													: data.paymentStatus === "PAID"
 														? lang.payments.paid
 														: "This listing is waiting for admin review. It is not public or save-able until an admin approves it."}
 									</AlertDescription>
 								</Alert>
 							)}
-							{data.itemType === "CAR" && user?.id === data.userId && !["PAID", "NOT_REQUIRED"].includes(data.paymentStatus) && data.status !== "APPROVED" && data.status !== "SOLD" && (
-								<CarListingPayment item={data} fee={paymentFee} enabled={paymentEnabled} labels={lang.payments} />
+							{user?.id === data.userId && data.paymentStatus !== "PAID" && data.paymentStatus !== "NOT_REQUIRED" && data.status !== "APPROVED" && data.status !== "SOLD" && (
+								<ListingPaymentPanel item={data} fee={paymentFee} enabled={paymentEnabled} testMode={testPaymentEnabled} labels={lang.payments} />
 							)}
 							<Text
 								fontWeight={"bold"}
@@ -608,12 +621,13 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	item["createdAt"] = item.createdAt.toString() as any;
 	if (!user) user = null;
 
-	const paymentFee = Number(process.env.CAR_LISTING_FEE_ETB);
+	const paymentFee = Number(process.env.LISTING_FEE_ETB ?? process.env.CAR_LISTING_FEE_ETB);
 	const validPaymentFee = Number.isFinite(paymentFee) && paymentFee > 0 ? paymentFee : 0;
 	const paymentEnabled = Boolean(process.env.CHAPA_SECRET_KEY?.trim() && validPaymentFee);
+	const testPaymentEnabled = process.env.NODE_ENV === "development" && process.env.ENABLE_TEST_LISTING_PAYMENTS === "true";
 
 	return {
-		props: { itemId, item, user, paymentFee: validPaymentFee, paymentEnabled },
+		props: { itemId, item, user, paymentFee: validPaymentFee, paymentEnabled, testPaymentEnabled },
 	};
 });
 export default ItemDetail;

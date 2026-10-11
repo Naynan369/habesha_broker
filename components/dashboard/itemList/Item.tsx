@@ -27,8 +27,8 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 	const headingColor = useColorModeValue("#25383d", "#e8eff0");
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const divider = useColorModeValue("gray.100", "whiteAlpha.200");
-	const statusColor = itemType === "CAR" && paymentStatus === "DUE" ? "orange" : itemType === "CAR" && paymentStatus === "PROCESSING" ? "blue" : status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange";
-	const statusLabel = itemType === "CAR" && paymentStatus === "DUE" ? "Payment due" : itemType === "CAR" && paymentStatus === "PROCESSING" ? "Payment processing" : status === "APPROVED" ? "Approved" : status === "DECLINED" ? "Declined" : status === "SOLD" ? "Sold" : "Pending review";
+	const statusColor = paymentStatus === "DUE" ? "orange" : paymentStatus === "PROCESSING" ? "blue" : status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange";
+	const statusLabel = paymentStatus === "DUE" ? "Payment due" : paymentStatus === "PROCESSING" ? "Payment processing" : paymentStatus === "PAID" && status === "PENDING" ? "Paid · Pending review" : status === "APPROVED" ? "Approved" : status === "DECLINED" ? "Declined" : status === "SOLD" ? "Sold" : "Pending review";
 	const itemTypeLabel = itemType === "SERVICE"
 		? (serviceCategory || "Service").replace(/_/g, " ")
 		: itemType === "BUSINESS_SPACE" ? "Business space" : itemType === "CAR" ? "Vehicle" : "Home";

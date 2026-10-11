@@ -24,10 +24,10 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
   if (!user.verfied) return res.status(403).json({ err: "Verify your email address before paying for a listing" });
 
   const item = await prisma.item.findFirst({
-    where: { id: itemId, userId: user.id, itemType: "CAR" },
-    select: { id: true, title: true, status: true, paymentStatus: true },
+    where: { id: itemId, userId: user.id },
+    select: { id: true, title: true, status: true, paymentStatus: true, itemType: true },
   });
-  if (!item) return res.status(404).json({ err: "Car listing not found" });
+  if (!item) return res.status(404).json({ err: "Listing not found" });
   if (item.status === "APPROVED" || item.status === "SOLD") {
     return res.status(409).json({ err: "This listing is already published or closed" });
   }
@@ -36,7 +36,7 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
   }
 
   const secret = process.env.CHAPA_SECRET_KEY?.trim();
-  const fee = Number(process.env.CAR_LISTING_FEE_ETB);
+  const fee = Number(process.env.LISTING_FEE_ETB ?? process.env.CAR_LISTING_FEE_ETB);
   const requestHost = typeof req.headers.host === "string" ? req.headers.host : "";
   const localDevOrigin = process.env.NODE_ENV === "development" && /^localhost(?::[0-9]{1,5})?$/.test(requestHost)
     ? "http://" + requestHost
@@ -82,11 +82,11 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
         return_url: paymentReturnUrl,
         customization: {
           title: "Habesha Brokers",
-          description: "Fixed car listing fee",
+          description: "Fixed listing publication fee",
         },
         meta: {
-          payment_reason: "Car listing publication: " + item.title,
-          invoices: [{ key: "Car listing publication", value: "1 car listing" }],
+          payment_reason: "Listing publication: " + item.title,
+          invoices: [{ key: "Listing publication", value: "1 listing" }],
         },
       },
       {

@@ -133,7 +133,7 @@ export default function AdminDashboard({ user }) {
 							<Box>
 								<Heading size="md">Listing review</Heading>
 								<Text mt="2" color={muted} fontSize="sm" maxW="3xl" lineHeight="1.6">
-									Car listings must have a confirmed listing-fee payment before they enter review. Verify the listing details and photos, then approve to publish or decline. Other listing types continue directly to review.
+									Every listing type requires the fixed listing fee before it enters review. Once payment is confirmed, verify the details and photos, then approve to publish or decline.
 								</Text>
 							</Box>
 							<Flex flex="1" />
@@ -223,8 +223,8 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 
 	const handleItem = async (newStatus: "APPROVED" | "DECLINED") => {
 		if (working || status !== "PENDING") return;
-		if (newStatus === "APPROVED" && itemType === "CAR" && !["PAID", "NOT_REQUIRED"].includes(paymentStatus)) {
-			toast({ title: "Payment must be confirmed first", description: "The car enters the review queue after Chapa verifies payment.", status: "warning" });
+		if (newStatus === "APPROVED" && paymentStatus !== "PAID") {
+			toast({ title: "Payment must be confirmed first", description: "A listing enters review after its payment is confirmed.", status: "warning" });
 			return;
 		}
 		setWorking(true);
@@ -260,20 +260,18 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 					</Flex>
 					<Text mt="1" fontSize="sm" color={muted}>{subtitle}</Text>
 					<Text mt="1" fontSize="xs" color={muted}>Posted {dayjs(createdAt).fromNow()} · ID {id}</Text>
-					{itemType === "CAR" && (
-						<Flex mt="2" direction="column" align="flex-start" gap="1">
-							<Badge colorScheme={paymentStatus === "PAID" ? "green" : paymentStatus === "PROCESSING" ? "blue" : paymentStatus === "DUE" ? "orange" : "gray"}>
-								{paymentStatus === "PAID" ? "Payment verified" : paymentStatus === "PROCESSING" ? "Payment in progress" : paymentStatus === "DUE" ? "Payment due" : "Existing listing"}
-							</Badge>
-							{latestPayment && <Text fontSize="xs" color={muted} noOfLines={1}>{latestPayment.status} · ETB {Number(latestPayment.amount).toLocaleString("en-US")} · {latestPayment.paymentMethod || "Chapa"} · Ref {latestPayment.txRef}</Text>}
-						</Flex>
-					)}
+					<Flex mt="2" direction="column" align="flex-start" gap="1">
+						<Badge colorScheme={paymentStatus === "PAID" ? "green" : paymentStatus === "PROCESSING" ? "blue" : paymentStatus === "DUE" ? "orange" : "gray"}>
+							{paymentStatus === "PAID" ? "Payment verified" : paymentStatus === "PROCESSING" ? "Payment in progress" : paymentStatus === "DUE" ? "Payment due" : "No fee required"}
+						</Badge>
+						{latestPayment && <Text fontSize="xs" color={muted} noOfLines={1}>{latestPayment.status} · ETB {Number(latestPayment.amount).toLocaleString("en-US")} · {latestPayment.paymentMethod || "Chapa"} · Ref {latestPayment.txRef}</Text>}
+					</Flex>
 				</Box>
 			</Flex>
 			<Flex align="center" gap="3" wrap="wrap" w={{ base: "full", lg: "auto" }} justify={{ base: "flex-end", lg: "flex-start" }}>
 				<Badge colorScheme={status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange"} borderRadius="full" px="3" py="1">{status}</Badge>
 				<Link href={`/items/${id}`} passHref><Button as="a" size="sm" variant="outline">Review details</Button></Link>
-				{status === "PENDING" && (itemType !== "CAR" || ["PAID", "NOT_REQUIRED"].includes(paymentStatus)) && (
+				{status === "PENDING" && paymentStatus === "PAID" && (
 					<ButtonGroup size="sm">
 						<Button colorScheme="green" onClick={() => handleItem("APPROVED")} isLoading={working} leftIcon={<CheckIcon />}>Approve</Button>
 						<Button colorScheme="red" variant="outline" onClick={() => handleItem("DECLINED")} isLoading={working} leftIcon={<CloseIcon />}>Decline</Button>
