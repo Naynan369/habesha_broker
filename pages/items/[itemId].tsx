@@ -16,9 +16,6 @@ import {
 	Skeleton,
 	SkeletonText,
 	Spinner,
-	Stat,
-	StatLabel,
-	StatNumber,
 	Text,
 	useToast,
 	Wrap,
@@ -199,12 +196,21 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, testPaymen
 	const surface = useColorModeValue("white", "#1b2a30");
 	const subtleBorder = useColorModeValue("gray.200", "whiteAlpha.200");
 	const mutedText = useColorModeValue("gray.600", "gray.300");
+	const headingText = useColorModeValue("maingray", "gray.100");
 	const canvas = useColorModeValue("#f5f5f1", "#10191d");
-	const [preview, setPreview] = useState(item?.images[0]);
+	const priceSurface = useColorModeValue("orange.50", "whiteAlpha.100");
+	const priceBorder = useColorModeValue("orange.100", "whiteAlpha.200");
+	const [preview, setPreview] = useState(item?.images?.[0]);
 	const data = item;
+	const images = Array.isArray(data?.images) ? data.images : [];
+	const activeImageNumber = Math.max(0, images.indexOf(preview)) + 1;
 	const detailRelation = data.itemType === "HOUSE" ? "House" : data.itemType === "CAR" ? "Car" : data.itemType === "BUSINESS_SPACE" ? "BusinessSpace" : "Service";
 	const relationData = data[detailRelation];
 	const listingDetails = Array.isArray(relationData) ? relationData[0] : relationData;
+	const priceTypeLabel = data.priceType === "NEGOTIABLE" ? "Negotiable" : "Fixed price";
+	const priceFrequency = data.itemType === "BUSINESS_SPACE" && listingDetails?.type === "RENT" && listingDetails?.priceFrequency
+		? businessText.frequencies[listingDetails.priceFrequency]
+		: null;
 
 	// check if saved
 	return (
@@ -225,11 +231,12 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, testPaymen
 			/>
 			<Flex direction="column" overflow="auto" minH="100vh" bg={canvas}>
 				<Flex
-					px={MyTheme.paddings.pagePadding}
-					height={MyTheme.size.navbarHeightCompact}
+					px={{ base: 4, md: 8, xl: 12 }}
+					minH={MyTheme.size.navbarHeightCompact}
 					background={"maingray"}
 					color="white"
 					alignItems={"center"}
+					boxShadow="0 8px 24px rgba(8,24,30,.12)"
 				>
 					<IconButton
 						colorScheme="whiteAlpha"
@@ -239,33 +246,46 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, testPaymen
 					>
 						<MdArrowBack size="20px" />
 					</IconButton>
-					<Heading fontSize="lg">Habesha Brokers</Heading>
+					<Heading fontSize={{ base: "md", md: "lg" }} letterSpacing="tight">Habesha Brokers</Heading>
 					<Box flex={1}></Box>
-					<ColorModeToggle />
-					{data && (
-						<HStack>
-							{user && data.userId === user.id && (
-								<Link href={"/items/edit/" + itemId} passHref>
-									<Button as="a" size="md" colorScheme="whiteAlpha" leftIcon={<EditIcon />}>Edit Item</Button>
-								</Link>
-							)}
-							{user && data.status === "APPROVED" && <SaveButton user={user} />}
-						</HStack>
-					)}
+					<HStack spacing={{ base: 3, md: 4 }} flexShrink={0}>
+						<ColorModeToggle />
+						{data && (
+							<HStack spacing={{ base: 2, md: 3 }} pl={{ base: 3, md: 4 }} borderLeft="1px solid" borderColor="whiteAlpha.300">
+								{user && data.userId === user.id && (
+									<Link href={"/items/edit/" + itemId} passHref>
+										<Button as="a" size="md" colorScheme="whiteAlpha" leftIcon={<EditIcon />}>Edit Item</Button>
+									</Link>
+								)}
+								{user && data.status === "APPROVED" && <SaveButton user={user} />}
+							</HStack>
+						)}
+					</HStack>
 				</Flex>
 				{data && (
 					<SimpleGrid
-						columns={[1, null, 2]}
-						px={MyTheme.paddings.pagePadding}
-						py="10"
-						spacing={"16"}
+						w="full"
+						maxW="1500px"
+						mx="auto"
+							templateColumns={{ base: "minmax(0, 1fr)", lg: "minmax(0, 1.08fr) minmax(390px, .92fr)" }}
+						px={{ base: 4, md: 8, xl: 12 }}
+						py={{ base: 6, md: 10 }}
+						spacing={{ base: 6, xl: 8 }}
+						alignItems="start"
 					>
-						<Flex flex={1} direction="column">
-							<ListingImage alt={item.title} src={preview} itemType={item.itemType} w="full" h={{ base: "300px", md: "520px" }} borderRadius="2xl" mb="8" />
-							<SimpleGrid columns={[2, 3]} spacing="5">
-								{data?.images.map((img) => {
-									return (
-										<Box as="button" type="button" aria-label={"View photo for " + data.title} key={img} onClick={() => setPreview(img)} position="relative" borderRadius="lg" overflow="hidden" _focusVisible={{ outline: "3px solid", outlineColor: "orange.300" }}>
+							<Flex minW="0" direction="column" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" overflow="hidden" boxShadow="0 12px 32px rgba(21,42,44,.08)">
+								<Box position="relative" w="full" h={{ base: "300px", md: "440px", xl: "520px" }} bg="gray.100">
+									<ListingImage alt={item.title} src={preview} itemType={item.itemType} w="full" h="full" />
+									{images.length > 0 && (
+										<Badge position="absolute" right="4" bottom="4" zIndex="1" color="white" bg="blackAlpha.700" borderRadius="full" px="3" py="1">
+											{activeImageNumber} / {images.length} photos
+										</Badge>
+									)}
+								</Box>
+							{images.length > 1 && (
+								<SimpleGrid columns={{ base: 3, sm: 4 }} spacing="3" p={{ base: 3, md: 4 }}>
+									{images.map((img, index) => (
+										<Box as="button" type="button" aria-label={"View photo " + (index + 1) + " for " + data.title} aria-pressed={preview === img} key={index + "-" + img} onClick={() => setPreview(img)} position="relative" border="2px solid" borderColor={preview === img ? "mainorange" : "transparent"} borderRadius="xl" overflow="hidden" transition="border-color .16s ease, transform .16s ease" _hover={{ transform: "translateY(-2px)" }} _focusVisible={{ outline: "3px solid", outlineColor: "orange.300" }}>
 											<Box
 												_hover={{
 													background: "#0008",
@@ -276,7 +296,7 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, testPaymen
 												display={"block"}
 												width="100%"
 												height={"100%"}
-												background="transparent"
+												background={preview === img ? "blackAlpha.300" : "transparent"}
 												borderRadius={"lg"}
 												transition="all .3s ease"
 											>
@@ -286,21 +306,17 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, testPaymen
 													alignItems={"center"}
 													justifyContent="center"
 												>
-													<MdFullscreen
-														color="white"
-														size={"30px"}
-													/>
+													<MdFullscreen color="white" size="24px" />
 												</Flex>
 											</Box>
-											<ListingImage alt={data.title} src={img} itemType={data.itemType} w="full" h="120px" borderRadius="lg" />
+											<ListingImage alt={data.title} src={img} itemType={data.itemType} w="full" h="100px" />
 										</Box>
-									);
-								})}
-							</SimpleGrid>
+									))}
+								</SimpleGrid>
+							)}
 						</Flex>
-						<Flex flex={1} direction="column">
-							<Heading as="h1">{data?.title}</Heading>
-							<Wrap my="2">
+							<Flex minW="0" direction="column" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" p={{ base: 5, md: 7 }} boxShadow="0 12px 32px rgba(21,42,44,.08)">
+								<Wrap mb="3">
 								<WrapItem>
 									<Badge
 										variant={"subtle"}
@@ -330,6 +346,22 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, testPaymen
 									)}
 								</WrapItem>
 							</Wrap>
+							<Heading as="h1" mt="1" color={headingText} fontSize={{ base: "2xl", md: "3xl" }} lineHeight="1.2" letterSpacing="tight">
+								{data.title}
+							</Heading>
+							<Flex mt="5" p={{ base: 4, md: 5 }} align={{ base: "flex-start", sm: "center" }} justify="space-between" gap="4" direction={{ base: "column", sm: "row" }} bg={priceSurface} border="1px solid" borderColor={priceBorder} borderRadius="2xl">
+								<Box>
+									<Text color={mutedText} fontSize="xs" fontWeight="bold" letterSpacing="wide" textTransform="uppercase">Asking price</Text>
+									<Flex align="baseline" gap="2" mt="1" wrap="wrap">
+										<Heading color="mainorange" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="tight">{formatPrice(data.price)}</Heading>
+										<Text color={mutedText} fontWeight="semibold">ETB</Text>
+										{priceFrequency && <Text color={mutedText} fontSize="sm">· {priceFrequency}</Text>}
+									</Flex>
+								</Box>
+								<Badge colorScheme={data.priceType === "NEGOTIABLE" ? "teal" : "gray"} borderRadius="full" px="3" py="2" fontSize="xs">
+									{priceTypeLabel}
+								</Badge>
+							</Flex>
 							{data.status !== "APPROVED" && (user?.id === data.userId || user?.role === "ADMIN") && (
 								<Alert status={data.status === "DECLINED" ? "error" : "warning"} borderRadius="xl" mb="4">
 									<AlertIcon />
@@ -349,122 +381,60 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, testPaymen
 							{user?.id === data.userId && data.paymentStatus !== "PAID" && data.paymentStatus !== "NOT_REQUIRED" && data.status !== "APPROVED" && data.status !== "SOLD" && (
 								<ListingPaymentPanel item={data} fee={paymentFee} enabled={paymentEnabled} testMode={testPaymentEnabled} labels={lang.payments} />
 							)}
-							<Text
-								fontWeight={"bold"}
-								color={mutedText}
-								fontSize={"sm"}
-								as="h3"
-							>
-								Posted {dayjs(data?.createdAt).fromNow()}
-							</Text>
-							<Text my="5" fontSize={"lg"} whiteSpace="pre-wrap">
-								{data?.description
-									? data?.description
-									: "No Description added"}
-							</Text>
-							<Box my="5">
-								<Heading color="mainorange" as="h2" size="md">
-									Price
-								</Heading>
-								<SimpleGrid
-									p="4"
-									spacing={"5"}
-									columns={[1, 2]}
-								>
-									<Stat
-										p="4"
-										boxShadow="md"
-										borderRadius={"xl"}
-									bg={surface}
-									border="1px solid"
-									borderColor={subtleBorder}
-									>
-										<StatLabel>Price Type</StatLabel>
-										<StatNumber>
-											{data.priceType}
-										</StatNumber>
-									</Stat>
-									<Stat
-										boxShadow="md"
-										p="4"
-										borderRadius={"xl"}
-									bg={surface}
-									border="1px solid"
-									borderColor={subtleBorder}
-									>
-										<StatLabel>Price</StatLabel>
-										<StatNumber>
-											{formatPrice(data.price)} ETB{data.itemType === "BUSINESS_SPACE" && listingDetails?.type === "RENT" && listingDetails?.priceFrequency ? ` · ${businessText.frequencies[listingDetails.priceFrequency]}` : ""}
-										</StatNumber>
-									</Stat>
+							<Flex align="center" mt="5" gap="2" color={mutedText} fontSize="sm">
+								<Text fontWeight="semibold">Listed</Text>
+								<Text>{dayjs(data?.createdAt).fromNow()}</Text>
+							</Flex>
+							<Box mt="5" p={{ base: 4, md: 5 }} bg={canvas} border="1px solid" borderColor={subtleBorder} borderRadius="xl">
+								<Heading color={headingText} as="h2" size="sm">Description</Heading>
+								<Text mt="3" color={mutedText} fontSize="md" lineHeight="1.8" whiteSpace="pre-wrap">
+									{data?.description || "No description has been added yet."}
+								</Text>
+							</Box>
+							<Box mt="6" p={{ base: 4, md: 5 }} border="1px solid" borderColor={subtleBorder} borderRadius="2xl">
+								<Heading color={headingText} size="md" as="h2">Listing details</Heading>
+								<Text mt="1" color={mutedText} fontSize="sm">Key information about this listing.</Text>
+								<SimpleGrid columns={{ base: 1, sm: 2 }} spacing="3" mt="5">
+									{Object.entries(listingDetails || {}).map(([key, value]) => {
+										if (["id", "itemId"].includes(key)) return null;
+										const label = data.itemType === "BUSINESS_SPACE"
+											? businessText.detailLabels[key] || key
+											: data.itemType === "SERVICE"
+												? serviceText.detailLabels[key] || key
+												: key.replace(/([A-Z])/g, " $1");
+										let displayValue = String(value ?? "");
+										if (key === "category" && data.itemType === "SERVICE") displayValue = serviceText.categories[value as string] || displayValue;
+										else if (key === "spaceType") displayValue = businessText.spaceTypes[value as string] || displayValue;
+										else if (key === "type" && data.itemType === "BUSINESS_SPACE") displayValue = value === "RENT" ? businessText.rent : businessText.sale;
+										else if (key === "priceFrequency") displayValue = businessText.frequencies[value as string] || displayValue;
+										else if (typeof value === "boolean") displayValue = value ? businessText.yes : businessText.no;
+										else if (key === "area" && data.itemType === "BUSINESS_SPACE") displayValue = String(value) + " m²";
+										return (
+											<Box key={key} minW="0" p="4" bg={canvas} border="1px solid" borderColor={subtleBorder} borderRadius="xl">
+												<Text color={mutedText} fontSize="xs" fontWeight="semibold" textTransform="capitalize">{label}</Text>
+												<Text mt="1" fontSize="md" fontWeight="medium" color={headingText} whiteSpace="normal" wordBreak="break-word">{displayValue}</Text>
+											</Box>
+										);
+									})}
 								</SimpleGrid>
 							</Box>
-							<Box my="5">
-								<Heading color="mainorange" size="md" as={"h2"}>
-									Details
-								</Heading>
-								<Wrap p="4" spacing="5">
-									{Object.entries(listingDetails || {}).map(([key, value]) => {
-									if (["id", "itemId"].includes(key)) return null;
-									const label = data.itemType === "BUSINESS_SPACE" ? businessText.detailLabels[key] || key : data.itemType === "SERVICE" ? serviceText.detailLabels[key] || key : key.replace(/([A-Z])/g, " $1");
-									const displayValue = key === "category" && data.itemType === "SERVICE" ? serviceText.categories[value as string] || String(value) : key === "spaceType" ? businessText.spaceTypes[value as string] : key === "type" && data.itemType === "BUSINESS_SPACE" ? value === "RENT" ? businessText.rent : businessText.sale : key === "priceFrequency" ? businessText.frequencies[value as string] : typeof value === "boolean" ? value ? businessText.yes : businessText.no : key === "area" && data.itemType === "BUSINESS_SPACE" ? `${value} m²` : String(value ?? "");
-									return <WrapItem key={key}><Stat p="4" minW="40" bg={surface} border="1px solid" borderColor={subtleBorder} boxShadow="sm" borderRadius="xl"><StatLabel textTransform="capitalize" color={mutedText}>{label}</StatLabel><StatNumber fontSize="md">{displayValue}</StatNumber></Stat></WrapItem>;
-								})}</Wrap>
-							</Box>
-							<Box>
-								<Heading color="mainorange" as="h2" size="md">
-									Posted By
-								</Heading>
-								<Flex direction={"column"} p="4">
-									<Flex
-										borderRadius={"md"}
-										boxShadow="md"
-										alignItems="center"
-										p="4"
-										my="5"
-										bg={surface}
-										border="1px solid"
-										borderColor={subtleBorder}
-									>
-										<Avatar
-											mr="4"
-											src={getMediaUrl(data.user.profile_url, "profile")}
-										></Avatar>
-										<Flex
-											direction="column"
-											justifyContent={"center"}
-										>
-											<Heading fontSize={"md"}>
-												{data.user.firstName +
-													" " +
-													data.user.lastName}
-											</Heading>
-											<Text>{data.user.bio}</Text>
-										</Flex>
-									</Flex>
-									<Flex
-										my="5"
-										boxShadow="md"
-										borderRadius={"md"}
-										p="4"
-										direction={"column"}
-										bg={surface}
-										border="1px solid"
-										borderColor={subtleBorder}
-									>
-										<Heading size="md" mb="4">
-											Contact Info
-										</Heading>
-										<ContactInfo
-											userID={data.userId}
-										></ContactInfo>
-									</Flex>
+							<Box mt="6">
+								<Heading color={headingText} as="h2" size="md" mb="3">Seller</Heading>
+								<Flex align="center" gap="4" p={{ base: 4, md: 5 }} bg={canvas} border="1px solid" borderColor={subtleBorder} borderRadius="2xl">
+									<Avatar size="lg" flexShrink={0} name={data.user.firstName + " " + data.user.lastName} src={getMediaUrl(data.user.profile_url, "profile")} />
+									<Box minW="0">
+										<Heading fontSize="md" color={headingText}>{data.user.firstName} {data.user.lastName}</Heading>
+										<Text mt="1" color={mutedText} fontSize="sm">{data.user.bio || "Listing owner"}</Text>
+									</Box>
+								</Flex>
+								<Flex mt="4" p={{ base: 4, md: 5 }} direction="column" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl">
+									<Heading size="sm" color={headingText}>Contact information</Heading>
+									<Box mt="3"><ContactInfo userID={data.userId} /></Box>
 								</Flex>
 							</Box>
 						</Flex>
 					</SimpleGrid>
 				)}
-				<Flex my="5"></Flex>
 			</Flex>
 		</>
 	);

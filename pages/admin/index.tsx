@@ -12,6 +12,7 @@ import {
 	StatNumber,
 	Input,
 	FormControl,
+	InputGroup,
 	IconButton,
 	InputRightElement,
 	ButtonGroup,
@@ -23,6 +24,7 @@ import {
 	Button,
 	useToast,
 	useColorModeValue,
+	Icon,
 } from "@chakra-ui/react";
 import { MyTheme } from "@config/theme/MyTheme";
 import { useFetch } from "@libs/hooks/useFetch";
@@ -33,9 +35,19 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { FC, useState } from "react";
 import { MdLogout } from "react-icons/md";
+import {
+	FaBuilding,
+	FaCarSide,
+	FaCheckCircle,
+	FaClock,
+	FaHome,
+	FaTools,
+	FaUsers,
+} from "react-icons/fa";
 import { dayjs } from "@config/dayjs";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { getMediaUrl } from "@libs/helpers/media";
+import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 
 export const getServerSideProps = withSessionSsr(
 	async function getServerSideProps({ req }) {
@@ -62,7 +74,7 @@ export default function AdminDashboard({ user }) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [statusFilter, setStatusFilter] = useState("PENDING");
 	const [refreshKey, setRefreshKey] = useState(0);
-	const pageBg = useColorModeValue("#f5f5f1", "#10191d");
+	const pageBg = useColorModeValue("#f4f6f8", "#10191d");
 	const surface = useColorModeValue("white", "#17262b");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const textColor = useColorModeValue("maingray", "gray.100");
@@ -82,80 +94,94 @@ export default function AdminDashboard({ user }) {
 			<Flex direction={"column"} minH="100vh" bg={pageBg}>
 				<Flex
 					alignItems={"center"}
-					px={MyTheme.paddings.pagePadding}
-					height={MyTheme.size.navbarHeight}
+					px={{ base: 4, md: 8, xl: 12 }}
+					minH={MyTheme.size.navbarHeight}
 					bg={surface}
 					borderBottom="1px solid"
 					borderColor={border}
+					boxShadow="sm"
 				>
-					<Flex direction={"column"}>
-						<Heading fontSize={"2xl"} color={textColor}>
+					<Flex direction="column" py="3">
+						<Heading fontSize={{ base: "lg", md: "xl" }} color={textColor} letterSpacing="tight">
 							Habesha Brokers
 						</Heading>
-						<Heading fontSize={"md"} color="mainorange">
-							ADMIN DASHBOARD
+						<Heading fontSize="xs" color="mainorange" letterSpacing="widest" mt="1">
+							ADMINISTRATION
 						</Heading>
 					</Flex>
 					<Spacer />
-					<Flex>
-						<Avatar name={user.firstName + " " + user.lastName} src={getMediaUrl(user.profile_url, "profile")} mr="5" />
+					<Flex align="center" gap={{ base: 2, md: 4 }}>
+						<ColorModeToggle />
+						<Avatar size="sm" name={user.firstName + " " + user.lastName} src={getMediaUrl(user.profile_url, "profile")} />
 						<Flex
 							direction="column"
 							display={["none", "none", "flex"]}
 						>
-							<Text fontWeight={"bold"}>
+							<Text fontWeight="semibold" fontSize="sm" color={textColor}>
 								{`${user.firstName} ${user.lastName}`}
 							</Text>
-							<Text fontSize={"sm"} color={muted}>
+							<Text fontSize="xs" color={muted}>
 								{user.email}
 							</Text>
 						</Flex>
 						<IconButton
 							onClick={handleLogout}
-							ml="4"
-							colorScheme={"red"}
+							ml={{ base: 1, md: 2 }}
+							colorScheme="red"
 							variant="ghost"
-							aria-label="logout"
-						>
-							<MdLogout />
-						</IconButton>
+							borderRadius="xl"
+							aria-label="Log out"
+							icon={<MdLogout />}
+						/>
 					</Flex>
 				</Flex>
 
 				<Flex
-					px={MyTheme.paddings.pagePadding}
-					mt="5"
+					w="full"
+					maxW="1600px"
+					mx="auto"
+					px={{ base: 4, md: 8, xl: 12 }}
+					py={{ base: 6, md: 10 }}
 					direction={"column"}
 				>
+					<Box mb={{ base: 5, md: 7 }}>
+						<Text fontSize="xs" fontWeight="bold" letterSpacing="widest" color="mainorange" textTransform="uppercase">Operations</Text>
+						<Heading mt="2" fontSize={{ base: "xl", md: "2xl" }} color={textColor} letterSpacing="tight">Dashboard overview</Heading>
+						<Text mt="2" color={muted} maxW="2xl" fontSize={{ base: "sm", md: "md" }}>
+							Monitor marketplace activity and manage listing reviews from one place.
+						</Text>
+					</Box>
 					<StatsBar key={refreshKey} />
-					<Flex direction={"column"} bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 8px 28px rgba(21,42,44,.06)" p={{ base: 4, md: 6 }} mt="8">
-						<Flex direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "center" }} gap="4" mb="2">
+					<Flex direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }} mt={{ base: 6, md: 8 }}>
+						<Flex direction={{ base: "column", lg: "row" }} align={{ base: "stretch", lg: "center" }} gap="5" mb="3">
 							<Box>
-								<Heading size="md">Listing review</Heading>
-								<Text mt="2" color={muted} fontSize="sm" maxW="3xl" lineHeight="1.6">
-									Every listing type requires the fixed listing fee before it enters review. Once payment is confirmed, verify the details and photos, then approve to publish or decline.
+								<Heading size="md" color={textColor}>Listing review</Heading>
+								<Text mt="2" color={muted} fontSize="sm" maxW="3xl" lineHeight="1.7">
+									Confirm payment and review listing details before publishing. Only paid listings can be approved.
 								</Text>
 							</Box>
 							<Flex flex="1" />
-							<FormControl maxW={{ md: "sm" }}>
+							<FormControl maxW={{ lg: "sm" }}>
+								<InputGroup size="md">
 								<Input
 									value={searchInput}
 									onChange={(event) => setSearchInput(event.target.value)}
 									onKeyDown={(event) => { if (event.key === "Enter") setSearchQuery(searchInput.trim()); }}
 									placeholder="Search by listing ID"
-									variant="filled"
+									variant="outline"
 									borderRadius="xl"
+									bg={pageBg}
+									pr="12"
 								/>
-								<InputRightElement>
-									<IconButton onClick={() => setSearchQuery(searchInput.trim())} aria-label="Search listings" colorScheme="blue" variant="ghost">
-										<Search2Icon />
-									</IconButton>
+								<InputRightElement h="full">
+									<IconButton onClick={() => setSearchQuery(searchInput.trim())} aria-label="Search listings" colorScheme="orange" variant="ghost" borderRadius="lg" icon={<Search2Icon />} />
 								</InputRightElement>
+								</InputGroup>
 							</FormControl>
 						</Flex>
-						<ButtonGroup spacing="2" my="5" flexWrap="wrap">
+						<ButtonGroup spacing="2" my="5" flexWrap="wrap" role="group" aria-label="Filter listing reviews">
 							{[["PAYMENT", "Awaiting payment"], ["PENDING", "Pending review"], ["APPROVED", "Approved"], ["DECLINED", "Declined"]].map(([value, label]) => (
-								<Button key={value} size="sm" borderRadius="full" colorScheme={statusFilter === value ? "orange" : "gray"} variant={statusFilter === value ? "solid" : "outline"} onClick={() => setStatusFilter(value)}>
+								<Button key={value} size="sm" px="4" h="9" borderRadius="full" colorScheme={statusFilter === value ? "orange" : "gray"} variant={statusFilter === value ? "solid" : "outline"} onClick={() => setStatusFilter(value)}>
 									{label}
 								</Button>
 							))}
@@ -211,6 +237,7 @@ interface ICard {
 
 const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
+	const surface = useColorModeValue("white", "#17262b");
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const [working, setWorking] = useState(false);
 	const toast = useToast();
@@ -250,7 +277,7 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 	};
 
 	return (
-		<Flex align={{ base: "flex-start", lg: "center" }} gap="4" py="4" px={{ base: 0, md: 2 }} borderBottom="1px solid" borderColor={border} direction={{ base: "column", lg: "row" }}>
+		<Flex align={{ base: "flex-start", lg: "center" }} gap="4" p={{ base: 4, md: 5 }} mt="4" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" boxShadow="sm" transition="box-shadow .2s, border-color .2s" _hover={{ boxShadow: "md", borderColor: "orange.200" }} direction={{ base: "column", lg: "row" }}>
 			<Flex align="center" gap="4" minW="0" flex="1">
 				<Box flexShrink={0}><ListingImage src={item.images?.[0]} alt={title} itemType={itemType} w="88px" h="72px" borderRadius="lg" /></Box>
 				<Box minW="0">
@@ -286,6 +313,11 @@ function StatsBar() {
 	const [data, loading, err] = useFetch({
 		fetchFunction: () => axios.get("/api/admin/stat"),
 	});
+	const surface = useColorModeValue("white", "#17262b");
+	const border = useColorModeValue("gray.200", "whiteAlpha.200");
+	const statText = useColorModeValue("maingray", "gray.100");
+	const labelText = useColorModeValue("gray.500", "gray.400");
+	const iconSurface = useColorModeValue("gray.100", "whiteAlpha.100");
 
 	if (loading) {
 		return (
@@ -304,80 +336,37 @@ function StatsBar() {
 		);
 	}
 
+	if (!data) return null;
+
+	const cards = [
+		{ label: "Total users", value: data.users, icon: FaUsers, tone: "blue" },
+		{ label: "Approved listings", value: data.approvedItems, icon: FaCheckCircle, tone: "green" },
+		{ label: "Awaiting review", value: data.waitingItems, icon: FaClock, tone: "orange" },
+		{ label: "Homes", value: data.houses, icon: FaHome, tone: "cyan" },
+		{ label: "Vehicles", value: data.cars, icon: FaCarSide, tone: "purple" },
+		{ label: "Business spaces", value: data.businessSpaces, icon: FaBuilding, tone: "teal" },
+		{ label: "Services", value: data.services, icon: FaTools, tone: "pink" },
+	];
+
 	return (
-		data && (
-			<SimpleGrid p="5" spacing="6" columns={{ base: 2, md: 4, xl: 7 }}>
-				<Stat
-					boxShadow="2xl"
-					p="5"
-					borderRadius="lg"
-					background="blue.400"
-					color="white"
-				>
-					<StatLabel fontSize={"lg"}>TOTAL USERS</StatLabel>
-					<StatNumber fontSize={"4xl"}>{data.users}</StatNumber>
+		<SimpleGrid spacing={{ base: 3, md: 4 }} columns={{ base: 2, md: 3, xl: 4 }}>
+			{cards.map((card) => (
+				<Stat key={card.label} bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} minH={{ base: "110px", md: "128px" }} boxShadow="sm">
+					<Flex justify="space-between" align="flex-start" gap="3">
+						<Box>
+							<StatLabel color={labelText} fontSize="xs" fontWeight="semibold" letterSpacing="wide" textTransform="uppercase">
+								{card.label}
+							</StatLabel>
+							<StatNumber mt="2" color={statText} fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" lineHeight="1">
+								{card.value ?? 0}
+							</StatNumber>
+						</Box>
+						<Flex w="10" h="10" flexShrink={0} align="center" justify="center" borderRadius="lg" bg={iconSurface} color={`${card.tone}.500`}>
+							<Icon as={card.icon} boxSize="4" />
+						</Flex>
+					</Flex>
 				</Stat>
-				<Stat
-					boxShadow="2xl"
-					p="5"
-					borderRadius="lg"
-					background="red.500"
-					color="white"
-				>
-					<StatLabel fontSize={"lg"} textTransform="uppercase">
-						Approved Items
-					</StatLabel>
-					<StatNumber fontSize={"4xl"}>
-						{data.approvedItems}
-					</StatNumber>
-				</Stat>
-				<Stat
-					boxShadow="2xl"
-					p="5"
-					borderRadius="lg"
-					background="green.500"
-					color="white"
-				>
-					<StatLabel fontSize={"lg"} textTransform="uppercase">
-						Pending Items
-					</StatLabel>
-					<StatNumber fontSize={"4xl"}>
-						{data.waitingItems}
-					</StatNumber>
-				</Stat>
-				<Stat
-					boxShadow="2xl"
-					p="5"
-					borderRadius="lg"
-					background="blackAlpha.900"
-					color="white"
-				>
-					<StatLabel fontSize={"lg"} textTransform="uppercase">
-						Total Houses
-					</StatLabel>
-					<StatNumber fontSize={"4xl"}>{data.houses}</StatNumber>
-				</Stat>
-				<Stat
-					boxShadow="2xl"
-					p="5"
-					borderRadius="lg"
-					background="orange.500"
-					color="white"
-				>
-					<StatLabel fontSize={"lg"} textTransform="uppercase">
-						Total Cars
-					</StatLabel>
-					<StatNumber fontSize={"4xl"}>{data.cars}</StatNumber>
-				</Stat>
-				<Stat boxShadow="2xl" p="5" borderRadius="lg" background="teal.600" color="white">
-					<StatLabel fontSize="lg" textTransform="uppercase">Business Spaces</StatLabel>
-					<StatNumber fontSize="4xl">{data.businessSpaces}</StatNumber>
-				</Stat>
-				<Stat boxShadow="2xl" p="5" borderRadius="lg" background="purple.600" color="white">
-					<StatLabel fontSize="lg" textTransform="uppercase">Services</StatLabel>
-					<StatNumber fontSize="4xl">{data.services}</StatNumber>
-				</Stat>
-			</SimpleGrid>
-		)
+			))}
+		</SimpleGrid>
 	);
 }

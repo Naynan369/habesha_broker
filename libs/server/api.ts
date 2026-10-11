@@ -259,6 +259,54 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		return res.status(200).json({ ok: true });
 	}
 
+	if (route === "changeEmail" && req.method === "POST") {
+		const user = await requireUser(req, res);
+		if (!user) return;
+		const email = String(body.email || "").trim().toLowerCase();
+		const password = String(body.password || "");
+		if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			return error(res, 400, "Enter a valid email address");
+		}
+		if (email === user.email.toLowerCase()) return error(res, 400, "That is already your email address");
+		const account = await prisma.user.findUnique({ where: { id: user.id }, select: { password: true } });
+		if (!account || !(await bcrypt.compare(password, account.password))) {
+			return error(res, 400, "Current password is incorrect");
+		}
+		const existing = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+		if (existing && existing.id !== user.id) return error(res, 409, "An account with that email already exists");
+		try {
+			const updated = await prisma.user.update({
+				where: { id: user.id },
+				data: { email, verfied: false },
+				select: publicUserSelect,
+			});
+			await prisma.verification.deleteMany({ where: { userId: user.id } });
+			await prisma.passwordReset.deleteMany({ where: { userId: user.id } });
+			req.session.user = updated as IUser;
+			await req.session.save();
+			return res.status(200).json({ user: updated });
+		} catch (caught) {
+			if ((caught as any)?.code === "P2002") return error(res, 409, "An account with that email already exists");
+			throw caught;
+		}
+	}
+
+	if (route === "deleteAccount" && req.method === "POST") {
+		const user = await requireUser(req, res);
+		if (!user) return;
+		if (body.confirmation !== "DELETE MY ACCOUNT") return error(res, 400, "Type DELETE MY ACCOUNT to confirm");
+		const account = await prisma.user.findUnique({ where: { id: user.id }, select: { password: true, role: true } });
+		if (!account || !(await bcrypt.compare(String(body.password || ""), account.password))) {
+			return error(res, 400, "Current password is incorrect");
+		}
+		if (account.role === "ADMIN" && await prisma.user.count({ where: { role: "ADMIN" } }) <= 1) {
+			return error(res, 409, "The last administrator account cannot be deleted");
+		}
+		await prisma.user.delete({ where: { id: user.id } });
+		req.session.destroy();
+		return res.status(200).json({ ok: true });
+	}
+
 	if (route === "editProfile" && req.method === "POST") {
 		const user = await requireUser(req, res);
 		if (!user) return;

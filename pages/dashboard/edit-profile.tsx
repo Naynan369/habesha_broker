@@ -1,6 +1,7 @@
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { Box, Flex, Heading, IconButton, SimpleGrid, useColorModeValue } from "@chakra-ui/react";
 import { ChangePassword } from "@components/dashboard/editProfile/ChangePassword";
+import { AccountManagement } from "@components/dashboard/editProfile/AccountManagement";
 import { ContactInfoEdit } from "@components/dashboard/editProfile/ContactInfoEdit";
 import { PersonalInfoUpdate } from "@components/dashboard/editProfile/ProfileInfoUpdate";
 import { ProfileUpdate } from "@components/dashboard/editProfile/ProfileUpdate";
@@ -72,6 +73,7 @@ export default function EditProfilePage({ user }) {
 				<Box>
 					<PersonalInfoUpdate user={user} />
 					<ChangePassword user={user} />
+					<AccountManagement user={user} />
 					<Box my="5">
 						<Heading size="md" mb="5">
 							Contact Information
