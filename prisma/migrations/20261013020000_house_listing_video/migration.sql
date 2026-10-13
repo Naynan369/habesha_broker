@@ -1,0 +1,2 @@
+ALTER TABLE "House"
+  ADD COLUMN "video" TEXT;

@@ -35,8 +35,8 @@ export default function VerifyAccountPage({ user }) {
 
 	const toast = useToast();
 	const router = useRouter();
-	const pageBg = useColorModeValue("gray.50", "#10191d");
-	const surface = useColorModeValue("white", "#17262b");
+	const pageBg = useColorModeValue("gray.50", "#000000");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const textColor = useColorModeValue("maingray", "gray.100");
 	const cardBorder = useColorModeValue("gray.200", "whiteAlpha.200");
 

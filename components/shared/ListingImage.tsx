@@ -1,5 +1,5 @@
 import { Box, Image, Text } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { MdDirectionsCar, MdHomeWork, MdImageNotSupported, MdMiscellaneousServices, MdStorefront } from "react-icons/md";
 import { getMediaUrl } from "@libs/helpers/media";
 
@@ -43,13 +43,12 @@ export function ListingImage({
 	loading = "lazy",
 }: ListingImageProps) {
 	const imageUrl = getMediaUrl(src, "items");
-	const [failed, setFailed] = useState(!imageUrl);
+	const [failedUrl, setFailedUrl] = useState<string | null>(null);
+	const failed = !imageUrl || failedUrl === imageUrl;
 	const isCar = itemType?.toUpperCase() === "CAR";
 	const isBusinessSpace = itemType?.toUpperCase() === "BUSINESS_SPACE";
 	const isService = itemType?.toUpperCase() === "SERVICE";
 	const Icon = imageUrl ? MdImageNotSupported : isCar ? MdDirectionsCar : isBusinessSpace ? MdStorefront : isService ? MdMiscellaneousServices : MdHomeWork;
-
-	useEffect(() => setFailed(!imageUrl), [imageUrl]);
 
 	const sharedProps = {
 		w: width || w,
@@ -107,7 +106,7 @@ export function ListingImage({
 			src={imageUrl}
 			loading={loading}
 			objectFit={objectFit}
-			onError={() => setFailed(true)}
+			onError={() => setFailedUrl(imageUrl)}
 		/>
 	);
 }

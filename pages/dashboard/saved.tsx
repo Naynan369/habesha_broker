@@ -33,11 +33,11 @@ export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 
 export default function SavedItems({ user }) {
 	const router = useRouter();
-	const pageBg = useColorModeValue("#f5f5f1", "#10191d");
-	const surface = useColorModeValue("white", "#17262b");
+	const pageBg = useColorModeValue("#f5f5f1", "#000000");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const muted = useColorModeValue("gray.600", "gray.400");
-	const emptyBg = useColorModeValue("white", "#17262b");
+	const emptyBg = useColorModeValue("white", "#0c0c0c");
 	const emptyBorder = useColorModeValue("gray.200", "whiteAlpha.200");
 	const emptyIconBg = useColorModeValue("orange.50", "rgba(233,183,92,.14)");
 	const emptyIconColor = useColorModeValue("orange.700", "orange.200");
@@ -107,7 +107,7 @@ export default function SavedItems({ user }) {
 								<Box w="14" h="14" display="grid" placeItems="center" borderRadius="full" bg={emptyIconBg} color={emptyIconColor}><MdFavoriteBorder size="22" /></Box>
 								<Heading mt="5" fontSize="lg">Your shortlist starts here</Heading>
 								<Text mt="2" maxW="sm" color={muted}>Save listings you like and come back to compare them whenever you are ready.</Text>
-								<Link href="/explore" passHref><Button as="a" mt="6" colorScheme="orange" rightIcon={<MdArrowForward />}>Explore listings</Button></Link>
+								<Link legacyBehavior href="/explore" passHref><Button as="a" mt="6" colorScheme="orange" rightIcon={<MdArrowForward />}>Explore listings</Button></Link>
 							</Flex>
 						)}
 					</Grid>

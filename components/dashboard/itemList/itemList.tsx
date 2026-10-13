@@ -17,7 +17,7 @@ interface IItemsList {
 
 export const ItemList: FC<IItemsList> = ({ user, filters, keyword = "", orderBy }) => {
 	const muted = useColorModeValue("gray.500", "gray.400");
-	const surface = useColorModeValue("white", "#17262b");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const heading = useColorModeValue("maingray", "gray.100");
 	const emptyIconBg = useColorModeValue("orange.50", "rgba(233,183,92,.14)");
@@ -81,7 +81,7 @@ export const ItemList: FC<IItemsList> = ({ user, filters, keyword = "", orderBy 
 								: "Select at least one category above to view your listings."}
 					</Text>
 					{!keyword && filters.length > 0 && (
-						<Link href="/dashboard/add-item" passHref>
+						<Link legacyBehavior href="/dashboard/add-item" passHref>
 							<Button as="a" mt="6" colorScheme="orange" borderRadius="xl" leftIcon={<MdAdd />}>Create listing</Button>
 						</Link>
 					)}

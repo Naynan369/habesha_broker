@@ -25,7 +25,7 @@ export const AccountManagement = ({ user }: { user: IUser }) => {
 	const [deletePassword, setDeletePassword] = useState("");
 	const [phrase, setPhrase] = useState("");
 	const [busy, setBusy] = useState(false);
-	const surface = useColorModeValue("white", "#17262b");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const muted = useColorModeValue("gray.600", "gray.300");
 	const dangerBg = useColorModeValue("red.50", "rgba(197,58,58,.12)");

@@ -11,11 +11,12 @@ export const HomeContact = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
 	const toast = useToast();
-	const surface = useColorModeValue("white", "#1b2a30");
-	const fieldBg = useColorModeValue("gray.50", "#142126");
+	const surface = useColorModeValue("white", "#111111");
+	const fieldBg = useColorModeValue("gray.50", "#101010");
 	const fieldBorder = useColorModeValue("gray.200", "whiteAlpha.300");
 	const textColor = useColorModeValue("#143A45", "#e7eff0");
 	const mutedColor = useColorModeValue("gray.600", "gray.300");
+	const sectionBackground = useColorModeValue("maingray", "#000000");
 
 	const submitContact = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -27,7 +28,7 @@ export const HomeContact = () => {
 	};
 
 	return (
-		<Flex id="Contact" as="section" direction="column" py={{ base: 16, md: 24 }} px={{ base: 6, md: 12, xl: 16 }} bg="maingray" color="white">
+		<Flex id="Contact" as="section" direction="column" py={{ base: 16, md: 24 }} px={{ base: 6, md: 12, xl: 16 }} bg={sectionBackground} color="white">
 			<Flex maxW="1440px" w="full" mx="auto" align={{ base: "flex-start", md: "flex-end" }} justify="space-between" gap="6" direction={{ base: "column", md: "row" }}>
 				<Box>
 					<Text color="mainyellow" textTransform="uppercase" letterSpacing=".18em" fontWeight="bold" fontSize="xs">{lang.home.contact_kicker}</Text>
@@ -55,7 +56,7 @@ export const HomeContact = () => {
 						<FormControl mb="4" isRequired><FormLabel htmlFor="name">{lang.home.contactForm.name}</FormLabel><Input id="name" name="name" type="text" autoComplete="name" placeholder={lang.home.contact_name_placeholder} bg={fieldBg} borderColor={fieldBorder} color={textColor} _hover={{ bg: fieldBg }} _focus={{ bg: fieldBg, borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
 						<FormControl mb="4" isRequired><FormLabel htmlFor="email">{lang.home.contactForm.email}</FormLabel><Input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" bg={fieldBg} borderColor={fieldBorder} color={textColor} _hover={{ bg: fieldBg }} _focus={{ bg: fieldBg, borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
 						<FormControl mb="5" isRequired><FormLabel htmlFor="msg">{lang.home.contactForm.msg}</FormLabel><Textarea id="msg" name="message" required rows={4} placeholder={lang.home.contact_message_placeholder} bg={fieldBg} borderColor={fieldBorder} color={textColor} _hover={{ bg: fieldBg }} _focus={{ bg: fieldBg, borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
-						<Flex justify="space-between" align="center" gap="4" flexWrap="wrap"><Text color="gray.500" fontSize="xs">{lang.home.contact_email_note}</Text><Button type="submit" bg="mainred" color="white" borderRadius="xl" rightIcon={<MdArrowOutward />} _hover={{ bg: "#ae2020" }}>{lang.home.contactForm.sbmt}</Button></Flex>
+						<Flex justify="space-between" align="center" gap="4" flexWrap="wrap"><Text color={mutedColor} fontSize="xs">{lang.home.contact_email_note}</Text><Button type="submit" bg="mainred" color="white" borderRadius="xl" rightIcon={<MdArrowOutward />} _hover={{ bg: "#ae2020" }}>{lang.home.contactForm.sbmt}</Button></Flex>
 					</form>
 				</Box>
 			</Flex>

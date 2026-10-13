@@ -27,10 +27,7 @@ export const ProfileUpdate: FC<IProfileUpdate> = ({ user }) => {
 	const toast = useToast();
 
 	useEffect(() => {
-		if (!file) {
-			setPreviewUrl(undefined);
-			return;
-		}
+		if (!file) return;
 		const objectUrl = URL.createObjectURL(file);
 		setPreviewUrl(objectUrl);
 		return () => URL.revokeObjectURL(objectUrl);
@@ -43,11 +40,8 @@ export const ProfileUpdate: FC<IProfileUpdate> = ({ user }) => {
 		setUploading(true);
 		await axios
 			.post("/api/user/uploadProfile", formData, {
-				headers: {
-					"Content-Type": "multipart/form-data",
-				},
 				onUploadProgress: (event) => {
-					setProgress((event.loaded * 100) / event.total);
+					if (event.total) setProgress(Math.round((event.loaded * 100) / event.total));
 				},
 			})
 			.then((res) => {
@@ -104,8 +98,12 @@ export const ProfileUpdate: FC<IProfileUpdate> = ({ user }) => {
 				</Button>
 				<Input
 					disabled={uploading}
-					onChange={(e) => setFile(e.target.files[0])}
-					accept="image/*"
+					onChange={(e) => {
+						const selectedFile = e.target.files?.[0] || null;
+						setFile(selectedFile);
+						if (!selectedFile) setPreviewUrl(undefined);
+					}}
+					accept="image/jpeg,image/png,image/webp,image/gif"
 					cursor="pointer"
 					type="file"
 					position="absolute"

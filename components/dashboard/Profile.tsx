@@ -20,7 +20,7 @@ interface IProfile {
 }
 export const Profile: FC<IProfile> = ({ user }) => {
 	const dashboardText = useLang().dashboardPage;
-	const surface = useColorModeValue("white", "#17262b");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const nameColor = useColorModeValue("#25383d", "#e8eff0");
 	const muted = useColorModeValue("gray.600", "gray.400");
@@ -40,7 +40,7 @@ export const Profile: FC<IProfile> = ({ user }) => {
 				<Heading fontSize="lg" letterSpacing="-.02em">
 					{dashboardText.profile}
 				</Heading>
-				<Link href={"/dashboard/edit-profile"} passHref>
+				<Link legacyBehavior href={"/dashboard/edit-profile"} passHref>
 					<IconButton as="a" variant="ghost" color={muted} _hover={{ bg: iconHoverBg, color: "mainorange" }} _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }} aria-label={dashboardText.editProfile}>
 						<MdEdit />
 					</IconButton>

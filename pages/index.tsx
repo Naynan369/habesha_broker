@@ -15,7 +15,7 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => ({
 
 export default function Home({ user }) {
 	const [mobMenu, setMobMenu] = useState(false);
-	const canvas = useColorModeValue("#f5f5f1", "#10191d");
+	const canvas = useColorModeValue("#f5f5f1", "#000000");
 	const toggleMenu = () => setMobMenu((open) => !open);
 
 	return (

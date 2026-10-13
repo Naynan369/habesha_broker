@@ -7,8 +7,8 @@ import { useEffect, useState } from "react";
 export default function ChapaPaymentReturn() {
 	const router = useRouter();
 	const labels = useLang().payments;
-	const pageBg = useColorModeValue("#f5f5f1", "#10191d");
-	const surface = useColorModeValue("white", "#17262b");
+	const pageBg = useColorModeValue("#f5f5f1", "#000000");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const [attempt, setAttempt] = useState(0);
 	const [state, setState] = useState<"checking" | "PAID" | "PENDING" | "FAILED" | "ERROR">("checking");
 	const [itemId, setItemId] = useState("");

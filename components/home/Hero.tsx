@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Heading, Input, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Input, Text, useColorModeValue } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import { am } from "@locales/am";
 import { en } from "@locales/en";
@@ -11,13 +11,16 @@ export const HomeHero = () => {
 	const [search, setSearch] = useState("");
 	const { locale, push } = useRouter();
 	const lang = locale === "am" ? am : en;
+	const searchSurface = useColorModeValue("white", "#111111");
+	const searchText = useColorModeValue("gray.800", "gray.100");
+	const searchBorder = useColorModeValue("whiteAlpha.500", "whiteAlpha.300");
 	const submitSearch = () => {
 		const keyword = search.trim();
 		push(keyword ? `/explore/${encodeURIComponent(keyword)}` : "/explore");
 	};
 
 	return (
-		<Box id="home" as="section" position="relative" minH={{ base: "760px", md: "min(860px, 100vh)" }} color="white" overflow="hidden" bg="#10271f">
+		<Box id="home" as="section" position="relative" minH={{ base: "760px", md: "min(860px, 100vh)" }} color="white" overflow="hidden" bg="#000000">
 			<Box
 				aria-hidden="true"
 				position="absolute"
@@ -57,9 +60,9 @@ export const HomeHero = () => {
 					<form onSubmit={(event) => { event.preventDefault(); submitSearch(); }}>
 					<Flex
 						mt={{ base: 8, md: 10 }}
-						bg="white"
+						bg={searchSurface}
 						border="1px solid"
-						borderColor="whiteAlpha.500"
+						borderColor={searchBorder}
 						borderRadius="2xl"
 						boxShadow="0 20px 60px rgba(0,0,0,.24)"
 						maxW="650px"
@@ -76,7 +79,7 @@ export const HomeHero = () => {
 								variant="unstyled"
 								px="3"
 								py="3"
-								color="gray.800"
+								color={searchText}
 								placeholder={lang.home.search_placeholder}
 								value={search}
 								onChange={(event) => setSearch(event.target.value)}
@@ -94,7 +97,7 @@ export const HomeHero = () => {
 				</Box>
 				<Flex mt={{ base: 14, md: "auto" }} align="center" justify="space-between" gap="4" flexWrap="wrap" borderTop="1px solid" borderColor="whiteAlpha.300" pt="5">
 					<Text color="whiteAlpha.700" fontSize="xs" letterSpacing=".16em" textTransform="uppercase">{lang.home.hero_bottomline}</Text>
-					<Link href="/explore" passHref><Flex as="a" align="center" gap="2" color="white" fontWeight="semibold" fontSize="sm" _hover={{ color: "mainyellow" }}>{lang.home.browse_action}<MdArrowForward /></Flex></Link>
+					<Link legacyBehavior href="/explore" passHref><Flex as="a" align="center" gap="2" color="white" fontWeight="semibold" fontSize="sm" _hover={{ color: "mainyellow" }}>{lang.home.browse_action}<MdArrowForward /></Flex></Link>
 				</Flex>
 			</Flex>
 		</Box>

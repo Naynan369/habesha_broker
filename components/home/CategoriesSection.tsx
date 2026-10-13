@@ -10,10 +10,10 @@ const businessSpacesImage = "https://images.unsplash.com/photo-1497366216548-375
 export const CategoriesSection = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
-	const sectionBg = useColorModeValue("#f3f2ed", "#121e22");
+	const sectionBg = useColorModeValue("#f3f2ed", "#000000");
 	const titleColor = useColorModeValue("#20383d", "#e7eff0");
 	const bodyColor = useColorModeValue("gray.600", "gray.300");
-	const surface = useColorModeValue("white", "#1b2a30");
+	const surface = useColorModeValue("white", "#111111");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const kickerColor = useColorModeValue("#a84c3d", "#e6a17c");
 
@@ -51,6 +51,7 @@ export const CategoriesSection = () => {
 
 const Category = ({ title, categoryLabel, image, description, action, href }) => {
 	const router = useRouter();
+	const imageFallback = useColorModeValue("#183238", "#0a0a0a");
 	const handleSelect = () => void router.push(href);
 
 	return (
@@ -68,7 +69,7 @@ const Category = ({ title, categoryLabel, image, description, action, href }) =>
 			whiteSpace="normal"
 			textAlign="left"
 			color="white"
-			bg="#183238"
+			bg={imageFallback}
 			border="1px solid"
 			borderColor="whiteAlpha.400"
 			borderRadius="2xl"
@@ -79,7 +80,7 @@ const Category = ({ title, categoryLabel, image, description, action, href }) =>
 			_focusVisible={{ outline: "3px solid", outlineColor: "#d69254", outlineOffset: "3px" }}
 			transition="transform 220ms ease, box-shadow 220ms ease"
 		>
-			<Box position="absolute" inset="0" bg="#183238">
+			<Box position="absolute" inset="0" bg={imageFallback}>
 				<Image
 					src={image}
 					alt=""

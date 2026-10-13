@@ -35,11 +35,11 @@ export const EditInputField: FC<IEditInputField> = ({
 	helpText,
 	required,
 }) => {
-	const fieldBg = useColorModeValue("white", "#17262b");
-	const fieldBorder = useColorModeValue("gray.300", "whiteAlpha.300");
+	const fieldBg = useColorModeValue("white", "#0c0c0c");
+	const fieldBorder = useColorModeValue("#929fa3", "whiteAlpha.300");
 	const fieldText = useColorModeValue("#25383d", "#e8eff0");
-	const placeholderText = useColorModeValue("gray.500", "gray.400");
-	const hoverBorder = useColorModeValue("gray.400", "whiteAlpha.500");
+	const placeholderText = useColorModeValue("#5b6a70", "#aebdc1");
+	const hoverBorder = useColorModeValue("#5f7075", "whiteAlpha.500");
 	const controlProps = {
 		id: name,
 		name,

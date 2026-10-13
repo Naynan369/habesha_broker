@@ -14,16 +14,16 @@ export const ItemCard: FC<IItem> = (props) => {
 	const lang = useLang();
 	const card = lang.explore.card;
 	const serviceText = lang.serviceListing;
-	const surface = useColorModeValue("white", "#1b2a30");
+	const surface = useColorModeValue("white", "#111111");
 	const textColor = useColorModeValue("#143A45", "#e7eff0");
 	const mutedColor = useColorModeValue("gray.500", "gray.300");
 	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
 	const dividerColor = useColorModeValue("gray.100", "whiteAlpha.200");
-	const imageFallback = useColorModeValue("gray.100", "#142126");
+	const imageFallback = useColorModeValue("gray.100", "#101010");
 	const categoryLabel = props.itemType === "SERVICE" ? serviceText.categories[props.serviceCategory] || card.service : props.itemType === "HOUSE" ? card.home : props.itemType === "CAR" ? card.vehicle : card.businessSpace;
 	const postedTime = dayjs(props.date).locale(router.locale === "am" ? "am" : "en").fromNow();
 	return (
-	<Link href={`/items/${props.id}`} passHref>
+	<Link legacyBehavior href={`/items/${props.id}`} passHref>
 		<Flex as="a" direction="column" minW="0" bg={surface} border="1px solid" borderColor={borderColor} borderRadius="2xl" overflow="hidden" cursor="pointer" textDecoration="none" transition="all 180ms ease" _hover={{ boxShadow: "0 18px 40px rgba(20,40,35,.18)", transform: "translateY(-3px)", borderColor: "mainorange" }} _focusVisible={{ outline: "3px solid", outlineColor: "orange.300" }}>
 			<Box position="relative" h={{ base: "205px", md: "235px" }} bg={imageFallback}>
 				<ListingImage alt={props.title} src={props.photoURL} itemType={props.itemType} w="full" h="full" />
@@ -45,9 +45,13 @@ export const ItemCard: FC<IItem> = (props) => {
 	);
 };
 
-export const ItemLoader = () => (
-	<Flex minH="405px" direction="column" borderRadius="2xl" border="1px solid" borderColor="gray.200" overflow="hidden" bg={useColorModeValue("white", "#1b2a30")}>
-		<Skeleton h="220px" />
-		<Flex flex="1" p="6" direction="column"><Skeleton height="5" mb="3" /><Skeleton height="3" w="45%" mb="6" /><Skeleton height="7" w="55%" mb="7" /><Flex mt="auto" align="center" gap="3"><SkeletonCircle /><Skeleton w="40%" height="4" /></Flex></Flex>
-	</Flex>
-);
+export const ItemLoader = () => {
+	const surface = useColorModeValue("white", "#111111");
+	const border = useColorModeValue("gray.200", "whiteAlpha.200");
+	return (
+		<Flex minH="405px" direction="column" borderRadius="2xl" border="1px solid" borderColor={border} overflow="hidden" bg={surface}>
+			<Skeleton h="220px" />
+			<Flex flex="1" p="6" direction="column"><Skeleton height="5" mb="3" /><Skeleton height="3" w="45%" mb="6" /><Skeleton height="7" w="55%" mb="7" /><Flex mt="auto" align="center" gap="3"><SkeletonCircle /><Skeleton w="40%" height="4" /></Flex></Flex>
+		</Flex>
+	);
+};

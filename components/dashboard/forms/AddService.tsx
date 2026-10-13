@@ -51,7 +51,7 @@ export const AddService = () => {
 		region: yup.string().trim().max(100).required(),
 		city: yup.string().trim().max(100).required(),
 		serviceArea: yup.string().max(240),
-		files: yup.array().min(1, common.photosRequired),
+		files: yup.array().min(1, common.photosRequired).max(10, "You can add up to 10 photos"),
 	}), [common.photosRequired]);
 
 	const initialValues = {
@@ -75,7 +75,6 @@ export const AddService = () => {
 
 		try {
 			const response = await axios.post("/api/items/add", formData, {
-				headers: { "Content-Type": "multipart/form-data" },
 				onUploadProgress: (event) => {
 					if (event.total) setUploadProgress((event.loaded * 100) / event.total);
 				},
@@ -126,7 +125,7 @@ export const AddService = () => {
 						<FormControl><FormLabel htmlFor="description">{text.description}</FormLabel><Textarea id="description" name="description" value={formik.values.description} onChange={formik.handleChange} placeholder={text.description} variant="filled" maxLength={10000} /></FormControl>
 						<FormControl isInvalid={Boolean(formik.touched.files && formik.errors.files)}>
 							<FormLabel htmlFor="service-photos">{common.photos}</FormLabel>
-							<Input id="service-photos" type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} onChange={(event) => { const files = Array.from(event.currentTarget.files || []); setPreviews(files.map((file) => URL.createObjectURL(file))); formik.setFieldValue("files", files); }} />
+			<Input id="service-photos" type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} onChange={(event) => { const files = Array.from(event.currentTarget.files || []); setPreviews(files.map((file) => URL.createObjectURL(file))); formik.setFieldValue("files", files); formik.setFieldTouched("files", true, false); }} />
 							<FormErrorMessage>{formik.errors.files as string}</FormErrorMessage>
 						</FormControl>
 						<Grid gridTemplateColumns="repeat(auto-fit, 160px)" gap="4">

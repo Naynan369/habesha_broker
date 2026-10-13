@@ -45,6 +45,7 @@ export const ContactInfo: FC<IContactInfo> = ({ userID, size, appearance = "bran
 	const [infos, loading] = useFetch({
 		fetchFunction: () =>
 			axios.get<ContactInfo[]>(`/api/user/contactInfo/${userID}`),
+		dependencies: [userID],
 	});
 
 	return (

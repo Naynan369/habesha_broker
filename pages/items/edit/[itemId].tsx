@@ -5,6 +5,8 @@ import {
 	Badge,
 	Box,
 	Button,
+	Checkbox,
+	CheckboxGroup,
 	Divider,
 	Flex,
 	Heading,
@@ -20,10 +22,11 @@ import { withSessionSsr } from "@config/cookie/cookie";
 import { MyTheme } from "@config/theme/MyTheme";
 import { prisma } from "@config/prisma";
 import { useLang } from "@libs/hooks/useLang";
+import { getMediaUrl } from "@libs/helpers/media";
 import axios from "axios";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useState } from "react";
 import { MdSave } from "react-icons/md";
 
 export const getServerSideProps = withSessionSsr(async ({ req, params, locale }) => {
@@ -45,8 +48,8 @@ export const getServerSideProps = withSessionSsr(async ({ req, params, locale })
 			itemType: true,
 			status: true,
 			images: true,
-			House: { select: { area: true, room: true, type: true, region: true, city: true } },
-			Car: { select: { model: true, status: true, manufacturer: true, year: true, transmition: true, color: true, cylinder: true, fuel: true } },
+			House: { select: { area: true, room: true, type: true, propertyType: true, priceFrequency: true, bedrooms: true, bathrooms: true, floor: true, totalFloors: true, furnishing: true, video: true, region: true, city: true, subcity: true, woreda: true, neighborhood: true, landmark: true, features: true } },
+			Car: { select: { model: true, status: true, manufacturer: true, year: true, transmition: true, color: true, cylinder: true, fuel: true, fuelType: true, bodyType: true, driveType: true, mileage: true, seats: true, doors: true, region: true, city: true, subcity: true, neighborhood: true, landmark: true, features: true } },
 			Service: { select: { category: true, region: true, city: true, serviceArea: true } },
 			BusinessSpace: { select: { spaceType: true, type: true, priceFrequency: true, area: true, region: true, city: true, subcity: true, woreda: true, neighborhood: true, landmark: true, electricity: true, water: true, roadAccess: true, parking: true } },
 		},
@@ -59,7 +62,7 @@ export const getServerSideProps = withSessionSsr(async ({ req, params, locale })
 function editValuesForItem(item: any) {
 	const detail = item.itemType === "HOUSE" ? item.House : item.itemType === "CAR" ? item.Car : item.itemType === "BUSINESS_SPACE" ? item.BusinessSpace : item.Service;
 	const specificProps = Object.fromEntries(
-		Object.entries(detail || {}).map(([key, value]) => [key, value == null ? "" : String(value)])
+		Object.entries(detail || {}).map(([key, value]) => [key, value == null ? "" : Array.isArray(value) ? value : String(value)])
 	);
 	return {
 		title: item.title || "",
@@ -71,22 +74,27 @@ function editValuesForItem(item: any) {
 }
 
 export default function EditItemPage({ item }) {
-	const pageBg = useColorModeValue("#f5f5f1", "#10191d");
-	const surface = useColorModeValue("white", "#17262b");
+	const pageBg = useColorModeValue("#f5f5f1", "#000000");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const router = useRouter();
 	const toast = useToast();
-	const serviceText = useLang().serviceListing;
-	const initialValues = useRef(editValuesForItem(item));
-	const [values, setValues] = useState(initialValues.current);
+	const lang = useLang();
+	const serviceText = lang.serviceListing;
+	const homeText = lang.businessListing;
+	const carText = lang.vehicleListing;
+	const panelBorder = useColorModeValue("gray.200", "whiteAlpha.200");
+	const panelBg = useColorModeValue("gray.50", "whiteAlpha.50");
+	const [initialValues] = useState(() => editValuesForItem(item));
+	const [values, setValues] = useState(initialValues);
 	const [saving, setSaving] = useState(false);
-	const isDirty = JSON.stringify(values) !== JSON.stringify(initialValues.current);
+	const isDirty = JSON.stringify(values) !== JSON.stringify(initialValues);
 
 	const updateValue = (name: string, value: string) => {
 		setValues((current) => ({ ...current, [name]: value }));
 	};
-	const updateSpecific = (name: string, value: string) => {
+	const updateSpecific = (name: string, value: string | string[]) => {
 		setValues((current) => ({
 			...current,
 			specificProps: { ...current.specificProps, [name]: value },
@@ -131,7 +139,7 @@ export default function EditItemPage({ item }) {
 			title={title}
 			name={name}
 			type={type}
-			value={values.specificProps[name] ?? ""}
+			value={Array.isArray(values.specificProps[name]) ? values.specificProps[name].join(", ") : String(values.specificProps[name] ?? "")}
 			onChange={(value) => updateSpecific(name, value)}
 			helpText={helpText}
 		/>
@@ -141,7 +149,7 @@ export default function EditItemPage({ item }) {
 			key={name}
 			title={title}
 			name={name}
-			value={values.specificProps[name] ?? ""}
+			value={Array.isArray(values.specificProps[name]) ? values.specificProps[name].join(", ") : String(values.specificProps[name] ?? "")}
 			onChange={(value) => updateSpecific(name, value)}
 			isSelect
 			required
@@ -153,30 +161,63 @@ export default function EditItemPage({ item }) {
 
 	const detailFields = item.itemType === "SERVICE" ? (
 		<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
-			{select(serviceText.category, "category", Object.entries(serviceText.categories) as Array<[string, string]>) }
+					{select(serviceText.category, "category", Object.entries(serviceText.categories) as Array<[string, string]>) }
 			{field(serviceText.region, "region")}
 			{field(serviceText.city, "city")}
 			{field(serviceText.serviceArea, "serviceArea")}
 		</SimpleGrid>
 	) : item.itemType === "HOUSE" ? (
-		<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
-			{field("Area", "area", "number", "Leave blank if the area is not available.")}
-			{field("Rooms", "room", "number", "Leave blank if the room count is not available.")}
-			{select("House type", "type", [["RENT", "For rent"], ["FORSALE", "For sale"]])}
-			{field("Region", "region")}
-			{field("City", "city")}
-		</SimpleGrid>
+		<>
+			<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
+				{select(homeText.propertyType, "propertyType", Object.entries(homeText.propertyTypes) as Array<[string, string]>) }
+				{select(homeText.rentOrSale, "type", [["RENT", homeText.rent], ["FORSALE", homeText.sale]])}
+				{values.specificProps.type === "RENT" && select(homeText.priceFrequency, "priceFrequency", Object.entries(homeText.frequencies) as Array<[string, string]>) }
+				{field(homeText.floorArea, "area", "number")}
+				{field(homeText.rooms, "room", "number")}
+				{field(homeText.bedrooms, "bedrooms", "number")}
+				{field(homeText.bathrooms, "bathrooms", "number")}
+				{field(homeText.floor, "floor", "number")}
+				{field(homeText.totalFloors, "totalFloors", "number")}
+				{select(homeText.furnishing, "furnishing", [["", "Not specified"], ...Object.entries(homeText.furnishingTypes)] as Array<[string, string]>) }
+				{[["region", homeText.region], ["city", homeText.city], ["subcity", homeText.subcity], ["woreda", homeText.woreda], ["neighborhood", homeText.neighborhood], ["landmark", homeText.landmark]].map(([name, label]) => field(label, name))}
+			</SimpleGrid>
+			<Box mt="5" p="4" border="1px solid" borderColor={panelBorder} borderRadius="xl" bg={panelBg}>
+				<Text mb="3" fontWeight="semibold">{homeText.features}</Text>
+				<CheckboxGroup colorScheme="orange" value={Array.isArray(values.specificProps.features) ? values.specificProps.features : []} onChange={(selected) => updateSpecific("features", selected as string[])}>
+					<SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing="3">
+						{Object.entries(homeText.homeFeatures).map(([value, label]) => <Checkbox key={value} value={value}>{label}</Checkbox>)}
+					</SimpleGrid>
+				</CheckboxGroup>
+			</Box>
+		</>
 	) : item.itemType === "CAR" ? (
-		<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
-			{field("Manufacturer", "manufacturer")}
-			{field("Model", "model")}
-			{field("Year", "year", "number", "Leave blank if the year is unknown.")}
-			{select("Condition", "status", [["USED", "Used"], ["NEW", "Brand new"], ["NEW_ETH", "New in Ethiopia"]])}
-			{select("Transmission", "transmition", [["AUTO", "Automatic"], ["MANUAL", "Manual"]])}
-			{field("Color", "color")}
-			{field("Cylinder size", "cylinder", "number", "Leave blank if not available.")}
-			{field("Fuel consumption", "fuel", "number", "Leave blank if not available.")}
-		</SimpleGrid>
+		<>
+			<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
+				{field(carText.manufacturer, "manufacturer")}
+				{field(carText.model, "model")}
+				{field(carText.year, "year", "number")}
+				{select(carText.status, "status", [["USED", carText.used], ["NEW", carText.new], ["NEW_ETH", carText.newInEthiopia]])}
+				{select(carText.bodyType, "bodyType", Object.entries(carText.bodyTypes) as Array<[string, string]>) }
+				{select(carText.transmission, "transmition", [["AUTO", carText.automatic], ["MANUAL", carText.manual]])}
+				{select(carText.fuelType, "fuelType", Object.entries(carText.fuelTypes) as Array<[string, string]>) }
+				{select(carText.driveType, "driveType", Object.entries(carText.driveTypes) as Array<[string, string]>) }
+				{field(carText.color, "color")}
+				{field(carText.cylinder, "cylinder", "number")}
+				{field(carText.fuel, "fuel", "number")}
+				{field(carText.mileage, "mileage", "number")}
+				{field(carText.seats, "seats", "number")}
+				{field(carText.doors, "doors", "number")}
+				{[["region", carText.region], ["city", carText.city], ["subcity", carText.subcity], ["neighborhood", carText.neighborhood], ["landmark", carText.landmark]].map(([name, label]) => field(label, name))}
+			</SimpleGrid>
+			<Box mt="5" p="4" border="1px solid" borderColor={panelBorder} borderRadius="xl" bg={panelBg}>
+				<Text mb="3" fontWeight="semibold">{carText.features}</Text>
+				<CheckboxGroup colorScheme="orange" value={Array.isArray(values.specificProps.features) ? values.specificProps.features : []} onChange={(selected) => updateSpecific("features", selected as string[])}>
+					<SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing="3">
+						{Object.entries(carText.vehicleFeatures).map(([value, label]) => <Checkbox key={value} value={value}>{label}</Checkbox>)}
+					</SimpleGrid>
+				</CheckboxGroup>
+			</Box>
+		</>
 	) : (
 		<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
 			{select("Space type", "spaceType", [["SHOP", "Shop"], ["OFFICE", "Office"], ["WAREHOUSE", "Warehouse"], ["MARKET_STALL", "Market stall"], ["WORKSHOP", "Workshop"], ["LAND", "Commercial land"]])}
@@ -229,6 +270,12 @@ export default function EditItemPage({ item }) {
 									<ListingImage key={`${image}-${index}`} src={image} alt={`${item.title} photo ${index + 1}`} itemType={item.itemType} h="28" borderRadius="lg" />
 								))}
 							</SimpleGrid>
+						</Box>
+					)}
+					{item.itemType === "HOUSE" && item.House?.video && (
+						<Box bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" p={{ base: 4, md: 6 }} mb="6">
+							<Heading size="sm" mb="4">{homeText.video}</Heading>
+							<video aria-label={homeText.videoPreview} controls preload="metadata" src={getMediaUrl(item.House.video, "items")} style={{ width: "100%", maxHeight: 400, borderRadius: 12, background: "#000000" }} />
 						</Box>
 					)}
 

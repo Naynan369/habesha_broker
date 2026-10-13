@@ -1,5 +1,7 @@
-import { Box, Flex, Heading } from "@chakra-ui/layout";
 import {
+	Box,
+	Flex,
+	Heading,
 	Button,
 	IconButton,
 	Input,
@@ -20,6 +22,7 @@ import { useRouter } from "next/router";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import Head from "next/head";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
+import { BrandLogo } from "@components/shared/BrandLogo";
 
 export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 	const user = req.session.user;
@@ -46,8 +49,8 @@ export default function MyItemsList({ user }) {
 		createdAt: "desc",
 	} as any);
 	const router = useRouter();
-	const pageBg = useColorModeValue("#f5f5f1", "#10191d");
-	const surface = useColorModeValue("white", "#17262b");
+	const pageBg = useColorModeValue("#f5f5f1", "#000000");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const headingColor = useColorModeValue("maingray", "gray.100");
 	const muted = useColorModeValue("gray.600", "gray.400");
@@ -81,9 +84,9 @@ export default function MyItemsList({ user }) {
 					>
 						<ArrowBackIcon />
 					</IconButton>
-					<Flex direction="column" minW="0">
-						<Heading fontSize="md" noOfLines={1}>Habesha Brokers</Heading>
-						<Text color="whiteAlpha.700" fontSize="xs" letterSpacing=".1em" textTransform="uppercase">Seller workspace</Text>
+					<Flex direction="column" minW="0" gap="1">
+						<BrandLogo />
+						<Text color="whiteAlpha.700" fontSize="9px" letterSpacing=".1em" textTransform="uppercase">Seller workspace</Text>
 					</Flex>
 					<Box flex={1}></Box>
 					<ColorModeToggle />

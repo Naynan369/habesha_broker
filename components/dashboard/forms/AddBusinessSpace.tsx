@@ -5,6 +5,7 @@ import {
 	CircularProgressLabel,
 	Flex,
 	FormControl,
+	FormErrorMessage,
 	FormLabel,
 	Grid,
 	Heading,
@@ -26,7 +27,7 @@ import { useLang } from "@libs/hooks/useLang";
 import axios from "axios";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MdClose, MdSave } from "react-icons/md";
 import * as yup from "yup";
 
@@ -44,7 +45,7 @@ const schema = yup.object().shape({
 	area: yup.number().min(1).required(),
 	region: yup.string().trim().required(),
 	city: yup.string().trim().required(),
-	files: yup.array().min(1),
+	files: yup.array().min(1, "Add at least one photo").max(10, "You can add up to 10 photos"),
 });
 
 export const AddBusinessSpace = () => {
@@ -54,6 +55,8 @@ export const AddBusinessSpace = () => {
 	const uploadButtonBg = useColorModeValue("orange.50", "whiteAlpha.100");
 	const uploadButtonText = useColorModeValue("orange.800", "orange.100");
 	const [uploadProgress, setUploadProgress] = useState(0);
+	const [previews, setPreviews] = useState<string[]>([]);
+	useEffect(() => () => previews.forEach((preview) => URL.revokeObjectURL(preview)), [previews]);
 
 	const initialValues = {
 		title: "",
@@ -86,7 +89,6 @@ export const AddBusinessSpace = () => {
 
 		try {
 			const response = await axios.post("/api/items/add", formData, {
-				headers: { "Content-Type": "multipart/form-data" },
 				onUploadProgress: (event) => {
 					if (event.total) setUploadProgress((event.loaded * 100) / event.total);
 				},
@@ -148,11 +150,11 @@ export const AddBusinessSpace = () => {
 					</Flex></FormControl>
 
 					<FormControl><FormLabel htmlFor="description">{text.description}</FormLabel><Textarea id="description" name="description" value={formik.values.description} onChange={formik.handleChange} placeholder={text.description} variant="filled" maxLength={10000} /></FormControl>
-					<FormControl><FormLabel htmlFor="business-photos">{text.photos}</FormLabel><Input id="business-photos" type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} onChange={(event) => formik.setFieldValue("files", Array.from(event.currentTarget.files || []))} />
-						{formik.touched.files && formik.errors.files && <Text mt="2" color="red.500" fontSize="sm">{text.photosRequired}</Text>}
+					<FormControl isInvalid={Boolean(formik.touched.files && formik.errors.files)}><FormLabel htmlFor="business-photos">{text.photos}</FormLabel><Input id="business-photos" type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} onChange={(event) => { const files = Array.from(event.currentTarget.files || []); setPreviews(files.map((file) => URL.createObjectURL(file))); formik.setFieldValue("files", files); formik.setFieldTouched("files", true, false); }} />
+						<FormErrorMessage>{String(formik.errors.files || "")}</FormErrorMessage>
 					</FormControl>
 					<Grid gridTemplateColumns="repeat(auto-fit, 160px)" gap="4">
-						{formik.values.files.map((file, index) => <Image alt={`${text.photoPreview} ${index + 1}`} key={`${file.name}-${index}`} borderRadius="lg" width="160px" height="160px" objectFit="cover" src={URL.createObjectURL(file)} />)}
+						{formik.values.files.map((file, index) => <Image alt={`${text.photoPreview} ${index + 1}`} key={`${file.name}-${index}`} borderRadius="lg" width="160px" height="160px" objectFit="cover" src={previews[index]} />)}
 					</Grid>
 					<Flex justify={{ base: "stretch", sm: "flex-end" }} direction={{ base: "column-reverse", sm: "row" }} gap="3">
 						<Button type="submit" w={{ base: "full", sm: "auto" }} colorScheme="orange" leftIcon={<MdSave />} isLoading={formik.isSubmitting} isDisabled={!formik.isValid}>{text.submit}</Button>

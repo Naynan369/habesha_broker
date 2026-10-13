@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Image, Text } from "@chakra-ui/react";
+import { Box, Flex, Heading, Image, Text, useColorModeValue } from "@chakra-ui/react";
 import { keyframes } from "@emotion/react";
 import { am } from "@locales/am";
 import { en } from "@locales/en";
@@ -23,6 +23,8 @@ export const ServicesSection = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
 	const cards = lang.home.service_cards;
+	const sectionBackground = useColorModeValue("maingray", "#000000");
+	const imageFallback = useColorModeValue("#29464b", "#0c0c0c");
 
 	const renderCards = (isDuplicate: boolean) => cards.map((card, index) => {
 		const photo = servicePhotos[index];
@@ -57,7 +59,7 @@ export const ServicesSection = () => {
 					borderColor="whiteAlpha.500"
 					borderRadius="full"
 					overflow="hidden"
-					bg="#29464b"
+					bg={imageFallback}
 					boxShadow="0 12px 28px rgba(0, 0, 0, .22)"
 					transition="border-color 220ms ease, box-shadow 220ms ease"
 					_hover={{ borderColor: "mainyellow", boxShadow: "0 14px 32px rgba(0, 0, 0, .3)" }}
@@ -84,7 +86,7 @@ export const ServicesSection = () => {
 	});
 
 	return (
-		<Box id="services" as="section" scrollMarginTop="96px" bg="maingray" px={{ base: 5, md: 10, xl: 14 }} py={{ base: 12, md: 16 }}>
+		<Box id="services" as="section" scrollMarginTop="96px" bg={sectionBackground} px={{ base: 5, md: 10, xl: 14 }} py={{ base: 12, md: 16 }}>
 			<Box maxW="1440px" mx="auto">
 				<Flex align="center" justify="space-between" gap="5" mb={{ base: 5, md: 7 }}>
 					<Box>

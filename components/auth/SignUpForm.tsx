@@ -151,7 +151,7 @@ export const SignUpForm = () => {
 					>
 						<Flex gap="1" align="center" fontSize="sm" color={mutedColor}>
 							<Text>{lang.auth.have_account}</Text>
-							<Link href="/auth/login" passHref>
+							<Link legacyBehavior href="/auth/login" passHref>
 								<Button as="a" variant="link" size="sm" color="mainorange" fontWeight="700">
 									{lang.auth.sign_in}
 								</Button>

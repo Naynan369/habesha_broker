@@ -24,9 +24,9 @@ export const AuthInputField: FC<IAuthInputField> = ({
 	autoComplete,
 }) => {
 	const labelColor = useColorModeValue("gray.700", "gray.200");
-	const fieldBg = useColorModeValue("gray.50", "#142126");
+	const fieldBg = useColorModeValue("gray.50", "#101010");
 	const fieldBorder = useColorModeValue("gray.200", "whiteAlpha.300");
-	const hoverBg = useColorModeValue("white", "#1b2a30");
+	const hoverBg = useColorModeValue("white", "#111111");
 	return (
 		<FormControl
 			isRequired
@@ -53,7 +53,7 @@ export const AuthInputField: FC<IAuthInputField> = ({
 				id={name}
 			/>
 			<FormErrorMessage>
-				{formik.touched[name] && formik.errors[name]}
+				{formik.touched[name] && String(formik.errors[name] || "")}
 			</FormErrorMessage>
 		</FormControl>
 	);

@@ -12,6 +12,7 @@ import { HouseAddForm } from "@components/dashboard/forms/AddHouse";
 import { AddBusinessSpace } from "@components/dashboard/forms/AddBusinessSpace";
 import { AddService } from "@components/dashboard/forms/AddService";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
+import { BrandLogo } from "@components/shared/BrandLogo";
 import { useLang } from "@libs/hooks/useLang";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { MyTheme } from "@config/theme/MyTheme";
@@ -53,10 +54,11 @@ export default function AddItem({ user }) {
 	const lang = useLang();
 	const text = lang.businessListing;
 	const [type, setType] = useState("" as FormTypes);
-	const pageBg = useColorModeValue("#f5f5f1", "#10191d");
+	const pageBg = useColorModeValue("#f5f5f1", "#000000");
 	const textColor = useColorModeValue("#25383d", "#e8eff0");
 	const muted = useColorModeValue("gray.600", "gray.400");
-	const formSurface = useColorModeValue("white", "#17262b");
+	const formSurface = useColorModeValue("white", "#0c0c0c");
+	const navBackground = useColorModeValue("maingray", "#000000");
 	const formBorder = useColorModeValue("gray.300", "whiteAlpha.300");
 	const formShadow = useColorModeValue("0 12px 32px rgba(21,42,44,.08)", "0 14px 34px rgba(0,0,0,.32)");
 
@@ -76,16 +78,16 @@ export default function AddItem({ user }) {
 					]}
 					px={MyTheme.paddings.pagePadding}
 					boxShadow="md"
-					background={"maingray"}
+					background={navBackground}
 					color="white"
 					alignItems={"center"}
 				>
-					<Flex direction={"column"}>
-						<Heading fontSize={"md"}>Habesha Brokers</Heading>
+					<Flex align="center" gap={{ base: 3, sm: 5 }}>
+						<BrandLogo />
 						<Heading
 							color="mainyellow"
 							textTransform={"uppercase"}
-							fontSize={"xl"}
+							fontSize={{ base: "sm", sm: "xl" }}
 						>
 							{text.addListing}
 						</Heading>
@@ -159,7 +161,7 @@ const ItemButton: FC<ItemButtonProps> = ({
 	changeType,
 	selected,
 }: ItemButtonProps) => {
-	const unselectedBg = useColorModeValue("white", "#17262b");
+	const unselectedBg = useColorModeValue("white", "#0c0c0c");
 	const unselectedColor = useColorModeValue("#25383d", "#e8eff0");
 	const border = useColorModeValue("gray.300", "whiteAlpha.400");
 	const selectedBg = useColorModeValue("#fffaf0", "rgba(233,183,92,.12)");

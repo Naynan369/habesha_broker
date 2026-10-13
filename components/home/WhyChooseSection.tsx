@@ -8,7 +8,7 @@ import { MdHandshake, MdLocationOn, MdOutlineVerifiedUser } from "react-icons/md
 export const WhyChooseSection = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
-	const sectionBg = useColorModeValue("#f3f0e8", "#10191d");
+	const sectionBg = useColorModeValue("#f3f0e8", "#000000");
 	const headingColor = useColorModeValue("#143A45", "#e7eff0");
 	const bodyColor = useColorModeValue("gray.600", "gray.300");
 	const kickerColor = useColorModeValue("mainred", "#e6a17c");
@@ -47,7 +47,7 @@ const WhyCard: FC<IWhyCard> = ({ number, title, icon, desc }) => {
 	const numberColor = useColorModeValue("gray.500", "gray.400");
 	const shadow = useColorModeValue("0 10px 26px rgba(23,39,34,.08)", "0 14px 30px rgba(0,0,0,.24)");
 	const hoverShadow = useColorModeValue("0 18px 34px rgba(21,42,44,.14)", "0 18px 36px rgba(0,0,0,.38)");
-	const cardGradient = useColorModeValue("linear(to-br, #ffffff, #fbf8f1)", "linear(to-br, #1b2a30, #152328)");
+	const cardGradient = useColorModeValue("linear(to-br, #ffffff, #fbf8f1)", "linear(to-br, #111111, #101010)");
 	return (
 		<Box
 			as="article"

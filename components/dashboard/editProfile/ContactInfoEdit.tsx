@@ -25,7 +25,7 @@ export const ContactInfoEdit = ({ user }) => {
 	const [value, setValue] = useState("");
 	const [update, setUpdate] = useState(0);
 	const toast = useToast();
-	const surface = useColorModeValue("white", "#17262b");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const textColor = useColorModeValue("maingray", "gray.100");
 

@@ -99,15 +99,27 @@ model ListingPayment {
 }
 
 model House {
-  id     String @id @default(cuid())
-  itemId String @unique
-  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
-
-  area   Float?
-  room   Int?
-  type   HouseType?
-  region String?
-  city   String?
+  id            String                   @id @default(cuid())
+  itemId        String                   @unique
+  item          Item                     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  area          Float?
+  room          Int?
+  type          HouseType?
+  propertyType  ResidentialPropertyType?
+  priceFrequency PriceFrequency?
+  bedrooms      Int?
+  bathrooms     Int?
+  floor         Int?
+  totalFloors   Int?
+  furnishing    FurnishingStatus?
+  video         String?
+  region        String?
+  city          String?
+  subcity       String?
+  woreda        String?
+  neighborhood  String?
+  landmark      String?
+  features      String[]                 @default([])
 }
 
 model Car {
@@ -123,6 +135,18 @@ model Car {
   color        String?
   cylinder     Float?
   fuel         Float?
+  fuelType     VehicleFuelType?
+  bodyType     VehicleBodyType?
+  driveType    VehicleDriveType?
+  mileage      Int?
+  seats        Int?
+  doors        Int?
+  region       String?
+  city         String?
+  subcity      String?
+  neighborhood String?
+  landmark     String?
+  features     String[]   @default([])
 }
 
 model BusinessSpace {
@@ -255,6 +279,52 @@ enum CarType {
   USED
   NEW
   NEW_ETH
+}
+
+enum ResidentialPropertyType {
+  APARTMENT
+  DETACHED_HOUSE
+  VILLA
+  CONDOMINIUM
+  TOWNHOUSE
+  LAND
+  OTHER
+}
+
+enum FurnishingStatus {
+  FURNISHED
+  SEMI_FURNISHED
+  UNFURNISHED
+}
+
+enum VehicleFuelType {
+  PETROL
+  DIESEL
+  HYBRID
+  ELECTRIC
+  LPG
+  OTHER
+}
+
+enum VehicleBodyType {
+  SEDAN
+  SUV
+  HATCHBACK
+  PICKUP
+  VAN
+  MINIBUS
+  COUPE
+  WAGON
+  TRUCK
+  OTHER
+}
+
+enum VehicleDriveType {
+  FWD
+  RWD
+  AWD
+  FOUR_WD
+  OTHER
 }
 
 enum ActionType {

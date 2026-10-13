@@ -1,45 +1,79 @@
 import {
+	Box,
 	Button,
+	Checkbox,
+	CheckboxGroup,
+	CircularProgress,
+	CircularProgressLabel,
 	Flex,
 	FormControl,
 	FormErrorMessage,
 	FormLabel,
-	Input,
+	Grid,
+	Heading,
 	Image,
+	Input,
+	Modal,
+	ModalBody,
+	ModalContent,
+	ModalOverlay,
 	Select,
 	SimpleGrid,
 	Text,
 	Textarea,
-	Grid,
-	Modal,
-	CircularProgress,
-	CircularProgressLabel,
-	Heading,
-	ModalBody,
-	ModalContent,
-	ModalOverlay,
-	useToast,
 	useColorModeValue,
+	useToast,
 } from "@chakra-ui/react";
+import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizardProgress";
+import { InputField } from "@components/dashboard/forms/InputField";
 import { useLang } from "@libs/hooks/useLang";
 import axios from "axios";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
-import { useState } from "react";
-import { MdClose, MdSave } from "react-icons/md";
+import { useEffect, useState, type ChangeEvent } from "react";
+import { MdArrowBack, MdArrowForward, MdClose, MdSave } from "react-icons/md";
 import * as yup from "yup";
-import { InputField } from "./InputField";
+
+const CAR_FEATURES = [
+	"AIR_CONDITIONING", "AIRBAGS", "ABS", "REAR_CAMERA", "PARKING_SENSORS", "SUNROOF",
+	"ALLOY_WHEELS", "CRUISE_CONTROL", "POWER_WINDOWS", "POWER_STEERING", "BLUETOOTH", "SPARE_TIRE",
+];
+const MAX_PHOTO_SIZE = 8 * 1024 * 1024;
+
+const optionalNumber = () => yup.number()
+	.transform((value, originalValue) => originalValue === "" || originalValue == null ? undefined : value)
+	.nullable()
+	.notRequired();
 
 const CarSchema = yup.object().shape({
 	title: yup.string().trim().min(5, "Use at least 5 characters").max(300, "Keep the title under 300 characters").required("A listing title is required"),
 	description: yup.string().max(10000, "Keep the description under 10,000 characters"),
-	model: yup.string(),
-	price: yup.number().typeError("Enter a valid price").min(0, "Price cannot be negative").required("A price is required"),
-	files: yup.array().min(1, "Add at least one photo before submitting").max(10, "You can add up to 10 photos"),
-	rent: yup.boolean(),
+	price: yup.number().typeError("Enter a valid price").min(1, "Price must be greater than zero").required("A price is required"),
+	priceType: yup.string().oneOf(["FIXED", "NEGOTIABLE"]).required("Choose a price type"),
+	files: yup.array().of(yup.mixed()).min(1, "Add at least one photo before submitting").max(10, "You can add up to 10 photos").test("photo-size", "Each photo must be 8 MB or smaller", (files: any[]) => !files || files.every((file) => file.size <= MAX_PHOTO_SIZE)),
+	status: yup.string().oneOf(["USED", "NEW", "NEW_ETH"]).required("Choose the vehicle condition"),
+	manufacturer: yup.string().trim().max(100).required("Manufacturer is required"),
+	model: yup.string().trim().max(100).required("Model is required"),
+	year: yup.number().typeError("Enter a valid year").integer("Use a whole year").min(1950, "Enter a year after 1950").max(new Date().getFullYear() + 2, "That year is too far in the future").required("Year is required"),
+	transmition: yup.string().oneOf(["AUTO", "MANUAL"]).required("Choose the transmission"),
+	color: yup.string().max(50),
+	cylinder: optionalNumber().min(0, "Engine size cannot be negative"),
+	fuel: optionalNumber().min(0, "Fuel consumption cannot be negative"),
+	fuelType: yup.string().oneOf(["PETROL", "DIESEL", "HYBRID", "ELECTRIC", "LPG", "OTHER"]).required("Choose the fuel type"),
+	bodyType: yup.string().oneOf(["SEDAN", "SUV", "HATCHBACK", "PICKUP", "VAN", "MINIBUS", "COUPE", "WAGON", "TRUCK", "OTHER"]).required("Choose the body style"),
+	driveType: yup.string().oneOf(["FWD", "RWD", "AWD", "FOUR_WD", "OTHER"]).required("Choose the drivetrain"),
+	mileage: optionalNumber().integer("Use a whole number of kilometres").min(0, "Mileage cannot be negative"),
+	seats: optionalNumber().integer("Use a whole number").min(1, "A vehicle must have at least one seat").max(100, "Check the seat count"),
+	doors: optionalNumber().integer("Use a whole number").min(1, "A vehicle must have at least one door").max(10, "Check the door count"),
+	region: yup.string().trim().max(100).required("Region is required"),
+	city: yup.string().trim().max(100).required("City or town is required"),
+	subcity: yup.string().max(100),
+	neighborhood: yup.string().max(120),
+	landmark: yup.string().max(120),
+	features: yup.array().of(yup.string().oneOf(CAR_FEATURES)).max(CAR_FEATURES.length),
 });
 
-export const AddCar = ({ user }) => {
+export const AddCar = (_props: { user?: unknown }) => {
 	const router = useRouter();
 	const toast = useToast();
 	const lang = useLang();
@@ -47,298 +81,217 @@ export const AddCar = ({ user }) => {
 	const text = lang.vehicleListing;
 	const uploadButtonBg = useColorModeValue("orange.50", "whiteAlpha.100");
 	const uploadButtonText = useColorModeValue("orange.800", "orange.100");
+	const muted = useColorModeValue("gray.600", "gray.400");
+	const panelBg = useColorModeValue("gray.50", "whiteAlpha.50");
+	const panelBorder = useColorModeValue("gray.200", "whiteAlpha.200");
 	const [uploadProgress, setUploadProgress] = useState(0);
+	const [previews, setPreviews] = useState<string[]>([]);
+	const [step, setStep] = useState(0);
+	useEffect(() => () => previews.forEach((preview) => URL.revokeObjectURL(preview)), [previews]);
 
-	const initialValues = {
-		title: "",
-		description: "",
-		price: 0.0,
-		priceType: "FIXED",
-		itemType: "CAR",
-		files: [],
+	const steps = common.wizard.steps as string[];
+	const hints = common.wizard.hints as string[];
+	const fieldsByStep = [
+		["title", "price", "priceType", "status", "manufacturer", "model", "year"],
+		["bodyType", "transmition", "fuelType", "driveType", "color", "cylinder", "fuel", "mileage", "seats", "doors", "features"],
+		["region", "city", "subcity", "neighborhood", "landmark", "description"],
+		["files"],
+	];
 
-		model: "",
-		status: "USED",
-		manufacturer: "",
-		year: new Date().getFullYear(),
-		transmition: "AUTO",
-		color: "",
-		cylinder: 0.0,
-		fuel: 0.0,
-	};
-
-	const onSubmit = (values, actions) => {
+	const onSubmit = async (values: any, actions: any) => {
 		const formdata = new FormData();
 		const { files, ...others } = values;
-
-		for (let key in others) {
-			formdata.append(key, others[key]);
+		for (const [key, value] of Object.entries(others)) {
+			formdata.append(key, Array.isArray(value) ? JSON.stringify(value) : String(value ?? ""));
 		}
-		files.forEach((file) => {
-			formdata.append("files", file);
-		});
+		files.forEach((file: File) => formdata.append("files", file));
 
-		actions.setSubmitting(true);
-
-		axios
-			.post("/api/items/add", formdata, {
-				headers: {
-					"Content-Type": "multipart/form-data",
-				},
-
+		try {
+			const response = await axios.post("/api/items/add", formdata, {
 				onUploadProgress: (event) => {
 					if (event.total) setUploadProgress(Math.round((event.loaded * 100) / event.total));
 				},
-			})
-			.then((res) => {
-				const { msg } = res.data;
-
-				toast({
-					title: "Success",
-					status: "success",
-					description: msg,
-					isClosable: true,
-				});
-				router.push(`/items/${res.data.itemId}`);
-			})
-			.catch((error) => {
-				const err = error?.response?.data?.err || error?.message || "Unable to submit your listing";
-				toast({
-					title: "Error",
-					status: "error",
-					description: err,
-					isClosable: true,
-				});
-			})
-			.finally(() => {
-				actions.setSubmitting(false);
 			});
+			toast({ title: common.successTitle, status: "success", description: response.data.msg, isClosable: true });
+			await router.push(`/items/${response.data.itemId}`);
+		} catch (error: any) {
+			const message = error?.response?.data?.err || error?.message || common.submitError;
+			toast({ title: common.errorTitle, status: "error", description: message, isClosable: true });
+		} finally {
+			actions.setSubmitting(false);
+		}
+	};
+
+	const nextStep = async (formik: any) => {
+		const errors = await formik.validateForm();
+		const touched = { ...formik.touched };
+		fieldsByStep[step].forEach((field) => { touched[field] = true; });
+		formik.setTouched(touched, false);
+		if (fieldsByStep[step].some((field) => errors[field])) return;
+		setStep((current) => Math.min(current + 1, steps.length - 1));
+	};
+
+	const choosePhotos = (event: ChangeEvent<HTMLInputElement>, formik: any) => {
+		const chosen = Array.from(event.currentTarget.files || []);
+		if (chosen.some((file) => file.size > MAX_PHOTO_SIZE)) {
+			formik.setFieldError("files", "Each photo must be 8 MB or smaller");
+			formik.setFieldTouched("files", true, false);
+			return;
+		}
+		if (chosen.length > 10) toast({ title: common.photos, description: common.wizard.maxPhotos, status: "warning", isClosable: true });
+		previews.forEach((preview) => URL.revokeObjectURL(preview));
+		const files = chosen.slice(0, 10);
+		setPreviews(files.map((file) => URL.createObjectURL(file)));
+		formik.setFieldValue("files", files);
+		formik.setFieldTouched("files", true, false);
+	};
+
+	const removePhoto = (index: number, formik: any) => {
+		const nextFiles = formik.values.files.filter((_file: File, fileIndex: number) => fileIndex !== index);
+		const nextPreviews = previews.filter((_preview, previewIndex) => previewIndex !== index);
+		if (previews[index]) URL.revokeObjectURL(previews[index]);
+		setPreviews(nextPreviews);
+		formik.setFieldValue("files", nextFiles);
 	};
 
 	return (
-		<Formik
-			initialValues={initialValues}
-			validationSchema={CarSchema}
-			onSubmit={onSubmit}
-		>
+		<Formik initialValues={{
+			title: "", description: "", price: "", priceType: "FIXED", itemType: "CAR", files: [],
+			model: "", status: "USED", manufacturer: "", year: "", transmition: "AUTO", color: "",
+			cylinder: "", fuel: "", fuelType: "", bodyType: "", driveType: "", mileage: "", seats: "", doors: "",
+			region: "", city: "", subcity: "", neighborhood: "", landmark: "", features: [],
+		}} validationSchema={CarSchema} onSubmit={onSubmit} validateOnBlur>
 			{(formik) => (
 				<form onSubmit={formik.handleSubmit}>
-					<Flex direction="column" gap={{ base: 5, md: 6 }}>
-						<Modal
-							closeOnOverlayClick={false}
-							closeOnEsc={false}
-							onClose={() => {}}
-							isOpen={formik.isSubmitting}
-						>
-							<ModalOverlay></ModalOverlay>
-							<ModalContent p="10">
-								<ModalBody
-									display={"flex"}
-									flexDirection={"column"}
-									alignItems={"center"}
-									justifyContent="center"
-								>
-									<CircularProgress
-										size={"150px"}
-										value={uploadProgress}
-									>
-										<CircularProgressLabel>
-											{uploadProgress}%
-										</CircularProgressLabel>
-									</CircularProgress>
-									<Heading mt="4" fontSize="lg">
-										{text.uploading}
-									</Heading>
-								</ModalBody>
-							</ModalContent>
-						</Modal>
-						<SimpleGrid spacing="5">
-							<InputField
-								formik={formik}
-								label={common.title}
-								name="title"
-								type="text"
-							/>
-						</SimpleGrid>
-						<SimpleGrid columns={[1, 2, 3]} spacing="5">
-							<FormControl>
-								<FormLabel htmlFor="priceType">{common.priceType}</FormLabel>
-								<Select
-									id="priceType"
-									name="priceType"
-									value={formik.values.priceType}
-									onChange={formik.handleChange}
-									variant={"filled"}
-								>
-									<option value="FIXED">{common.fixed}</option>
-									<option value="NEGOTIABLE">
-										{common.negotiable}
-									</option>
-								</Select>
-							</FormControl>
-							<InputField
-								formik={formik}
-								label={common.price}
-								name="price"
-								type="number"
-								suffix={<Text>ETB</Text>}
-							/>
-							<FormControl>
-								<FormLabel htmlFor="status">{text.status}</FormLabel>
-								<Select
-									id="status"
-									name="status"
-									value={formik.values.status}
-									onChange={formik.handleChange}
-									variant={"filled"}
-								>
-									<option value="USED">{text.used}</option>
-									<option value="NEW">{text.new}</option>
-									<option value="NEW_ETH">
-										{text.newInEthiopia}
-									</option>
-								</Select>
-							</FormControl>
-						</SimpleGrid>
-						<SimpleGrid columns={[1, 2, 3]} spacing="5">
-							<InputField
-								formik={formik}
-								label={text.manufacturer}
-								name="manufacturer"
-								type="text"
-							/>
-							<InputField
-								formik={formik}
-								label={text.model}
-								name="model"
-								type="text"
-							/>
-							<InputField
-								formik={formik}
-								label={text.year}
-								name="year"
-								type="number"
-							/>
-						</SimpleGrid>
-						<SimpleGrid columns={[1, 2]} spacing="5">
-							<FormControl>
-								<FormLabel htmlFor="transmition">{text.transmission}</FormLabel>
-								<Select
-									id="transmition"
-									name="transmition"
-									value={formik.values.transmition}
-									onChange={formik.handleChange}
-									variant={"filled"}
-								>
-									<option value="MANUAL">{text.manual}</option>
-									<option value="AUTO">{text.automatic}</option>
-								</Select>
-							</FormControl>
+					<Modal closeOnOverlayClick={false} closeOnEsc={false} onClose={() => {}} isOpen={formik.isSubmitting}>
+						<ModalOverlay />
+						<ModalContent p="10">
+							<ModalBody display="flex" flexDirection="column" alignItems="center" justifyContent="center">
+								<CircularProgress size="150px" value={uploadProgress}><CircularProgressLabel>{uploadProgress}%</CircularProgressLabel></CircularProgress>
+								<Heading mt="4" fontSize="lg">{text.uploading}</Heading>
+							</ModalBody>
+						</ModalContent>
+					</Modal>
 
-							<InputField
-								formik={formik}
-								label={text.color}
-								name="color"
-								type="text"
-							/>
+					<ListingWizardProgress steps={steps} hints={hints} activeStep={step} stepLabel={common.wizard.step} ofLabel={common.wizard.of} />
+
+					{step === 0 && <Flex direction="column" gap="5">
+						<InputField formik={formik} label={common.title} name="title" placeholder={text.titleHint} helperText={text.titleHelp} required />
+						<SimpleGrid columns={{ base: 1, md: 3 }} spacing="5">
+							<InputField formik={formik} label={common.price} name="price" type="number" suffix={<Text>ETB</Text>} required />
+							<SelectField formik={formik} name="priceType" label={common.priceType} options={[["FIXED", common.fixed], ["NEGOTIABLE", common.negotiable]]} required />
+							<SelectField formik={formik} name="status" label={text.status} options={[["USED", text.used], ["NEW", text.new], ["NEW_ETH", text.newInEthiopia]]} required />
 						</SimpleGrid>
-						<SimpleGrid columns={[1, 2]} spacing="5">
-							<InputField
-								formik={formik}
-								label={text.fuel}
-								name="fuel"
-								type="number"
-					suffix={<Text>{text.fuelUnit}</Text>}
-							/>
-							<InputField
-								formik={formik}
-								label={text.cylinder}
-								name="cylinder"
-								type="number"
-							/>
+						<SimpleGrid columns={{ base: 1, md: 3 }} spacing="5">
+							<InputField formik={formik} label={text.manufacturer} name="manufacturer" placeholder={text.manufacturerHint} required />
+							<InputField formik={formik} label={text.model} name="model" placeholder={text.modelHint} required />
+							<InputField formik={formik} label={text.year} name="year" type="number" placeholder="2018" required />
 						</SimpleGrid>
-						<FormControl
-							isInvalid={!!formik.errors.description}
-						>
+					</Flex>}
+
+					{step === 1 && <Flex direction="column" gap="5">
+						<SimpleGrid columns={{ base: 1, md: 3 }} spacing="5">
+							<SelectField formik={formik} name="bodyType" label={text.bodyType} options={Object.entries(text.bodyTypes)} required />
+							<SelectField formik={formik} name="transmition" label={text.transmission} options={[["AUTO", text.automatic], ["MANUAL", text.manual]]} required />
+							<SelectField formik={formik} name="fuelType" label={text.fuelType} options={Object.entries(text.fuelTypes)} required />
+							<SelectField formik={formik} name="driveType" label={text.driveType} options={Object.entries(text.driveTypes)} required />
+							<InputField formik={formik} label={text.color} name="color" placeholder={text.color} />
+							<InputField formik={formik} label={text.cylinder} name="cylinder" type="number" placeholder="e.g. 2.0" suffix={<Text>L</Text>} />
+							<InputField formik={formik} label={text.mileage} name="mileage" type="number" placeholder="e.g. 85000" suffix={<Text>{text.mileageUnit}</Text>} />
+							<InputField formik={formik} label={text.fuel} name="fuel" type="number" placeholder="e.g. 7.5" suffix={<Text>{text.fuelUnit}</Text>} />
+							<InputField formik={formik} label={text.seats} name="seats" type="number" placeholder="e.g. 5" />
+							<InputField formik={formik} label={text.doors} name="doors" type="number" placeholder="e.g. 4" />
+						</SimpleGrid>
+						<Box>
+							<FormControl isInvalid={Boolean(formik.touched.features && formik.errors.features)}>
+								<FormLabel mb="3">{text.features}</FormLabel>
+								<CheckboxGroup colorScheme="orange" value={formik.values.features} onChange={(value) => formik.setFieldValue("features", value)}>
+									<SimpleGrid columns={{ base: 1, sm: 2, lg: 3 }} spacing="3" p={{ base: 4, md: 5 }} border="1px solid" borderColor={panelBorder} borderRadius="xl" bg={panelBg}>
+										{Object.entries(text.vehicleFeatures).map(([value, label]) => <Checkbox key={value} value={value}>{label}</Checkbox>)}
+									</SimpleGrid>
+								</CheckboxGroup>
+							</FormControl>
+						</Box>
+					</Flex>}
+
+					{step === 2 && <Flex direction="column" gap="5">
+						<Text color={muted} fontSize="sm">{text.locationStepHint}</Text>
+						<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
+							<InputField formik={formik} label={text.region} name="region" placeholder={text.regionHint} required />
+							<InputField formik={formik} label={text.city} name="city" placeholder={text.cityHint} required />
+							<InputField formik={formik} label={text.subcity} name="subcity" placeholder={text.subcity} />
+							<InputField formik={formik} label={text.neighborhood} name="neighborhood" placeholder={text.neighborhood} />
+							<InputField formik={formik} label={text.landmark} name="landmark" placeholder={text.landmarkHint} />
+						</SimpleGrid>
+						<FormControl isInvalid={Boolean(formik.touched.description && formik.errors.description)}>
 							<FormLabel htmlFor="description">{common.description}</FormLabel>
-							<Textarea
-								id="description"
-								variant="filled"
-								name="description"
-								value={formik.values.description}
-								onChange={formik.handleChange}
-								placeholder={common.description}
-							></Textarea>
-							{!!formik.errors.description && (
-								<FormErrorMessage>
-									{formik.errors.description}
-								</FormErrorMessage>
-							)}
+							<Textarea id="description" name="description" value={formik.values.description} onChange={formik.handleChange} onBlur={formik.handleBlur} placeholder={text.descriptionHint} variant="filled" minH="36" maxLength={10000} />
+							<FormErrorMessage>{String(formik.errors.description || "")}</FormErrorMessage>
 						</FormControl>
-						<FormControl isInvalid={!!formik.errors.files && !!formik.touched.files}>
-							<FormLabel htmlFor="car-photos">{common.photos}</FormLabel>
-							<Input
-								id="car-photos"
-								onChange={(ev) => {
-									const files = ev.target.files;
-									formik.setFieldValue(
-										"files",
-									Array.from(files || [])
-									);
-								formik.setFieldTouched("files", true, false);
-								}}
-								variant={"filled"}
-								h="auto"
-								minH="12"
-								py="2"
-								sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }}
-								type="file"
-								name="files"
-								accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
-								placeholder="images"
-								multiple
-							></Input>
-							{formik.errors.files && formik.touched.files ? (
-								<FormErrorMessage>{String(formik.errors.files)}</FormErrorMessage>
-							) : (
-								<Text mt="2" color="gray.500" fontSize="sm">Choose 1–10 JPG, PNG, WebP, or GIF photos (up to 8 MB each).</Text>
-							)}
+					</Flex>}
+
+					{step === 3 && <Flex direction="column" gap="5">
+						<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
+							<ReviewCard label={common.title} value={formik.values.title || "—"} />
+							<ReviewCard label={common.wizard.priceLabel} value={formik.values.price ? `ETB ${Number(formik.values.price).toLocaleString("en-US")}` : "—"} />
+							<ReviewCard label={text.manufacturer} value={[formik.values.manufacturer, formik.values.model].filter(Boolean).join(" ") || "—"} />
+							<ReviewCard label={text.year} value={formik.values.year || "—"} />
+							<ReviewCard label={text.status} value={formik.values.status === "USED" ? text.used : formik.values.status === "NEW" ? text.new : text.newInEthiopia} />
+							<ReviewCard label={text.bodyType} value={text.bodyTypes[formik.values.bodyType] || "—"} />
+							<ReviewCard label={text.fuelType} value={text.fuelTypes[formik.values.fuelType] || "—"} />
+							<ReviewCard label={text.transmission} value={formik.values.transmition === "AUTO" ? text.automatic : text.manual} />
+							<ReviewCard label={text.city} value={[formik.values.city, formik.values.region].filter(Boolean).join(", ") || "—"} />
+							<ReviewCard label={text.mileage} value={formik.values.mileage ? `${Number(formik.values.mileage).toLocaleString("en-US")} ${text.mileageUnit}` : "—"} />
+						</SimpleGrid>
+						<Box p="4" border="1px solid" borderColor={panelBorder} borderRadius="xl" bg={panelBg}>
+							<Text fontSize="sm" fontWeight="semibold">{text.features}</Text>
+							<Text mt="1" color={muted} fontSize="sm">{formik.values.features.length ? formik.values.features.map((feature: string) => text.vehicleFeatures[feature]).join(" · ") : "—"}</Text>
+						</Box>
+						<FormControl isRequired isInvalid={Boolean(formik.touched.files && formik.errors.files)}>
+							<Flex align="center" justify="space-between" gap="3" wrap="wrap">
+								<FormLabel htmlFor="car-photos" mb="0">{common.photos}</FormLabel>
+								<Text fontSize="xs" color={muted}>{formik.values.files.length}/10 {common.wizard.photosCount}</Text>
+							</Flex>
+							<Text color={muted} fontSize="sm" mt="2" mb="3">{common.wizard.photoHelp}</Text>
+							<Input id="car-photos" onChange={(event) => choosePhotos(event, formik)} variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+							<FormErrorMessage>{String(formik.errors.files || "")}</FormErrorMessage>
 						</FormControl>
-						<Grid
-							gridTemplateColumns="repeat(auto-fit, 200px)"
-							gap={"5"}
-						>
-							{formik.values.files.map((file, index) => {
-								return (
-									<Image
-										alt={"Selected listing photo " + (index + 1)}
-										key={index}
-										background={"black"}
-										boxShadow="md"
-										borderRadius={"md"}
-										width={"200px"}
-										height={"200px"}
-										objectFit="contain"
-										src={URL.createObjectURL(file)}
-									></Image>
-								);
-							})}
+						<Grid templateColumns="repeat(auto-fill, minmax(145px, 1fr))" gap="4">
+							{formik.values.files.map((file: File, index: number) => <Box key={`${file.name}-${index}`} position="relative" overflow="hidden" borderRadius="xl" border="1px solid" borderColor={panelBorder}>
+								<Image alt={`${common.photoPreview} ${index + 1}`} w="full" h="150px" objectFit="cover" src={previews[index]} />
+								<Button aria-label={`${text.removePhoto} ${index + 1}`} position="absolute" top="2" right="2" size="sm" minW="8" h="8" p="0" borderRadius="full" onClick={() => removePhoto(index, formik)}><MdClose /></Button>
+							</Box>)}
 						</Grid>
-						<Flex justifyContent={{ base: "stretch", sm: "flex-end" }} gap="3" direction={{ base: "column-reverse", sm: "row" }}>
-							<Button
-								colorScheme="orange"
-								w={{ base: "full", sm: "auto" }}
-								leftIcon={<MdSave />}
-								type="submit"
-								isDisabled={formik.isSubmitting}
-							>
-								{formik.isSubmitting ? text.submitting : text.submit}
-							</Button>
-							<Button type="button" w={{ base: "full", sm: "auto" }} leftIcon={<MdClose />} onClick={() => router.push("/dashboard")}>{common.cancel}</Button>
-						</Flex>{" "}
+					</Flex>}
+
+					<Flex justify="space-between" align="center" gap="3" mt={{ base: 6, md: 8 }} pt="5" borderTop="1px solid" borderColor={panelBorder}>
+						<Button type="button" variant="ghost" onClick={() => router.push("/dashboard")} leftIcon={<MdClose />} display={{ base: step === 0 ? "inline-flex" : "none", sm: "inline-flex" }}>{common.cancel}</Button>
+						<Flex ml="auto" gap="3">
+							{step > 0 && <Button type="button" variant="outline" leftIcon={<MdArrowBack />} onClick={() => setStep((current) => current - 1)}>{common.wizard.back}</Button>}
+							{step < steps.length - 1 ? <Button type="button" colorScheme="orange" rightIcon={<MdArrowForward />} onClick={() => nextStep(formik)}>{common.wizard.next}</Button> : <Button type="submit" colorScheme="orange" leftIcon={<MdSave />} isLoading={formik.isSubmitting}>{text.submit}</Button>}
+						</Flex>
 					</Flex>
 				</form>
 			)}
 		</Formik>
 	);
 };
+
+function SelectField({ formik, name, label, options, required = false }: { formik: any; name: string; label: string; options: Array<[string, string]>; required?: boolean }) {
+	return <FormControl isRequired={required} isInvalid={Boolean(formik.touched[name] && formik.errors[name])}>
+		<FormLabel htmlFor={name} mb="2" fontSize="sm" fontWeight="semibold">{label}</FormLabel>
+		<Select id={name} name={name} value={formik.values[name]} onChange={formik.handleChange} onBlur={formik.handleBlur} variant="filled" h="12" placeholder="—">
+			{options.map(([value, optionLabel]) => <option key={value} value={value}>{optionLabel}</option>)}
+		</Select>
+		<FormErrorMessage>{String(formik.errors[name] || "")}</FormErrorMessage>
+	</FormControl>;
+}
+
+function ReviewCard({ label, value }: { label: string; value: string }) {
+	const bg = useColorModeValue("gray.50", "whiteAlpha.50");
+	const muted = useColorModeValue("gray.600", "gray.400");
+	return <Box minW="0" p="4" bg={bg} border="1px solid" borderColor={useColorModeValue("gray.200", "whiteAlpha.200")} borderRadius="xl">
+		<Text fontSize="xs" fontWeight="semibold" color={muted}>{label}</Text>
+		<Text mt="1" fontWeight="semibold" wordBreak="break-word">{value}</Text>
+	</Box>;
+}

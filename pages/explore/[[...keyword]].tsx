@@ -31,8 +31,11 @@ export default function ExplorePage({ user, keyword }) {
 	const lang = useLang();
 	const filter = useFilter();
 	const router = useRouter();
-	const canvas = useColorModeValue("#f3f2ed", "#10191d");
-	const surface = useColorModeValue("white", "#1b2a30");
+	const canvas = useColorModeValue("#f3f2ed", "#000000");
+	const surface = useColorModeValue("white", "#111111");
+	const searchSurface = useColorModeValue("white", "#111111");
+	const searchText = useColorModeValue("#243b40", "#e7eff0");
+	const searchIconColor = useColorModeValue("#788588", "#aebdc1");
 	const titleColor = useColorModeValue("#21383e", "#e7eff0");
 	const bodyColor = useColorModeValue("gray.600", "gray.300");
 	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
@@ -40,7 +43,7 @@ export default function ExplorePage({ user, keyword }) {
 	const accentText = useColorModeValue("#bc6332", "#f0b078");
 	const errorSurface = useColorModeValue("#fff5f1", "#321f1d");
 	const errorText = useColorModeValue("#783e32", "#f3c1b5");
-	const badgeSurface = useColorModeValue("#e8efec", "#263a40");
+	const badgeSurface = useColorModeValue("#e8efec", "#191919");
 	const applyFilters = useCallback(() => {
 		setFilterRevision((revision) => revision + 1);
 		const currentFilter = useFilter.getState();
@@ -153,10 +156,10 @@ export default function ExplorePage({ user, keyword }) {
 									{lang.explore.heroDescription}
 								</Text>
 								<form onSubmit={handleSearch}>
-									<Flex mt={{ base: 7, md: 9 }} maxW="720px" bg="white" p="2" gap="2" borderRadius="2xl" boxShadow="0 18px 48px rgba(0,0,0,.22)" direction={{ base: "column", sm: "row" }}>
+									<Flex mt={{ base: 7, md: 9 }} maxW="720px" bg={searchSurface} p="2" gap="2" borderRadius="2xl" boxShadow="0 18px 48px rgba(0,0,0,.22)" direction={{ base: "column", sm: "row" }}>
 										<Flex flex="1" minW="0" align="center" px={{ base: 3, sm: 4 }}>
-											<MdSearch size="22" color="#788588" />
-											<Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} variant="unstyled" px="3" py="3" color="#243b40" placeholder={lang.explore.searchPlaceholder} aria-label={lang.explore.searchAria} />
+											<MdSearch size="22" color={searchIconColor} />
+											<Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} variant="unstyled" px="3" py="3" color={searchText} placeholder={lang.explore.searchPlaceholder} aria-label={lang.explore.searchAria} />
 										</Flex>
 										<Button type="submit" bg="#d7783f" color="white" _hover={{ bg: "#c56731" }} h={{ base: "48px", sm: "54px" }} px={{ base: 5, md: 7 }} borderRadius="xl" leftIcon={<MdSearch size="18" />}>
 									{lang.explore.searchButton}

@@ -151,9 +151,29 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 		where.title = { contains: body.title.trim().slice(0, 120) };
 	}
 
-	const relationRules: Record<string, { numeric: string[]; strings: string[]; enums: Record<string, string[]> }> = {
-		House: { numeric: ["area", "room"], strings: ["region", "city"], enums: { type: ["RENT", "FORSALE"] } },
-		Car: { numeric: ["year", "cylinder", "fuel"], strings: ["model", "manufacturer", "color"], enums: { status: ["USED", "NEW", "NEW_ETH"] } },
+	const relationRules: Record<string, { numeric: string[]; strings: string[]; enums: Record<string, string[]>; features?: string[] }> = {
+		House: {
+			numeric: ["area", "room", "bedrooms", "bathrooms", "floor", "totalFloors"],
+			strings: ["region", "city", "subcity", "woreda", "neighborhood", "landmark"],
+			enums: {
+				type: ["RENT", "FORSALE"],
+				propertyType: ["APARTMENT", "DETACHED_HOUSE", "VILLA", "CONDOMINIUM", "TOWNHOUSE", "LAND", "OTHER"],
+				priceFrequency: ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"],
+				furnishing: ["FURNISHED", "SEMI_FURNISHED", "UNFURNISHED"],
+			},
+			features: ["PARKING", "ELECTRICITY", "WATER", "INTERNET", "SECURITY", "ELEVATOR", "BALCONY", "COMPOUND", "GENERATOR", "GYM", "SWIMMING_POOL", "GARDEN"],
+		},
+		Car: {
+			numeric: ["year", "cylinder", "fuel", "mileage", "seats", "doors"],
+			strings: ["model", "manufacturer", "color", "transmition", "region", "city", "subcity", "neighborhood", "landmark"],
+			enums: {
+				status: ["USED", "NEW", "NEW_ETH"],
+				fuelType: ["PETROL", "DIESEL", "HYBRID", "ELECTRIC", "LPG", "OTHER"],
+				bodyType: ["SEDAN", "SUV", "HATCHBACK", "PICKUP", "VAN", "MINIBUS", "COUPE", "WAGON", "TRUCK", "OTHER"],
+				driveType: ["FWD", "RWD", "AWD", "FOUR_WD", "OTHER"],
+			},
+			features: ["AIR_CONDITIONING", "AIRBAGS", "ABS", "REAR_CAMERA", "PARKING_SENSORS", "SUNROOF", "ALLOY_WHEELS", "CRUISE_CONTROL", "POWER_WINDOWS", "POWER_STEERING", "BLUETOOTH", "SPARE_TIRE"],
+		},
 		BusinessSpace: { numeric: ["area"], strings: ["region", "city", "subcity", "neighborhood"], enums: { spaceType: ["SHOP", "OFFICE", "WAREHOUSE", "MARKET_STALL", "WORKSHOP", "LAND"], type: ["RENT", "FORSALE"], priceFrequency: ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"] } },
 		Service: { numeric: [], strings: ["region", "city", "serviceArea"], enums: { category: ["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"] } },
 	};
@@ -173,6 +193,10 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 		}
 		for (const [key, options] of Object.entries(rules.enums)) {
 			if (options.includes(input[key])) details[key] = input[key];
+		}
+		if (rules.features && Array.isArray(input.features)) {
+			const features = input.features.filter((value: unknown) => typeof value === "string" && rules.features?.includes(value));
+			if (features.length) details.features = { hasSome: [...new Set(features)] };
 		}
 		where[relation] = { is: details };
 	}
@@ -511,6 +535,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				if (body.price === "" || body.price === null) return error(res, 400, "Price is required");
 				const price = Number(body.price);
 				if (!Number.isFinite(price) || price < 0) return error(res, 400, "Price must be a non-negative number");
+				if (["HOUSE", "CAR"].includes(item.itemType) && price === 0) return error(res, 400, "Price must be greater than zero");
 				data.price = price;
 			} else if (key === "priceType") {
 				if (!["FIXED", "NEGOTIABLE"].includes(body.priceType)) return error(res, 400, "Invalid price type");
@@ -526,8 +551,8 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		let specific: Record<string, any> = {};
 		if (body.specificProps && typeof body.specificProps === "object" && !Array.isArray(body.specificProps)) {
 			const allowedByType: Record<string, string[]> = {
-				HOUSE: ["area", "room", "type", "region", "city"],
-				CAR: ["model", "status", "manufacturer", "year", "transmition", "color", "cylinder", "fuel"],
+				HOUSE: ["area", "room", "type", "propertyType", "priceFrequency", "bedrooms", "bathrooms", "floor", "totalFloors", "furnishing", "region", "city", "subcity", "woreda", "neighborhood", "landmark", "features"],
+				CAR: ["model", "status", "manufacturer", "year", "transmition", "color", "cylinder", "fuel", "fuelType", "bodyType", "driveType", "mileage", "seats", "doors", "region", "city", "subcity", "neighborhood", "landmark", "features"],
 				BUSINESS_SPACE: ["spaceType", "type", "priceFrequency", "area", "region", "city", "subcity", "woreda", "neighborhood", "landmark", "electricity", "water", "roadAccess", "parking"],
 				SERVICE: ["category", "region", "city", "serviceArea"],
 			};
@@ -535,24 +560,46 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 			for (const key of allowed) {
 				const value = body.specificProps[key];
 				if (value === undefined) continue;
-				if (["area", "room", "year", "cylinder", "fuel"].includes(key)) {
+				if (["area", "room", "year", "cylinder", "fuel", "bedrooms", "bathrooms", "floor", "totalFloors", "mileage", "seats", "doors"].includes(key)) {
 					if (value === "" || value === null) {
 						if (item.itemType === "BUSINESS_SPACE" && key === "area") return error(res, 400, "Floor area is required");
 						specific[key] = null;
 						continue;
 					}
 					const number = Number(value);
-					if (!Number.isFinite(number) || number < 0 || (["room", "year"].includes(key) && !Number.isInteger(number))) {
+					const integerFields = ["room", "year", "bedrooms", "bathrooms", "floor", "totalFloors", "mileage", "seats", "doors"];
+					if (!Number.isFinite(number) || number < 0 || (integerFields.includes(key) && !Number.isInteger(number))) {
 						return error(res, 400, "A listing detail has an invalid number");
 					}
 					if (item.itemType === "HOUSE" && key === "room" && number < 1) return error(res, 400, "Room count must be at least one");
 					if (item.itemType === "HOUSE" && key === "area" && number === 0) return error(res, 400, "Area must be greater than zero");
 					if (item.itemType === "BUSINESS_SPACE" && key === "area" && number === 0) return error(res, 400, "Floor area must be greater than zero");
-					if (item.itemType === "CAR" && key === "year" && number > new Date().getFullYear() + 2) return error(res, 400, "Vehicle year is not valid");
+					if (["seats", "doors"].includes(key) && number < 1) return error(res, 400, "Vehicle seats and doors must be at least one");
+					if (item.itemType === "CAR" && key === "year" && (number < 1950 || number > new Date().getFullYear() + 2)) return error(res, 400, "Vehicle year is not valid");
+					if (item.itemType === "HOUSE" && key === "totalFloors" && number < 1) return error(res, 400, "Building must have at least one floor");
+					if (item.itemType === "HOUSE" && ((["bedrooms", "bathrooms"].includes(key) && number > 100) || (key === "floor" && number > 1000) || (key === "totalFloors" && number > 200))) return error(res, 400, "Check the property room or floor counts");
+					if (item.itemType === "CAR" && ((key === "mileage" && number > 10000000) || (key === "seats" && number > 100) || (key === "doors" && number > 10))) return error(res, 400, "Check the vehicle mileage, seat, or door count");
 					specific[key] = number;
 				} else if (key === "type") {
 					if (!["RENT", "FORSALE"].includes(value)) return error(res, 400, "Invalid listing purpose");
 					specific[key] = value;
+				} else if (key === "propertyType") {
+					if (value === "" || value === null) specific[key] = null;
+					else if (!["APARTMENT", "DETACHED_HOUSE", "VILLA", "CONDOMINIUM", "TOWNHOUSE", "LAND", "OTHER"].includes(value)) return error(res, 400, "Invalid property type");
+					else specific[key] = value;
+				} else if (key === "furnishing") {
+					if (value === "" || value === null) specific[key] = null;
+					else if (!["FURNISHED", "SEMI_FURNISHED", "UNFURNISHED"].includes(value)) return error(res, 400, "Invalid furnishing status");
+					else specific[key] = value;
+				} else if (["fuelType", "bodyType", "driveType"].includes(key) && item.itemType === "CAR") {
+					const choices: Record<string, string[]> = {
+						fuelType: ["PETROL", "DIESEL", "HYBRID", "ELECTRIC", "LPG", "OTHER"],
+						bodyType: ["SEDAN", "SUV", "HATCHBACK", "PICKUP", "VAN", "MINIBUS", "COUPE", "WAGON", "TRUCK", "OTHER"],
+						driveType: ["FWD", "RWD", "AWD", "FOUR_WD", "OTHER"],
+					};
+					if (value === "" || value === null) specific[key] = null;
+					else if (!choices[key].includes(value)) return error(res, 400, "Invalid vehicle " + key);
+					else specific[key] = value;
 				} else if (key === "spaceType") {
 					if (!["SHOP", "OFFICE", "WAREHOUSE", "MARKET_STALL", "WORKSHOP", "LAND"].includes(value)) return error(res, 400, "Invalid commercial space type");
 					specific[key] = value;
@@ -574,6 +621,12 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				} else if (key === "transmition") {
 					if (!["AUTO", "MANUAL"].includes(value)) return error(res, 400, "Invalid transmission");
 					specific[key] = value;
+				} else if (key === "features") {
+					const choices = item.itemType === "HOUSE"
+						? ["PARKING", "ELECTRICITY", "WATER", "INTERNET", "SECURITY", "ELEVATOR", "BALCONY", "COMPOUND", "GENERATOR", "GYM", "SWIMMING_POOL", "GARDEN"]
+						: ["AIR_CONDITIONING", "AIRBAGS", "ABS", "REAR_CAMERA", "PARKING_SENSORS", "SUNROOF", "ALLOY_WHEELS", "CRUISE_CONTROL", "POWER_WINDOWS", "POWER_STEERING", "BLUETOOTH", "SPARE_TIRE"];
+					if (!Array.isArray(value) || value.some((feature) => typeof feature !== "string" || !choices.includes(feature))) return error(res, 400, "Invalid listing features");
+					specific[key] = [...new Set(value)];
 				} else if (typeof value === "string") {
 					const normalized = value.trim().slice(0, 500);
 					const requiredStrings: Record<string, string[]> = {
@@ -587,6 +640,16 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 			if (item.itemType === "BUSINESS_SPACE") {
 				if (body.specificProps.type === "RENT" && !specific.priceFrequency) return error(res, 400, "Choose a rent frequency");
 				if (body.specificProps.type === "FORSALE") specific.priceFrequency = null;
+			}
+			if (item.itemType === "HOUSE") {
+				if (body.specificProps.type === "RENT" && !specific.priceFrequency && !body.specificProps.priceFrequency) return error(res, 400, "Choose a rent frequency");
+				if (body.specificProps.type === "FORSALE") specific.priceFrequency = null;
+			}
+			if (item.itemType === "CAR") {
+				const requiredStrings = ["manufacturer", "model"];
+				for (const key of requiredStrings) {
+					if (body.specificProps[key] !== undefined && !String(body.specificProps[key]).trim()) return error(res, 400, `${key} is required`);
+				}
 			}
 		}
 		const hasSpecificChanges = Object.keys(specific).length > 0;

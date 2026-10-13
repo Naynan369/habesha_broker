@@ -44,7 +44,7 @@ export default function Login() {
 				<LoginForm />
 				<Flex mt="8" align="center" gap="2" fontSize="sm" color={mutedColor}>
 					<Text>{lang.auth.new_to}</Text>
-					<Link href="/auth/sign_up" passHref>
+					<Link legacyBehavior href="/auth/sign_up" passHref>
 						<Button as="a" size="sm" variant="link" color="mainorange" fontWeight="700">
 							{lang.auth.create}
 						</Button>

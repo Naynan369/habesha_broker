@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import { ReactNode } from "react";
 import styles from "@styles/Auth.module.scss";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
+import { BrandLogo } from "@components/shared/BrandLogo";
 
 interface AuthPageLayoutProps {
 	children: ReactNode;
@@ -14,8 +15,8 @@ interface AuthPageLayoutProps {
 export const AuthPageLayout = ({ children }: AuthPageLayoutProps) => {
 	const lang = useLang();
 	const router = useRouter();
-	const canvas = useColorModeValue("#f2f5f4", "#10191d");
-	const surface = useColorModeValue("white", "#1b2a30");
+	const canvas = useColorModeValue("#f2f5f4", "#000000");
+	const surface = useColorModeValue("white", "#111111");
 	const textColor = useColorModeValue("#143A45", "#e7eff0");
 	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
 	const inactiveLanguageColor = useColorModeValue("gray.600", "gray.300");
@@ -32,26 +33,7 @@ export const AuthPageLayout = ({ children }: AuthPageLayoutProps) => {
 			justify="space-between"
 			color="white"
 		>
-			<Flex align="center" gap="3">
-				<Flex
-					w="44px"
-					h="44px"
-					align="center"
-					justify="center"
-					borderRadius="14px"
-					bg="mainyellow"
-					color="maingray"
-					fontWeight="800"
-					fontSize="sm"
-				>
-					HB
-				</Flex>
-				<Box>
-					<Text fontWeight="800" letterSpacing="0.08em" fontSize="sm">
-						HABESHA BROKERS
-					</Text>
-				</Box>
-			</Flex>
+			<BrandLogo />
 
 			<Box mt={{ base: 8, lg: 0 }}>
 				<Text
@@ -122,12 +104,7 @@ export const AuthPageLayout = ({ children }: AuthPageLayoutProps) => {
 						justify="space-between"
 						color="white"
 					>
-						<Flex align="center" gap="3">
-							<Flex w="40px" h="40px" align="center" justify="center" borderRadius="13px" bg="mainyellow" color="maingray" fontWeight="800" fontSize="sm">
-								HB
-							</Flex>
-							<Text fontWeight="800" letterSpacing="0.08em" fontSize="sm">HABESHA BROKERS</Text>
-						</Flex>
+						<BrandLogo />
 						<Heading fontSize="2xl" lineHeight="1.15" maxW="520px">
 							{lang.auth.panel_title}
 						</Heading>
@@ -145,7 +122,7 @@ export const AuthPageLayout = ({ children }: AuthPageLayoutProps) => {
 						direction="column"
 					>
 						<Flex align="center" justify="space-between" gap="3" mb={{ base: 8, md: 10 }}>
-							<Link href="/" passHref>
+							<Link legacyBehavior href="/" passHref>
 								<Button
 									as="a"
 									leftIcon={<ArrowLeftIcon />}

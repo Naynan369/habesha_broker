@@ -1,5 +1,5 @@
 import { CarType, ItemType, ServiceCategory } from "@prisma/client";
-import create from "zustand";
+import { create } from "zustand";
 
 export interface FilterState {
 	itemType?: ItemType;

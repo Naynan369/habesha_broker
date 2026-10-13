@@ -24,9 +24,9 @@ export default function Dashboard({ user }) {
     const router = useRouter();
     const dashboardText = useLang().dashboardPage;
     const logout = useUser((state) => state.logout);
-    const pageBg = useColorModeValue("#f5f5f1", "#10191d");
+    const pageBg = useColorModeValue("#f5f5f1", "#000000");
     const muted = useColorModeValue("gray.600", "gray.400");
-    const heroSurface = useColorModeValue("white", "#17262b");
+    const heroSurface = useColorModeValue("white", "#0c0c0c");
     const heroBorder = useColorModeValue("gray.200", "whiteAlpha.200");
     const verifiedBg = useColorModeValue("green.50", "rgba(72,187,120,.14)");
     const pendingBg = useColorModeValue("orange.50", "rgba(237,137,54,.14)");
@@ -84,14 +84,14 @@ export default function Dashboard({ user }) {
 
 interface IActionButton { href: string; icon: ReactNode; text: string; description: string; }
 const ActionButton: FC<IActionButton> = ({ href, icon, text, description }) => {
-    const surface = useColorModeValue("white", "#17262b");
+    const surface = useColorModeValue("white", "#0c0c0c");
     const border = useColorModeValue("gray.200", "whiteAlpha.200");
     const muted = useColorModeValue("gray.600", "gray.400");
     const accentBg = useColorModeValue("#fbf3e2", "rgba(233,183,92,.14)");
     const accentColor = useColorModeValue("#9b6522", "#f0c978");
     const arrowBg = useColorModeValue("gray.50", "whiteAlpha.100");
     return (
-        <Link href={`/dashboard/${href}`} passHref>
+        <Link legacyBehavior href={`/dashboard/${href}`} passHref>
             <Flex as="a" role="link" minH={{ base: "156px", md: "176px" }} h="full" direction="column" justify="space-between" p={{ base: 5, md: 6 }} bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" color="inherit" boxShadow="0 5px 18px rgba(21,42,44,.045)" transition="transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", borderColor: "mainyellow", boxShadow: "0 14px 30px rgba(21,42,44,.11)" }} _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "3px" }}>
                 <Flex align="center" justify="space-between" gap="4">
                     <Flex w="12" h="12" flexShrink={0} align="center" justify="center" borderRadius="xl" bg={accentBg} color={accentColor}>{icon}</Flex>

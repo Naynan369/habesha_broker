@@ -12,7 +12,7 @@ export function FilterNav({ applyFilters }) {
 	const business = lang.businessListing;
 	const service = lang.serviceListing;
 	const [expanded, setExpanded] = useState(false);
-	const surface = useColorModeValue("white", "#1b2a30");
+	const surface = useColorModeValue("white", "#111111");
 	const textColor = useColorModeValue("#21383e", "#e7eff0");
 	const mutedColor = useColorModeValue("gray.500", "gray.300");
 	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");

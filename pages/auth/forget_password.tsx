@@ -30,10 +30,10 @@ export default function ForgetPassword() {
 
 	const router = useRouter();
 	const toast = useToast();
-	const canvas = useColorModeValue("#f5f5f1", "#10191d");
-	const surface = useColorModeValue("white", "#1b2a30");
+	const canvas = useColorModeValue("#f5f5f1", "#000000");
+	const surface = useColorModeValue("white", "#111111");
 	const textColor = useColorModeValue("#143A45", "#e7eff0");
-	const fieldBg = useColorModeValue("white", "#142126");
+	const fieldBg = useColorModeValue("white", "#101010");
 	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
 
 	const requestLink = async () => {

@@ -18,7 +18,7 @@ import { RecentActivity, RecentActivityLoader } from "./RecentActivityLoader";
 export const RecentActivities = () => {
 	const dashboardText = useLang().dashboardPage;
 	const { locale } = useRouter();
-	const surface = useColorModeValue("white", "#17262b");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const [data, loading, error] = useFetch({

@@ -48,6 +48,7 @@ import { dayjs } from "@config/dayjs";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { getMediaUrl } from "@libs/helpers/media";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
+import { BrandLogo } from "@components/shared/BrandLogo";
 
 export const getServerSideProps = withSessionSsr(
 	async function getServerSideProps({ req }) {
@@ -74,8 +75,8 @@ export default function AdminDashboard({ user }) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [statusFilter, setStatusFilter] = useState("PENDING");
 	const [refreshKey, setRefreshKey] = useState(0);
-	const pageBg = useColorModeValue("#f4f6f8", "#10191d");
-	const surface = useColorModeValue("white", "#17262b");
+	const pageBg = useColorModeValue("#f4f6f8", "#000000");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const textColor = useColorModeValue("maingray", "gray.100");
 	const muted = useColorModeValue("gray.600", "gray.400");
@@ -101,10 +102,8 @@ export default function AdminDashboard({ user }) {
 					borderColor={border}
 					boxShadow="sm"
 				>
-					<Flex direction="column" py="3">
-						<Heading fontSize={{ base: "lg", md: "xl" }} color={textColor} letterSpacing="tight">
-							Habesha Brokers
-						</Heading>
+					<Flex direction="column" py="3" gap="1">
+						<BrandLogo />
 						<Heading fontSize="xs" color="mainorange" letterSpacing="widest" mt="1">
 							ADMINISTRATION
 						</Heading>
@@ -237,7 +236,7 @@ interface ICard {
 
 const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
-	const surface = useColorModeValue("white", "#17262b");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const [working, setWorking] = useState(false);
 	const toast = useToast();
@@ -297,7 +296,7 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 			</Flex>
 			<Flex align="center" gap="3" wrap="wrap" w={{ base: "full", lg: "auto" }} justify={{ base: "flex-end", lg: "flex-start" }}>
 				<Badge colorScheme={status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange"} borderRadius="full" px="3" py="1">{status}</Badge>
-				<Link href={`/items/${id}`} passHref><Button as="a" size="sm" variant="outline">Review details</Button></Link>
+				<Link legacyBehavior href={`/items/${id}`} passHref><Button as="a" size="sm" variant="outline">Review details</Button></Link>
 				{status === "PENDING" && paymentStatus === "PAID" && (
 					<ButtonGroup size="sm">
 						<Button colorScheme="green" onClick={() => handleItem("APPROVED")} isLoading={working} leftIcon={<CheckIcon />}>Approve</Button>
@@ -313,7 +312,7 @@ function StatsBar() {
 	const [data, loading, err] = useFetch({
 		fetchFunction: () => axios.get("/api/admin/stat"),
 	});
-	const surface = useColorModeValue("white", "#17262b");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const statText = useColorModeValue("maingray", "gray.100");
 	const labelText = useColorModeValue("gray.500", "gray.400");

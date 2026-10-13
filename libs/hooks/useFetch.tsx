@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface IFetch {
 	fetchFunction: () => Promise<any>;
@@ -9,12 +9,18 @@ const useFetch = ({ fetchFunction, dependencies = [] }: IFetch) => {
 	const [data, setData] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
+	const fetchRef = useRef(fetchFunction);
+	const dependencyKey = JSON.stringify(dependencies);
+
+	useEffect(() => {
+		fetchRef.current = fetchFunction;
+	}, [fetchFunction]);
 
 	useEffect(() => {
 		let active = true;
 		setLoading(true);
 		setError(null);
-		fetchFunction()
+		fetchRef.current()
 			.then((res) => {
 				if (active) setData(res.data);
 			})
@@ -27,7 +33,7 @@ const useFetch = ({ fetchFunction, dependencies = [] }: IFetch) => {
 		return () => {
 			active = false;
 		};
-	}, [...dependencies]);
+	}, [dependencyKey]);
 
 	return [data, loading, error];
 };

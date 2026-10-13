@@ -76,7 +76,7 @@ const LoginForm = () => {
 					</Flex>
 
 					<Flex mt="4" justifyContent="flex-end">
-						<Link href="/auth/forget_password" passHref>
+						<Link legacyBehavior href="/auth/forget_password" passHref>
 							<Text as="a" fontSize="sm" color="mainorange" fontWeight="600" _hover={{ textDecoration: "underline" }}>
 								{lang.auth.forget}
 							</Text>

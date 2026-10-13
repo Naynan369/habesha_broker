@@ -30,8 +30,8 @@ export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 
 export default function EditProfilePage({ user }) {
 	const router = useRouter();
-	const pageBg = useColorModeValue("#f5f5f1", "#10191d");
-	const surface = useColorModeValue("white", "#17262b");
+	const pageBg = useColorModeValue("#f5f5f1", "#000000");
+	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const textColor = useColorModeValue("maingray", "gray.100");
 

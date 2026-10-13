@@ -19,7 +19,7 @@ export const FilterInput: FC<IFilterInput> = ({ name, title, isSingleInput, isSe
 	const filter: any = useFilter();
 	const text = useLang().explore.filters;
 	const labelColor = useColorModeValue("gray.600", "gray.300");
-	const fieldBg = useColorModeValue("gray.50", "#142126");
+	const fieldBg = useColorModeValue("gray.50", "#101010");
 	const fieldBorder = useColorModeValue("gray.200", "whiteAlpha.300");
 	const fieldText = useColorModeValue("#25383d", "#e7eff0");
 	const relation = itemType === "CAR" ? "Car" : itemType === "BUSINESS_SPACE" ? "BusinessSpace" : itemType === "SERVICE" ? "Service" : "House";
