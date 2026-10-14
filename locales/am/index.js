@@ -196,6 +196,8 @@ export const am = {
 		description: "መግለጫ",
 		photos: "ፎቶዎች",
 		photosRequired: "ቢያንስ አንድ ፎቶ ያክሉ።",
+		photoSizeError: "እያንዳንዱ ፎቶ ከ8 ሜባ መብለጥ የለበትም።",
+		photoTypeError: "JPEG፣ PNG፣ WebP ወይም GIF ፎቶ ይምረጡ።",
 		photoPreview: "የተመረጠ ፎቶ",
 		removePhoto: "ፎቶውን ያስወግዱ",
 		optional: "አማራጭ",

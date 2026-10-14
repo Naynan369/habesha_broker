@@ -196,6 +196,8 @@ export const en = {
 		description: "Description",
 		photos: "Photos",
 		photosRequired: "Add at least one photo.",
+		photoSizeError: "Each photo must be 8 MB or smaller.",
+		photoTypeError: "Choose JPEG, PNG, WebP, or GIF photos.",
 		photoPreview: "Selected photo",
 		removePhoto: "Remove photo",
 		optional: "Optional",

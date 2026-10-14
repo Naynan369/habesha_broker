@@ -562,7 +562,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				if (value === undefined) continue;
 				if (["area", "room", "year", "cylinder", "fuel", "bedrooms", "bathrooms", "floor", "totalFloors", "mileage", "seats", "doors"].includes(key)) {
 					if (value === "" || value === null) {
-						if (item.itemType === "BUSINESS_SPACE" && key === "area") return error(res, 400, "Floor area is required");
+						if ((["HOUSE", "BUSINESS_SPACE"].includes(item.itemType) && key === "area") || (item.itemType === "CAR" && key === "year")) return error(res, 400, "This listing detail is required");
 						specific[key] = null;
 						continue;
 					}
@@ -584,7 +584,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 					if (!["RENT", "FORSALE"].includes(value)) return error(res, 400, "Invalid listing purpose");
 					specific[key] = value;
 				} else if (key === "propertyType") {
-					if (value === "" || value === null) specific[key] = null;
+					if (value === "" || value === null) return error(res, 400, "Choose a property type");
 					else if (!["APARTMENT", "DETACHED_HOUSE", "VILLA", "CONDOMINIUM", "TOWNHOUSE", "LAND", "OTHER"].includes(value)) return error(res, 400, "Invalid property type");
 					else specific[key] = value;
 				} else if (key === "furnishing") {
@@ -597,7 +597,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 						bodyType: ["SEDAN", "SUV", "HATCHBACK", "PICKUP", "VAN", "MINIBUS", "COUPE", "WAGON", "TRUCK", "OTHER"],
 						driveType: ["FWD", "RWD", "AWD", "FOUR_WD", "OTHER"],
 					};
-					if (value === "" || value === null) specific[key] = null;
+					if (value === "" || value === null) return error(res, 400, "Choose a vehicle " + key);
 					else if (!choices[key].includes(value)) return error(res, 400, "Invalid vehicle " + key);
 					else specific[key] = value;
 				} else if (key === "spaceType") {
@@ -630,6 +630,8 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				} else if (typeof value === "string") {
 					const normalized = value.trim().slice(0, 500);
 					const requiredStrings: Record<string, string[]> = {
+						HOUSE: ["region", "city"],
+						CAR: ["model", "manufacturer", "region", "city"],
 						SERVICE: ["category", "region", "city"],
 						BUSINESS_SPACE: ["region", "city"],
 					};

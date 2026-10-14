@@ -323,7 +323,7 @@ export const HouseAddForm = (_props: { user?: unknown }) => {
 					</Flex>}
 
 					<Flex justify="space-between" align="center" gap="3" mt={{ base: 6, md: 8 }} pt="5" borderTop="1px solid" borderColor={panelBorder}>
-						<Button type="button" variant="ghost" onClick={() => router.push("/dashboard")} leftIcon={<MdClose />} display={{ base: step === 0 ? "inline-flex" : "none", sm: "inline-flex" }}>{common.cancel}</Button>
+						<Button type="button" variant="ghost" onClick={() => router.push("/dashboard")} leftIcon={<MdClose />} display="inline-flex">{common.cancel}</Button>
 						<Flex ml="auto" gap="3">
 							{step > 0 && <Button type="button" variant="outline" leftIcon={<MdArrowBack />} onClick={() => setStep((current) => current - 1)}>{common.wizard.back}</Button>}
 							{step < steps.length - 1 ? <Button type="button" colorScheme="orange" rightIcon={<MdArrowForward />} onClick={() => nextStep(formik)}>{common.wizard.next}</Button> : <Button type="submit" colorScheme="orange" leftIcon={<MdSave />} isLoading={formik.isSubmitting}>{common.submit}</Button>}
