@@ -19,7 +19,7 @@
     "dayjs": "^1.11.5",
     "formik": "^2.2.9",
     "framer-motion": "14.2.0",
-    "iron-session": "^6.3.1",
+    "iron-session": "8.0.1",
     "multer": "^1.4.4",
     "next": "16.4.0",
     "next-seo": "7.3.0",
