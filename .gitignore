@@ -39,3 +39,4 @@ public/uploads/*
 public/items/*
 public/profile/*
 public/profile
+.env*
