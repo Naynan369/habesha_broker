@@ -769,18 +769,17 @@ export async function apiHandler(req: NextApiRequest, res: NextApiResponse) {
 		}
 		return error(res, 404, "Route not found");
 	} catch (err) {
-		if (process.env.NODE_ENV !== "production") {
-			const details = err && typeof err === "object" ? (err as any) : {};
-			const message = String(details.message || err || "Unknown error")
-				.replace(/postgres(?:ql)?:\/\/[^\s\"'`<>]+/gi, "postgresql://[credentials redacted]")
-				.replace(/(password|pwd)=([^&\s]+)/gi, "$1=[redacted]");
-			console.error("[api] Request failed", {
-				route: slug.join("/"),
-				name: details.name || "Error",
-				code: details.code,
-				message,
-			});
-		}
+		const details = err && typeof err === "object" ? (err as any) : {};
+		const message = String(details.message || err || "Unknown error")
+			.replace(/postgres(?:ql)?:\/\/[^\s\"'`<>]+/gi, "postgresql://[credentials redacted]")
+			.replace(/(password|pwd)=([^&\s]+)/gi, "$1=[redacted]")
+			.slice(0, 1000);
+		console.error("[api] Request failed", {
+			route: slug.join("/"),
+			name: details.name || "Error",
+			code: details.code,
+			message,
+		});
 		return error(res, 500, "The request could not be completed");
 	}
 }
