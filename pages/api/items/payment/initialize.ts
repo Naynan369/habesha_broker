@@ -1,4 +1,5 @@
 import { prisma } from "@config/prisma";
+import { LISTING_FEE_ETB } from "@config/listingPayment";
 import { withSessionApi } from "@config/cookie/cookie";
 import { getBaseUrl } from "@libs/helpers/util";
 import axios from "axios";
@@ -41,7 +42,7 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
   }
 
   const secret = process.env.CHAPA_SECRET_KEY?.trim();
-  const fee = Number(process.env.LISTING_FEE_ETB ?? process.env.CAR_LISTING_FEE_ETB);
+  const fee = LISTING_FEE_ETB;
   const requestHost = typeof req.headers.host === "string" ? req.headers.host : "";
   const localDevOrigin = process.env.NODE_ENV === "development" && /^localhost(?::[0-9]{1,5})?$/.test(requestHost)
     ? "http://" + requestHost

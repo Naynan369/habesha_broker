@@ -11,13 +11,15 @@ import { ItemLoader } from "./ItemLoader";
 
 interface IItemsList {
 	user: IUser;
+	paymentFee: number;
+	paymentEnabled: boolean;
 	filters: string[];
 	keyword: string;
 	orderBy: any;
 	copy: any;
 }
 
-export const ItemList: FC<IItemsList> = ({ user, filters, keyword = "", orderBy, copy }) => {
+export const ItemList: FC<IItemsList> = ({ user, paymentFee, paymentEnabled, filters, keyword = "", orderBy, copy }) => {
 	const [page, setPage] = useState(0);
 	const pageText = useLang().explore;
 	const filterKey = filters.join("|");
@@ -70,6 +72,8 @@ export const ItemList: FC<IItemsList> = ({ user, filters, keyword = "", orderBy,
 						featured={item.featured}
 						status={item.status}
 						paymentStatus={item.paymentStatus}
+						paymentFee={paymentFee}
+						paymentEnabled={paymentEnabled}
 					/>
 				))
 			) : (

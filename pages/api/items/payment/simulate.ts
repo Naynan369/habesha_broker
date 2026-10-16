@@ -1,4 +1,5 @@
 import { prisma } from "@config/prisma";
+import { LISTING_FEE_ETB } from "@config/listingPayment";
 import { withSessionApi } from "@config/cookie/cookie";
 import crypto from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -33,7 +34,7 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
     return res.status(409).json({ err: "This listing does not require another payment" });
   }
 
-  const fee = Number(process.env.LISTING_FEE_ETB ?? process.env.CAR_LISTING_FEE_ETB);
+  const fee = LISTING_FEE_ETB;
   if (!Number.isFinite(fee) || fee <= 0) {
     return res.status(503).json({ err: "Set a valid listing fee before simulating payment" });
   }

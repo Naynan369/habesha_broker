@@ -18,6 +18,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { MdAdd, MdArrowDownward, MdSearch } from "react-icons/md";
 import { ItemList } from "@components/dashboard/itemList/itemList";
 import { withSessionSsr } from "@config/cookie/cookie";
+import { LISTING_FEE_ETB } from "@config/listingPayment";
 import { useRouter } from "next/router";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import Head from "next/head";
@@ -38,11 +39,13 @@ export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 	return {
 		props: {
 			user,
+			paymentFee: LISTING_FEE_ETB,
+			paymentEnabled: Boolean(process.env.CHAPA_SECRET_KEY?.trim()),
 		},
 	};
 });
 
-export default function MyItemsList({ user }) {
+export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 	const text = useLang().listingManagementPage;
 	const [search, setSearch] = useState("");
 	const [keyword, setKeyword] = useState("");
@@ -181,6 +184,8 @@ export default function MyItemsList({ user }) {
 								filters={filters}
 								keyword={keyword}
 								copy={text}
+								paymentFee={paymentFee}
+								paymentEnabled={paymentEnabled}
 							/>
 						</Flex>
 					</Flex>
