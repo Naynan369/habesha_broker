@@ -1,11 +1,9 @@
 import * as nodemailer from "nodemailer";
-import SMTPTransport from "nodemailer/lib/smtp-transport";
 
 export const sendMail = async (
 	to: string,
 	subject: string,
-	html: string,
-	callback?: (err: Error, info: SMTPTransport.SentMessageInfo) => any
+	html: string
 ) => {
 	const user = process.env.MYEMAIL;
 	const pass = process.env.MYPASS;
@@ -24,7 +22,6 @@ export const sendMail = async (
 			to,
 			subject,
 			html,
-		},
-		callback
+		}
 	);
 };
