@@ -95,6 +95,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 	const [step, setStep] = useState(0);
 	const previewsRef = useRef(previews);
 	const videoPreviewRef = useRef(videoPreview);
+	const photoInputRef = useRef<HTMLInputElement>(null);
 	useEffect(() => {
 		previewsRef.current = previews;
 		videoPreviewRef.current = videoPreview;
@@ -149,13 +150,17 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 
 	const choosePhotos = (event: ChangeEvent<HTMLInputElement>, formik: any) => {
 		const chosen = Array.from(event.currentTarget.files || []);
-		event.currentTarget.value = "";
+		if (!chosen.length) return;
 		if (chosen.some((file) => file.size > MAX_PHOTO_SIZE)) {
+			event.currentTarget.value = "";
 			formik.setFieldError("files", "Each photo must be 8 MB or smaller");
 			formik.setFieldTouched("files", true, false);
 			return;
 		}
-		if (chosen.length > 10) toast({ title: common.photos, description: common.wizard.maxPhotos, status: "warning", isClosable: true });
+		if (chosen.length > 10) {
+			event.currentTarget.value = "";
+			toast({ title: common.photos, description: common.wizard.maxPhotos, status: "warning", isClosable: true });
+		}
 		previews.forEach((preview) => URL.revokeObjectURL(preview));
 		const files = chosen.slice(0, 10);
 		setPreviews(files.map((file) => URL.createObjectURL(file)));
@@ -168,6 +173,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 		const nextPreviews = previews.filter((_preview, previewIndex) => previewIndex !== index);
 		if (previews[index]) URL.revokeObjectURL(previews[index]);
 		setPreviews(nextPreviews);
+		if (photoInputRef.current) photoInputRef.current.value = "";
 		formik.setFieldValue("files", nextFiles);
 	};
 
@@ -296,7 +302,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 								<Text fontSize="xs" color={muted}>{formik.values.files.length}/10 {common.wizard.photosCount}</Text>
 							</Flex>
 							<Text color={muted} fontSize="sm" mt="2" mb="3">{common.wizard.photoHelp}</Text>
-							<Input id="house-photos" onChange={(event) => choosePhotos(event, formik)} variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+							<Input ref={photoInputRef} id="house-photos" onChange={(event) => choosePhotos(event, formik)} variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
 							<FormErrorMessage>{String(formik.errors.files || "")}</FormErrorMessage>
 						</FormControl>
 						<FormControl isInvalid={Boolean(formik.touched.video && formik.errors.video)}>
