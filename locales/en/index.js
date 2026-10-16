@@ -86,6 +86,7 @@ export const en = {
 		pageTitle: "Verify account", heading: "Verify your email address",
 		instructions: "We will send a verification code to your email address:", sendCode: "Send verification code",
 		verify: "Verify email", sending: "Sending…", verifying: "Verifying…", resend: "Send another code", cancel: "Cancel",
+		emailAccepted: "The mail provider accepted the message. Check your inbox and spam folder.", alreadyVerified: "This account is already verified.",
 		emailError: "Could not send the verification email. Please try again.", verifyError: "The code is invalid or expired. Check it and try again.",
 	},
 	common: {

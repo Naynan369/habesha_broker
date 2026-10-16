@@ -48,7 +48,14 @@ export default function VerifyAccountPage({ user }) {
 		await axios
 			.post("/api/user/requestVerification", {})
 			.then((res) => {
+				if (res.data?.alreadyVerified) {
+					toast({ title: text.alreadyVerified, status: "info", isClosable: true });
+					router.replace("/dashboard");
+					return;
+				}
+				if (res.data?.deliveryAccepted !== true) throw new Error("Mail provider did not confirm acceptance");
 				setSent(true);
+				toast({ title: text.emailAccepted, status: "success", isClosable: true });
 			})
 			.catch((err) => {
 				toast({

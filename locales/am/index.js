@@ -86,6 +86,7 @@ export const am = {
 		pageTitle: "መለያን ያረጋግጡ", heading: "ኢሜልዎን ያረጋግጡ",
 		instructions: "የማረጋገጫ ቁጥር ወደ ኢሜልዎ እንልካለን፦", sendCode: "የማረጋገጫ ቁጥር ላክ",
 		verify: "ኢሜልን ያረጋግጡ", sending: "በመላክ ላይ…", verifying: "በማረጋገጥ ላይ…", resend: "ሌላ ቁጥር ላክ", cancel: "ይቅር",
+		emailAccepted: "የኢሜል አገልግሎቱ መልዕክቱን ተቀብሏል። የገቢ ኢሜልዎንና የያልተፈለጉ ኢሜሎች አቃፊን ይመልከቱ።", alreadyVerified: "ይህ መለያ አስቀድሞ ተረጋግጧል።",
 		emailError: "የማረጋገጫ ኢሜሉን መላክ አልተቻለም። እንደገና ይሞክሩ።", verifyError: "ቁጥሩ የተሳሳተ ወይም ጊዜው ያለፈበት ነው። ያረጋግጡና እንደገና ይሞክሩ።",
 	},
 	common: {

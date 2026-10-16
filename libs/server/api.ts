@@ -385,8 +385,20 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		} else {
 			await prisma.verification.create({ data: { userId: user.id, code } });
 		}
-		await sendMail(user.email, "Verify your Email", getVerificationHtml(user.firstName, code));
-		return res.status(200).json({ ok: true });
+		const mailInfo = await sendMail(user.email, "Verify your Email", getVerificationHtml(user.firstName, code));
+		const acceptedRecipients = Array.isArray(mailInfo?.accepted) ? mailInfo.accepted : [];
+		const recipientAccepted = acceptedRecipients.some((recipient) => {
+			const address = typeof recipient === "string" ? recipient : recipient?.address;
+			return typeof address === "string" && address.trim().toLowerCase() === user.email.trim().toLowerCase();
+		});
+		if (!recipientAccepted) {
+			console.error("[email] Verification recipient was not accepted by SMTP", {
+				acceptedCount: acceptedRecipients.length,
+				rejectedCount: Array.isArray(mailInfo?.rejected) ? mailInfo.rejected.length : 0,
+			});
+			return error(res, 502, "The mail provider did not accept the verification email");
+		}
+		return res.status(200).json({ ok: true, deliveryAccepted: true });
 	}
 
 	if (route === "verifyAccount" && req.method === "POST") {
