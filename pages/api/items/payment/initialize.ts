@@ -89,6 +89,7 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
   const cleanBaseUrl = baseUrl.replace(/\/$/, "");
   const localePrefix = req.body?.locale === "am" ? "/am" : "";
   const paymentReturnUrl = cleanBaseUrl + localePrefix + "/payments/chapa?tx_ref=" + encodeURIComponent(txRef);
+  let failureStage = "chapa_request";
   try {
     const response = await axios.post(
       "https://api.chapa.co/v1/transaction/initialize",
@@ -116,17 +117,34 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
       }
     );
 
+    failureStage = "validate_chapa_response";
     const checkoutUrl = response.data?.data?.checkout_url;
     if (String(response.data?.status || "").toLowerCase() !== "success" || typeof checkoutUrl !== "string" || !checkoutUrl.startsWith("https://")) {
       throw new Error("Chapa did not return a secure checkout link");
     }
+    failureStage = "save_checkout_url";
     await prisma.listingPayment.update({ where: { id: payment.id }, data: { checkoutUrl } });
+    failureStage = "release_payment_lock";
     await prisma.item.updateMany({
       where: { id: item.id, paymentStatus: "PROCESSING", paymentLockedAt: lockedAt },
       data: { paymentLockedAt: null },
     });
     return res.status(201).json({ checkoutUrl, txRef });
-  } catch (_error) {
+  } catch (error) {
+    const failure = error as {
+      code?: unknown;
+      message?: unknown;
+      response?: { status?: unknown; data?: { status?: unknown; message?: unknown } };
+    };
+    const providerMessage = failure.response?.data?.message;
+    console.error("[payments] Checkout initialization failed", {
+      stage: failureStage,
+      providerHttpStatus: failure.response?.status,
+      providerStatus: failure.response?.data?.status,
+      providerMessage: typeof providerMessage === "string" ? providerMessage.slice(0, 160) : undefined,
+      code: typeof failure.code === "string" ? failure.code : undefined,
+      message: typeof failure.message === "string" ? failure.message.slice(0, 160) : undefined,
+    });
     await prisma.listingPayment.updateMany({
       where: { id: payment.id, status: "INITIATED" },
       data: { status: "FAILED" },
