@@ -40,7 +40,7 @@ async function markPaymentFailed(paymentId: string, itemId: string) {
     if (latest?.id === paymentId) {
       await tx.item.updateMany({
         where: { id: itemId, paymentStatus: "PROCESSING" },
-        data: { paymentStatus: "DUE" },
+        data: { paymentStatus: "DUE", paymentLockedAt: null },
       });
     }
   });
@@ -112,7 +112,7 @@ export async function verifyChapaListingPayment(txRef: string) {
     });
     await tx.item.updateMany({
       where: { id: payment.itemId },
-      data: { paymentStatus: "PAID" },
+      data: { paymentStatus: "PAID", paymentLockedAt: null },
     });
   });
 

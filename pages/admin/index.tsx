@@ -33,7 +33,7 @@ import { ListingImage } from "@components/shared/ListingImage";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { MdLogout } from "react-icons/md";
 import {
 	FaBuilding,
@@ -49,10 +49,11 @@ import { withSessionSsr } from "@config/cookie/cookie";
 import { getMediaUrl } from "@libs/helpers/media";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 import { BrandLogo } from "@components/shared/BrandLogo";
+import { useLang } from "@libs/hooks/useLang";
 
 export const getServerSideProps = withSessionSsr(
 	async function getServerSideProps({ req }) {
-		const user = req.session.user;
+		const user = req.user;
 
 		if (!user || user.role !== "ADMIN") {
 			return {
@@ -208,13 +209,16 @@ interface IItemList {
 }
 
 const ItemsList: FC<IItemList> = ({ searchQuery, statusFilter, refreshKey, onModerated }) => {
+	const [page, setPage] = useState(0);
+	const pageText = useLang().explore;
+	useEffect(() => setPage(0), [searchQuery, statusFilter]);
 	const [data, loading, error] = useFetch({
-		fetchFunction: () => axios.post("/api/items?page=0", {
+		fetchFunction: () => axios.post(`/api/items?page=${page}`, {
 			status: statusFilter === "PAYMENT" ? "PENDING" : statusFilter,
 			...(statusFilter === "PAYMENT" ? { paymentFilter: "AWAITING" } : {}),
 			...(searchQuery ? { id: searchQuery } : {}),
 		}),
-		dependencies: [searchQuery, statusFilter, refreshKey],
+		dependencies: [searchQuery, statusFilter, refreshKey, page],
 	});
 	const muted = useColorModeValue("gray.600", "gray.400");
 	if (loading) {
@@ -223,10 +227,17 @@ const ItemsList: FC<IItemList> = ({ searchQuery, statusFilter, refreshKey, onMod
 	if (error) {
 		return <Alert status="error" borderRadius="lg"><AlertIcon /><AlertTitle>Could not load listings</AlertTitle></Alert>;
 	}
-	if (!data?.length) {
+	if (!data?.items?.length) {
 		return <Text py="10" textAlign="center" color={muted}>{searchQuery ? "No listing matches that ID in this status." : `There are no ${statusFilter.toLowerCase()} listings.`}</Text>;
 	}
-	return <>{data.map((item) => <ItemCard key={item.id} item={item} onModerated={onModerated} />)}</>;
+	return <>
+		{data.items.map((item) => <ItemCard key={item.id} item={item} onModerated={onModerated} />)}
+		{data.total > 30 && <Flex align="center" justify="space-between" gap="3" mt="5" py="3">
+			<Button size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>{pageText.previousPage}</Button>
+			<Text color={muted} fontSize="sm">{pageText.pageCounter.replace("{page}", String(page + 1)).replace("{pages}", String(Math.ceil(data.total / 30)))}</Text>
+			<Button size="sm" colorScheme="orange" isDisabled={(page + 1) * 30 >= data.total} onClick={() => setPage((current) => current + 1)}>{pageText.nextPage}</Button>
+		</Flex>}
+	</>;
 };
 
 interface ICard {

@@ -27,6 +27,7 @@ import {
 import { InputField } from "@components/dashboard/forms/InputField";
 import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizardProgress";
 import { useLang } from "@libs/hooks/useLang";
+import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import axios from "axios";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
@@ -79,7 +80,7 @@ const HouseSchema = yup.object().shape({
 		.test("video-type", "Use an MP4, WebM, or MOV video", (file: any) => !file || ALLOWED_VIDEO_TYPES.includes(file.type)),
 });
 
-export const HouseAddForm = (_props: { user?: unknown }) => {
+export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 	const router = useRouter();
 	const toast = useToast();
 	const common = useLang().businessListing;
@@ -113,20 +114,20 @@ export const HouseAddForm = (_props: { user?: unknown }) => {
 	];
 
 	const onSubmit = async (values: any, actions: any) => {
-		const formdata = new FormData();
-		const { files, video, ...others } = values;
-		for (const [key, value] of Object.entries(others)) {
-			formdata.append(key, Array.isArray(value) ? JSON.stringify(value) : String(value ?? ""));
-		}
-		files.forEach((file: File) => formdata.append("files", file));
-		if (video) formdata.append("video", video);
-
 		try {
-			const response = await axios.post("/api/items/add", formdata, {
-				onUploadProgress: (event) => {
-					if (event.total) setUploadProgress(Math.round((event.loaded * 100) / event.total));
-				},
+			if (!user?.id) throw new Error("Please sign in again before uploading photos.");
+			const { files, video, ...fields } = values;
+			const uploads = await uploadMediaFiles({
+				files: [...files.map((file: File) => ({ file, mediaKind: "image" as const })), ...(video ? [{ file: video as File, mediaKind: "video" as const }] : [])],
+				userId: user.id,
+				purpose: "listing",
+				itemType: "HOUSE",
+				onProgress: setUploadProgress,
 			});
+			const images = uploads.slice(0, files.length);
+			const videoUrl = video ? uploads[uploads.length - 1] : null;
+			const response = await axios.post("/api/items/add", { ...fields, images, video: videoUrl });
+			setUploadProgress(100);
 			toast({ title: common.successTitle, status: "success", description: response.data.msg, isClosable: true });
 			await router.push(`/items/${response.data.itemId}`);
 		} catch (error: any) {

@@ -3,11 +3,11 @@ import { verifyChapaListingPayment } from "@libs/server/chapa";
 import { withSessionApi } from "@config/cookie/cookie";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-type SessionRequest = NextApiRequest & { session?: { user?: { id?: string } } };
+type SessionRequest = NextApiRequest & { user?: { id: string; role?: "USER" | "ADMIN" } };
 
 async function handler(req: SessionRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ err: "Method not allowed" });
-  const userId = req.session?.user?.id;
+  const userId = req.user?.id;
   if (!userId) return res.status(401).json({ err: "Authentication required" });
 
   const txRef = typeof req.body?.txRef === "string" ? req.body.txRef.trim() : "";
@@ -18,8 +18,7 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
     select: { itemId: true, item: { select: { userId: true } } },
   });
   if (!payment) return res.status(404).json({ err: "Payment not found" });
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
-  if (payment.item.userId !== userId && user?.role !== "ADMIN") {
+  if (payment.item.userId !== userId && req.user?.role !== "ADMIN") {
     return res.status(404).json({ err: "Payment not found" });
   }
 

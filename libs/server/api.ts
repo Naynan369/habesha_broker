@@ -9,11 +9,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import type { IUser } from "@libs/types/user";
 
 type SessionRequest = NextApiRequest & {
-	session: {
-		user?: IUser;
-		save: () => Promise<void>;
-		destroy: () => void;
-	};
+	user?: IUser;
+	session: { userId?: string; sessionVersion?: number; save: () => Promise<void>; destroy: () => void };
 };
 
 const publicUserSelect = {
@@ -50,15 +47,7 @@ const isValidRecordId = (value: unknown): value is string =>
 	typeof value === "string" && /^[A-Za-z0-9_-]{8,128}$/.test(value);
 
 async function currentUser(req: SessionRequest) {
-	if (!req.session?.user?.id) return null;
-	const user = await prisma.user.findUnique({
-		where: { id: req.session.user.id },
-		select: publicUserSelect,
-	});
-	if (user) {
-		req.session.user = user as IUser;
-	}
-	return user;
+	return req.user || null;
 }
 
 async function requireUser(req: SessionRequest, res: NextApiResponse, verified = false) {
@@ -202,39 +191,59 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 	}
 	return where;
 }
+
+function searchableText(term: string, fields: string[]) {
+	return fields.map((field) => ({ [field]: { contains: term, mode: "insensitive" } }));
+}
+
 async function listItems(req: SessionRequest, res: NextApiResponse) {
 	const adminView = Boolean(
-		req.session?.user?.role === "ADMIN" &&
-		(req.query.page !== undefined || typeof req.body?.id === "string" || req.body?.status === "PENDING")
+		req.user?.role === "ADMIN" &&
+		(typeof req.body?.id === "string" || ["PENDING", "APPROVED", "DECLINED", "SOLD"].includes(req.body?.status))
 	);
-	const user = adminView ? req.session.user : await currentUser(req);
+	const user = adminView ? req.user : await currentUser(req);
 	const isAdmin = adminView;
 	if (isAdmin && req.body?.id && !isValidRecordId(req.body.id)) {
 		return error(res, 400, "Listing ID is invalid");
 	}
 	if (isAdmin && !(await requireAdmin(req, res))) return;
 	const body = req.body || {};
-	const page = Math.max(0, Number(req.query.page) || 0);
+	const requestedPage = Number(req.query.page) || 0;
+	const page = Math.max(0, Math.min(10000, Math.floor(requestedPage)));
 	const orderBy = body.orderBy && typeof body.orderBy === "object" ? body.orderBy : { createdAt: "desc" };
 	const orderKey = Object.keys(orderBy)[0];
 	const sort: any = ["createdAt", "title", "price"].includes(orderKey) && ["asc", "desc"].includes(orderBy[orderKey])
 		? { [orderKey]: orderBy[orderKey] }
 		: { createdAt: "desc" };
-	const items = await prisma.item.findMany({
-		where: safeItemWhere(body, user as IUser | null, isAdmin),
-		include: isAdmin ? {
-			...itemInclude,
-			ListingPayments: {
-				take: 1,
-				orderBy: { createdAt: "desc" },
-				select: { id: true, txRef: true, amount: true, currency: true, status: true, paymentMethod: true, providerRef: true, createdAt: true, verifiedAt: true },
-			},
-		} : itemInclude,
-		orderBy: sort,
-		skip: page * 30,
-		take: 30,
-	});
-	return res.status(200).json(items);
+	const where = safeItemWhere(body, user as IUser | null, isAdmin);
+	const keyword = typeof body.keyword === "string" ? body.keyword.trim().slice(0, 120) : "";
+	if (keyword && !isAdmin) {
+		where.OR = [
+			{ title: { contains: keyword, mode: "insensitive" } },
+			{ House: { is: { OR: searchableText(keyword, ["region", "city", "subcity", "neighborhood", "landmark"]) } } },
+			{ Car: { is: { OR: searchableText(keyword, ["manufacturer", "model", "region", "city", "subcity", "neighborhood", "landmark"]) } } },
+			{ BusinessSpace: { is: { OR: searchableText(keyword, ["region", "city", "subcity", "neighborhood", "landmark"]) } } },
+			{ Service: { is: { OR: searchableText(keyword, ["region", "city", "serviceArea"]) } } },
+		];
+	}
+	const [items, total] = await Promise.all([
+		prisma.item.findMany({
+			where,
+			include: isAdmin ? {
+				...itemInclude,
+				ListingPayments: {
+					take: 1,
+					orderBy: { createdAt: "desc" },
+					select: { id: true, txRef: true, amount: true, currency: true, status: true, paymentMethod: true, providerRef: true, createdAt: true, verifiedAt: true },
+				},
+			} : itemInclude,
+			orderBy: sort,
+			skip: page * 30,
+			take: 30,
+		}),
+		prisma.item.count({ where }),
+	]);
+	return res.status(200).json({ items, total, page, pageSize: 30 });
 }
 
 async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: string[]) {
@@ -272,8 +281,9 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		if (!user || !(await bcrypt.compare(password, user.password))) {
 			return error(res, 401, "Email or password is incorrect");
 		}
-		const { password: _password, ...safeUser } = user;
-		req.session.user = safeUser as IUser;
+		const { password: _password, sessionVersion, ...safeUser } = user;
+		req.session.userId = user.id;
+		req.session.sessionVersion = sessionVersion;
 		await req.session.save();
 		return res.status(200).json({ user: safeUser });
 	}
@@ -301,14 +311,15 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		try {
 			const updated = await prisma.user.update({
 				where: { id: user.id },
-				data: { email, verfied: false },
-				select: publicUserSelect,
+				data: { email, verfied: false, sessionVersion: { increment: 1 } },
+				select: { ...publicUserSelect, sessionVersion: true },
 			});
 			await prisma.verification.deleteMany({ where: { userId: user.id } });
 			await prisma.passwordReset.deleteMany({ where: { userId: user.id } });
-			req.session.user = updated as IUser;
+			const { sessionVersion, ...safeUser } = updated;
+			req.session.sessionVersion = sessionVersion;
 			await req.session.save();
-			return res.status(200).json({ user: updated });
+			return res.status(200).json({ user: safeUser });
 		} catch (caught) {
 			if ((caught as any)?.code === "P2002") return error(res, 409, "An account with that email already exists");
 			throw caught;
@@ -342,10 +353,13 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 			if (!record || !(await bcrypt.compare(body.oldPassword, record.password))) {
 				return res.status(400).json({ fieldError: true, field: "oldPassword", msg: "Current password is incorrect" });
 			}
-			await prisma.user.update({
+			const updated = await prisma.user.update({
 				where: { id: user.id },
-				data: { password: await bcrypt.hash(body.newPassword, 12) },
+				data: { password: await bcrypt.hash(body.newPassword, 12), sessionVersion: { increment: 1 } },
+				select: { sessionVersion: true },
 			});
+			req.session.sessionVersion = updated.sessionVersion;
+			await req.session.save();
 			return res.status(200).json({ ok: true });
 		}
 		const data: any = {};
@@ -354,8 +368,6 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		if (typeof body.bio === "string") data.bio = body.bio.slice(0, 2000);
 		if (!Object.keys(data).length) return error(res, 400, "No profile changes were provided");
 		const updated = await prisma.user.update({ where: { id: user.id }, data, select: publicUserSelect });
-		req.session.user = updated as IUser;
-		await req.session.save();
 		return res.status(200).json({ user: updated });
 	}
 
@@ -391,8 +403,6 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 			select: publicUserSelect,
 		});
 		await prisma.verification.delete({ where: { id: verification.id } });
-		req.session.user = updated as IUser;
-		await req.session.save();
 		return res.status(200).json({ user: updated });
 	}
 
@@ -421,7 +431,7 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		if (!reset || Date.now() - reset.requestTime.getTime() > 60 * 60 * 1000) {
 			return error(res, 400, "This reset link is invalid or expired");
 		}
-		await prisma.user.update({ where: { id: reset.userId }, data: { password: await bcrypt.hash(password, 12) } });
+		await prisma.user.update({ where: { id: reset.userId }, data: { password: await bcrypt.hash(password, 12), sessionVersion: { increment: 1 } } });
 		await prisma.passwordReset.delete({ where: { id: reset.id } });
 		return res.status(200).json({ ok: true });
 	}
@@ -479,12 +489,19 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 	if (route === "save" && req.method === "GET") {
 		const user = await requireUser(req, res);
 		if (!user) return;
-		const saved = await prisma.savedItems.findMany({
-			where: { userId: user.id, item: { status: "APPROVED" } },
-			include: { item: { include: itemInclude } },
-			orderBy: { savedAt: "desc" },
-		});
-		return res.status(200).json(saved);
+		const page = Math.max(0, Math.min(10000, Math.floor(Number(req.query.page) || 0)));
+		const where = { userId: user.id, item: { status: "APPROVED" as const } };
+		const [items, total] = await Promise.all([
+			prisma.savedItems.findMany({
+				where,
+				include: { item: { include: itemInclude } },
+				orderBy: { savedAt: "desc" },
+				skip: page * 30,
+				take: 30,
+			}),
+			prisma.savedItems.count({ where }),
+		]);
+		return res.status(200).json({ items, total, page, pageSize: 30 });
 	}
 
 	if (route === "save/check" && req.method === "GET") {
@@ -526,7 +543,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		const user = await requireUser(req, res, true);
 		if (!user) return;
 		if (!isValidRecordId(body.itemId)) return error(res, 400, "Listing ID is invalid");
-		const item = await prisma.item.findUnique({ where: { id: body.itemId }, select: { id: true, userId: true, itemType: true } });
+		const item = await prisma.item.findUnique({ where: { id: body.itemId }, select: { id: true, userId: true, itemType: true, paymentStatus: true } });
 		if (!item || item.userId !== user.id) return error(res, 404, "Listing not found");
 		const data: any = {};
 		for (const key of ["title", "description", "price", "priceType"]) {
@@ -658,14 +675,12 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		if (!Object.keys(data).length && !hasSpecificChanges) return error(res, 400, "No listing changes were provided");
 		data.status = "PENDING";
 		data.approvedId = null;
+		if (item.paymentStatus === "NOT_REQUIRED") data.paymentStatus = "DUE";
 		if (hasSpecificChanges) {
 			const relation = item.itemType === "HOUSE" ? "House" : item.itemType === "CAR" ? "Car" : item.itemType === "BUSINESS_SPACE" ? "BusinessSpace" : "Service";
 			data[relation] = { update: specific };
 		}
-		await prisma.$transaction(async (tx) => {
-			await tx.item.update({ where: { id: item.id }, data });
-			await tx.savedItems.deleteMany({ where: { itemId: item.id } });
-		});
+		await prisma.item.update({ where: { id: item.id }, data });
 		return res.status(200).json({ ok: true });
 	}
 
@@ -732,8 +747,6 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 			if (!result.count) return false;
 			if (status === "APPROVED") {
 				await tx.recentActions.create({ data: { userId: item.userId, itemId, actionType: "APPROVED" } });
-			} else {
-				await tx.savedItems.deleteMany({ where: { itemId } });
 			}
 			return true;
 		});

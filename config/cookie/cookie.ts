@@ -6,13 +6,15 @@ import type {
 	GetServerSidePropsContext,
 	NextApiHandler,
 } from "next";
+import { prisma } from "@config/prisma";
 
-type SessionData = { user?: IUser };
+type SessionData = { userId?: string; sessionVersion?: number };
 type AppSession = IronSession<SessionData>;
 
 declare module "http" {
 	interface IncomingMessage {
 		session: AppSession;
+		user?: IUser;
 	}
 }
 
@@ -37,6 +39,7 @@ function getCookieConfig(): SessionOptions {
 export const withSessionApi = (handler: NextApiHandler): NextApiHandler => {
 	return async (req, res) => {
 		req.session = await getIronSession<SessionData>(req, res, getCookieConfig());
+		await loadCurrentUser(req);
 		return handler(req, res);
 	};
 };
@@ -46,6 +49,28 @@ export function withSessionSsr(
 ): GetServerSideProps<any> {
 	return async (context) => {
 		context.req.session = await getIronSession<SessionData>(context.req, context.res, getCookieConfig());
+		await loadCurrentUser(context.req);
 		return handler(context);
 	};
+}
+
+async function loadCurrentUser(req: IncomingMessage) {
+	const { userId, sessionVersion } = req.session;
+	if (!userId || !Number.isInteger(sessionVersion)) {
+		if (userId || sessionVersion !== undefined || (req.session as any).user) req.session.destroy();
+		return;
+	}
+	const account = await prisma.user.findUnique({
+		where: { id: userId },
+		select: {
+			id: true, firstName: true, lastName: true, email: true,
+			bio: true, profile_url: true, role: true, verfied: true, sessionVersion: true,
+		},
+	});
+	if (!account || account.sessionVersion !== sessionVersion) {
+		req.session.destroy();
+		return;
+	}
+	const { sessionVersion: _version, ...user } = account;
+	req.user = user;
 }

@@ -13,9 +13,10 @@ import { useRouter } from "next/router";
 import React from "react";
 import Link from "next/link";
 import { MdArrowForward, MdFavoriteBorder } from "react-icons/md";
+import { useLang } from "@libs/hooks/useLang";
 
 export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
-	const user = req.session.user;
+	const user = req.user;
 	if (!user) {
 		return {
 			redirect: {
@@ -33,6 +34,9 @@ export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 
 export default function SavedItems({ user }) {
 	const router = useRouter();
+	const copy = useLang().savedPage;
+	const [page, setPage] = React.useState(0);
+	const pageText = useLang().explore;
 	const pageBg = useColorModeValue("#f5f5f1", "#000000");
 	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
@@ -42,13 +46,14 @@ export default function SavedItems({ user }) {
 	const emptyIconBg = useColorModeValue("orange.50", "rgba(233,183,92,.14)");
 	const emptyIconColor = useColorModeValue("orange.700", "orange.200");
 	const [data, loading, error] = useFetch({
-		fetchFunction: () => axios.get("/api/items/save"),
+		fetchFunction: () => axios.get(`/api/items/save?page=${page}`),
+		dependencies: [page],
 	});
 
 	return (
 		<>
 			<Head>
-				<title>Saved Items - Habesha Brokers</title>
+				<title>{copy.pageTitle}</title>
 			</Head>
 			<Flex minH="100vh" bg={pageBg} direction="column">
 				<Flex
@@ -63,12 +68,12 @@ export default function SavedItems({ user }) {
 					<IconButton
 						mr="5"
 						boxSize="40px"
-						aria-label="Back"
+						aria-label={copy.back}
 						onClick={() => router.back()}
 					>
 						<ArrowBackIcon />
 					</IconButton>
-						<Heading size="md">Saved listings</Heading>
+						<Heading size="md">{copy.heading}</Heading>
 					<Box flex="1" />
 					<ColorModeToggle />
 				</Flex>
@@ -78,14 +83,14 @@ export default function SavedItems({ user }) {
 					px={MyTheme.paddings.pagePadding}
 					direction="column"
 				>
-					<Text mb="6" color={muted} fontSize="sm">The homes, vehicles, spaces, and services you save are collected here.</Text>
+					<Text mb="6" color={muted} fontSize="sm">{copy.description}</Text>
 					<Grid templateColumns={{ base: "minmax(0, 1fr)", sm: "repeat(auto-fill, minmax(18rem, 1fr))" }} justifyContent="center" alignItems="stretch" gap={{ base: 5, md: 6 }}>
 						{error ? (
-							<Alert status="error" gridColumn="1 / -1" p="8" borderRadius="xl">Could not load saved listings. Please refresh and try again.</Alert>
+							<Alert status="error" gridColumn="1 / -1" p="8" borderRadius="xl">{copy.loadError}</Alert>
 						) : loading || !data ? (
 							[...Array(6)].map((_, index) => <ItemLoader key={index} />)
-						) : data.length ? (
-							data.map((savedItem) => (
+						) : data.items?.length ? (
+							data.items.map((savedItem) => (
 								<Item
 									key={savedItem.id}
 									id={savedItem.item.id}
@@ -105,12 +110,17 @@ export default function SavedItems({ user }) {
 						) : (
 							<Flex gridColumn="1 / -1" minH="300px" align="center" justify="center" direction="column" textAlign="center" px="6" py="12" bg={emptyBg} border="1px solid" borderColor={emptyBorder} borderRadius="2xl" boxShadow="0 6px 22px rgba(21,42,44,.04)">
 								<Box w="14" h="14" display="grid" placeItems="center" borderRadius="full" bg={emptyIconBg} color={emptyIconColor}><MdFavoriteBorder size="22" /></Box>
-								<Heading mt="5" fontSize="lg">Your shortlist starts here</Heading>
-								<Text mt="2" maxW="sm" color={muted}>Save listings you like and come back to compare them whenever you are ready.</Text>
-								<Link legacyBehavior href="/explore" passHref><Button as="a" mt="6" colorScheme="orange" rightIcon={<MdArrowForward />}>Explore listings</Button></Link>
+								<Heading mt="5" fontSize="lg">{copy.emptyTitle}</Heading>
+								<Text mt="2" maxW="sm" color={muted}>{copy.emptyDescription}</Text>
+								<Link legacyBehavior href="/explore" passHref><Button as="a" mt="6" colorScheme="orange" rightIcon={<MdArrowForward />}>{copy.exploreListings}</Button></Link>
 							</Flex>
 						)}
 					</Grid>
+					{!loading && data?.total > 30 && <Flex align="center" justify="space-between" gap="3" mt="5" px="2">
+						<Button size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>{pageText.previousPage}</Button>
+						<Text color={muted} fontSize="sm">{pageText.pageCounter.replace("{page}", String(page + 1)).replace("{pages}", String(Math.ceil(data.total / 30)))}</Text>
+						<Button size="sm" colorScheme="orange" isDisabled={(page + 1) * 30 >= data.total} onClick={() => setPage((current) => current + 1)}>{pageText.nextPage}</Button>
+					</Flex>}
 				</Flex>
 			</Flex>
 		</>

@@ -30,7 +30,7 @@ import { FormEvent, useState } from "react";
 import { MdSave } from "react-icons/md";
 
 export const getServerSideProps = withSessionSsr(async ({ req, params, locale }) => {
-	const user = req.session.user;
+	const user = req.user;
 	if (!user) return { redirect: { destination: locale === "am" ? "/am/auth/login" : "/auth/login" }, props: {} };
 	if (!user.verfied) return { redirect: { destination: locale === "am" ? "/am/dashboard/verify-account" : "/dashboard/verify-account" }, props: {} };
 	const itemId = params?.itemId;

@@ -1,54 +1,16 @@
 import { prisma } from "@config/prisma";
 import { withSessionApi } from "@config/cookie/cookie";
 import type { NextApiRequest, NextApiResponse } from "next";
-import multer from "multer";
-import fs from "fs";
-import path from "path";
-import { v4 as uuid } from "uuid";
+import { isOwnedBlobUrl } from "@libs/helpers/blob";
 
 class ListingInputError extends Error {}
 
 type SessionRequest = NextApiRequest & {
-	session: { user?: { id: string; verfied: boolean }; save: () => Promise<void> };
-	files?: Record<string, Express.Multer.File[]>;
-	body: Record<string, string>;
+	user?: { id: string; verfied: boolean };
+	body: Record<string, any>;
 };
 
-const uploadDir = path.join(process.cwd(), "public", "items");
-const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
-const MAX_VIDEO_SIZE = 25 * 1024 * 1024;
-const upload = multer({
-	storage: multer.diskStorage({
-		destination: (_req, _file, callback) => callback(null, uploadDir),
-		filename: (_req, file, callback) => {
-			const extension = {
-				"image/jpeg": ".jpg",
-				"image/png": ".png",
-				"image/webp": ".webp",
-				"image/gif": ".gif",
-				"video/mp4": ".mp4",
-				"video/webm": ".webm",
-				"video/quicktime": ".mov",
-			}[file.mimetype] || ".img";
-			callback(null, uuid() + extension);
-		},
-	}),
-	fileFilter: (_req, file, callback) => {
-		const imageTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-		const videoTypes = ["video/mp4", "video/webm", "video/quicktime"];
-		if (file.fieldname === "files" && !imageTypes.includes(file.mimetype)) {
-			return callback(new ListingInputError("Use a JPEG, PNG, WebP, or GIF image"));
-		}
-		if (file.fieldname === "video" && !videoTypes.includes(file.mimetype)) {
-			return callback(new ListingInputError("Use an MP4, WebM, or MOV video"));
-		}
-		if (!["files", "video"].includes(file.fieldname)) return callback(new ListingInputError("Unexpected upload field"));
-		callback(null, true);
-	},
-	limits: { files: 11, fileSize: MAX_VIDEO_SIZE },
-}).fields([{ name: "files", maxCount: 10 }, { name: "video", maxCount: 1 }]);
-
-function parseNumber(value: string, field: string, optional = false) {
+function parseNumber(value: unknown, field: string, optional = false) {
 	if (optional && (value === undefined || value === "")) return undefined;
 	const number = Number(value);
 	if (!Number.isFinite(number)) throw new ListingInputError("Invalid " + field);
@@ -60,52 +22,42 @@ function optionalText(value: unknown, maxLength: number) {
 	return text || null;
 }
 
-function parseFeatures(value: string | undefined, allowed: string[]) {
+function parseFeatures(value: unknown, allowed: string[]) {
 	if (!value) return [];
 	let parsed: unknown;
-	try { parsed = JSON.parse(value); } catch (_error) { throw new ListingInputError("Invalid features selection"); }
+	try { parsed = typeof value === "string" ? JSON.parse(value) : value; } catch (_error) { throw new ListingInputError("Invalid features selection"); }
 	if (!Array.isArray(parsed) || parsed.some((feature) => typeof feature !== "string" || !allowed.includes(feature))) {
 		throw new ListingInputError("Invalid features selection");
 	}
 	return [...new Set(parsed)];
 }
 
-function parseOptionalInteger(value: string | undefined, field: string, minimum = 0) {
+function parseOptionalInteger(value: unknown, field: string, minimum = 0) {
 	const number = parseNumber(value || "", field, true);
 	if (number === undefined) return undefined;
 	if (!Number.isInteger(number) || number < minimum) throw new ListingInputError("Invalid " + field);
 	return number;
 }
 
-function handleUpload(req: any, res: any) {
-	return new Promise<void>((resolve, reject) => {
-		upload(req, res, (err: any) => (err ? reject(err) : resolve()));
-	});
-}
-
 async function handler(req: NextApiRequest, res: NextApiResponse) {
 	if (req.method !== "POST") return res.status(405).json({ err: "Method not allowed" });
 	const sessionReq = req as SessionRequest;
-	const user = sessionReq.session?.user;
+	const user = sessionReq.user;
 	if (!user) return res.status(401).json({ err: "Authentication required" });
 	if (!user.verfied) return res.status(403).json({ err: "Verify your email address first" });
 
-	let uploadedFiles: Express.Multer.File[] = [];
 	try {
-		fs.mkdirSync(uploadDir, { recursive: true });
-		await handleUpload(req, res);
-		const groupedFiles = sessionReq.files || {};
-		const files = groupedFiles.files || [];
-		const video = groupedFiles.video?.[0];
-		uploadedFiles = [...files, ...(video ? [video] : [])];
-		if (files.some((file) => file.size > MAX_IMAGE_SIZE)) throw new ListingInputError("Each photo must be 8 MB or smaller");
-		if (video && video.size > MAX_VIDEO_SIZE) throw new ListingInputError("The video must be 25 MB or smaller");
-		if (!files.length) throw new ListingInputError("Add at least one photo to your listing");
 		const body = sessionReq.body || {};
 		const title = String(body.title || "").trim();
 		const price = parseNumber(body.price, "price");
 		const priceType = body.priceType;
 		const itemType = body.itemType;
+		const images = body.images;
+		const video = body.video || null;
+		if (!Array.isArray(images) || images.length < 1 || images.length > 10 || images.some((url: unknown) => !isOwnedBlobUrl(url, "listing", user.id, "image"))) {
+			throw new ListingInputError("Upload between 1 and 10 valid listing photos");
+		}
+		if (video && !isOwnedBlobUrl(video, "listing", user.id, "video")) throw new ListingInputError("The house video upload is invalid");
 		if (!title || title.length < 5 || title.length > 300) throw new ListingInputError("Title must be between 5 and 300 characters");
 		if (price < 0) throw new ListingInputError("Price must be non-negative");
 		if (!["FIXED", "NEGOTIABLE"].includes(priceType)) throw new ListingInputError("Invalid price type");
@@ -120,7 +72,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 			priceType,
 			itemType,
 			paymentStatus: "DUE",
-			images: files.map((file) => file.filename),
+			images,
 			user: { connect: { id: user.id } },
 		} as any;
 
@@ -160,7 +112,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 				neighborhood: optionalText(body.neighborhood, 120),
 				landmark: optionalText(body.landmark, 120),
 				features: parseFeatures(body.features, homeFeatures),
-				video: video?.filename || null,
+				video,
 			} };
 		} else if (itemType === "CAR") {
 			const year = parseNumber(body.year, "year", true);
@@ -259,16 +211,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 		const message = "Listing created. Pay " + feeLabel + " from the listing page. Admin review starts after payment is confirmed.";
 		return res.status(201).json({ msg: message, itemId: created.id });
 	} catch (err: any) {
-		for (const file of uploadedFiles) {
-			try { fs.unlinkSync(file.path); } catch (_cleanupError) {}
-		}
 		const isUploadInputError = err instanceof ListingInputError;
-		const isMulterError = err instanceof multer.MulterError;
-		const status = isUploadInputError ? 400 : isMulterError ? (err.code === "LIMIT_FILE_SIZE" ? 413 : 400) : 500;
+		const status = isUploadInputError ? 400 : 500;
 		const message = status >= 500 ? "Unable to save this listing. Please try again." : err?.message || "Unable to add listing";
 		return res.status(status).json({ err: message });
 	}
 }
 
-export const config = { api: { bodyParser: false } };
 export default withSessionApi(handler);

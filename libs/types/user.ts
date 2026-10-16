@@ -7,4 +7,5 @@ export interface IUser {
 	profile_url?: string;
 	role?: "USER" | "ADMIN";
 	verfied: boolean;
+	sessionVersion?: number;
 }

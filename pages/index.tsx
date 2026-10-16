@@ -10,7 +10,7 @@ import { withSessionSsr } from "@config/cookie/cookie";
 import React, { useState } from "react";
 
 export const getServerSideProps = withSessionSsr(async ({ req }) => ({
-	props: { user: req.session.user || null },
+	props: { user: req.user || null },
 }));
 
 export default function Home({ user }) {

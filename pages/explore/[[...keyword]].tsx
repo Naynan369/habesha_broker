@@ -18,7 +18,7 @@ import { withSessionSsr } from "@config/cookie/cookie";
 const SERVICE_CATEGORIES = ["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"] as const;
 
 export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
-	const user = req.session.user;
+	const user = req.user;
 	const keyword = params?.keyword ? params.keyword[0] : "";
 	return { props: { user: user || null, keyword } };
 });
@@ -28,6 +28,7 @@ export default function ExplorePage({ user, keyword }) {
 	const [search, setSearch] = useState(keyword || "");
 	const [filterRevision, setFilterRevision] = useState(0);
 	const [retryCount, setRetryCount] = useState(0);
+	const [pageIndex, setPageIndex] = useState(0);
 	const lang = useLang();
 	const filter = useFilter();
 	const router = useRouter();
@@ -45,6 +46,7 @@ export default function ExplorePage({ user, keyword }) {
 	const errorText = useColorModeValue("#783e32", "#f3c1b5");
 	const badgeSurface = useColorModeValue("#e8efec", "#191919");
 	const applyFilters = useCallback(() => {
+		setPageIndex(0);
 		setFilterRevision((revision) => revision + 1);
 		const currentFilter = useFilter.getState();
 		const query: Record<string, string | string[]> = {};
@@ -97,11 +99,11 @@ export default function ExplorePage({ user, keyword }) {
 	}, [router.isReady, router.query.itemType, router.query.serviceCategory, serviceCategoryFromQuery, applyFilters]);
 
 	const [data, loading, error] = useFetch({
-		fetchFunction: () => axios.post("/api/items", {
-			title: { startsWith: search },
+		fetchFunction: () => axios.post(`/api/items?page=${pageIndex}`, {
+			keyword: search,
 			...organizeFilters(filter),
 		}, { timeout: 10000 }),
-		dependencies: [search, filterRevision, retryCount],
+		dependencies: [search, filterRevision, retryCount, pageIndex],
 	});
 
 	const selectCategory = (type: "HOUSE" | "CAR" | "BUSINESS_SPACE" | "SERVICE") => {
@@ -113,6 +115,7 @@ export default function ExplorePage({ user, keyword }) {
 	const handleSearch = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const term = searchInput.trim();
+		setPageIndex(0);
 		const query: Record<string, string | string[]> = {};
 		if (filter.itemType) query.itemType = filter.itemType;
 		if (filter.itemType === "SERVICE" && filter.Service?.some?.category) query.serviceCategory = filter.Service.some.category;
@@ -288,7 +291,7 @@ export default function ExplorePage({ user, keyword }) {
 							</Box>
 							<Flex align="center" gap="3" wrap="wrap">
 								{activeResultLabel && <Badge color={titleColor} bg={badgeSurface} borderRadius="full" px="3" py="1">{activeResultLabel}</Badge>}
-								<Text color={bodyColor} fontSize="sm" fontWeight="medium">{error ? lang.explore.unavailable : loading ? lang.explore.loading : `${data?.length || 0} ${data?.length === 1 ? lang.explore.foundSingular : lang.explore.foundPlural}`}</Text>
+								<Text color={bodyColor} fontSize="sm" fontWeight="medium">{error ? lang.explore.unavailable : loading ? lang.explore.loading : `${data?.total || 0} ${(data?.total || 0) === 1 ? lang.explore.foundSingular : lang.explore.foundPlural}`}</Text>
 							</Flex>
 						</Flex>
 						<Grid templateColumns={{ base: "1fr", lg: "290px minmax(0, 1fr)" }} gap={{ base: 5, lg: 7 }} alignItems="start">
@@ -304,9 +307,9 @@ export default function ExplorePage({ user, keyword }) {
 									</Alert>
 								) : loading || !data ? (
 									<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">{[...Array(4)].map((_, index) => <ItemLoader key={index} />)}</SimpleGrid>
-								) : data.length ? (
+								) : data.items?.length ? (
 									<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
-										{data.map((item) => <ItemCard key={item.id} id={item.id} title={item.title} date={item.createdAt} photoURL={item.images?.[0]} ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")} ownerPhoto={item?.user?.profile_url} price={item.price} itemType={item.itemType} priceFrequency={item.BusinessSpace?.priceFrequency} featured={item.featured} status={item.status} serviceCategory={item.Service?.category} />)}
+										{data.items.map((item) => <ItemCard key={item.id} id={item.id} title={item.title} date={item.createdAt} photoURL={item.images?.[0]} ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")} ownerPhoto={item?.user?.profile_url} price={item.price} itemType={item.itemType} priceFrequency={item.BusinessSpace?.priceFrequency} featured={item.featured} status={item.status} serviceCategory={item.Service?.category} />)}
 									</SimpleGrid>
 								) : (
 					<Flex align="center" justify="center" direction="column" bg={surface} borderRadius="2xl" border="1px solid" borderColor={borderColor} p={{ base: 8, md: 12 }} textAlign="center">
@@ -315,6 +318,11 @@ export default function ExplorePage({ user, keyword }) {
 						<Text color={bodyColor} mt="2" maxW="460px">{lang.explore.noMatchesDescription}</Text>
 									</Flex>
 								)}
+								{!loading && data?.total > 30 && <Flex align="center" justify="space-between" gap="3" mt="6" p="4" bg={surface} border="1px solid" borderColor={borderColor} borderRadius="xl">
+									<Button size="sm" variant="outline" isDisabled={pageIndex === 0} onClick={() => setPageIndex((page) => Math.max(0, page - 1))}>{lang.explore.previousPage}</Button>
+									<Text color={bodyColor} fontSize="sm" textAlign="center">{lang.explore.pageCounter.replace("{page}", String(pageIndex + 1)).replace("{pages}", String(Math.ceil(data.total / 30)))}</Text>
+									<Button size="sm" colorScheme="orange" isDisabled={(pageIndex + 1) * 30 >= data.total} onClick={() => setPageIndex((page) => page + 1)}>{lang.explore.nextPage}</Button>
+								</Flex>}
 							</Box>
 						</Grid>
 					</Box>

@@ -11,6 +11,7 @@ import { IUser } from "@libs/types/user";
 import axios from "axios";
 import { FC, useEffect, useState } from "react";
 import { getMediaUrl } from "@libs/helpers/media";
+import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import { FaSave } from "react-icons/fa";
 import { MdCamera } from "react-icons/md";
 
@@ -19,7 +20,7 @@ interface IProfileUpdate {
 }
 
 export const ProfileUpdate: FC<IProfileUpdate> = ({ user }) => {
-	const [file, setFile] = useState(null);
+	const [file, setFile] = useState<File | null>(null);
 	const [profileUrl, setProfileUrl] = useState(user.profile_url);
 	const [previewUrl, setPreviewUrl] = useState<string>();
 	const [progress, setProgress] = useState(0);
@@ -34,39 +35,20 @@ export const ProfileUpdate: FC<IProfileUpdate> = ({ user }) => {
 	}, [file]);
 
 	const uploadImage = async () => {
-		const formData = new FormData();
-		formData.append("image", file);
-
+		if (!file) return;
 		setUploading(true);
-		await axios
-			.post("/api/user/uploadProfile", formData, {
-				onUploadProgress: (event) => {
-					if (event.total) setProgress(Math.round((event.loaded * 100) / event.total));
-				},
-			})
-			.then((res) => {
-				setProfileUrl(res.data?.user?.profile_url || profileUrl);
-				toast({
-					title: "Success",
-					variant: "solid",
-					description: "Profile Picture Uploaded",
-					status: "success",
-				});
-			})
-			.catch((err) => {
-				toast({
-					title: "Error",
-					variant: "solid",
-					description:
-						"Can't Upload Profile Picture, please Try again",
-					status: "error",
-				});
-			})
-			.finally(() => {
-				setUploading(false);
-				setFile(null);
-				setProgress(0);
-			});
+		try {
+			const [url] = await uploadMediaFiles({ files: [{ file, mediaKind: "image" }], userId: user.id, purpose: "profile", onProgress: setProgress });
+			const response = await axios.post("/api/user/uploadProfile", { url });
+			setProfileUrl(response.data?.user?.profile_url || profileUrl);
+			toast({ title: "Success", variant: "solid", description: "Profile picture uploaded", status: "success" });
+		} catch (error: any) {
+			toast({ title: "Error", variant: "solid", description: error?.response?.data?.err || "Can't upload profile picture. Please try again.", status: "error" });
+		} finally {
+			setUploading(false);
+			setFile(null);
+			setProgress(0);
+		}
 	};
 	return (
 		<Flex direction={"column"} alignItems="center">

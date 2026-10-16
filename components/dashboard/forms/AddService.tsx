@@ -25,10 +25,11 @@ import {
 import { InputField } from "@components/dashboard/forms/InputField";
 import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizardProgress";
 import { useLang } from "@libs/hooks/useLang";
+import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import axios from "axios";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { MdArrowBack, MdArrowForward, MdClose, MdSave } from "react-icons/md";
 import * as yup from "yup";
 
@@ -37,7 +38,7 @@ const MAX_PHOTO_SIZE = 8 * 1024 * 1024;
 const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const CATEGORIES = ["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"];
 
-export const AddService = () => {
+export const AddService = ({ user }: { user?: { id: string } }) => {
 	const router = useRouter();
 	const toast = useToast();
 	const lang = useLang();
@@ -50,8 +51,9 @@ export const AddService = () => {
 	const [uploadProgress, setUploadProgress] = useState(0);
 	const [previews, setPreviews] = useState<string[]>([]);
 	const [step, setStep] = useState(0);
-
-	useEffect(() => () => previews.forEach((preview) => URL.revokeObjectURL(preview)), [previews]);
+	const previewsRef = useRef(previews);
+	useEffect(() => { previewsRef.current = previews; }, [previews]);
+	useEffect(() => () => previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview)), []);
 
 	const schema = yup.object().shape({
 		title: yup.string().trim().min(5, "Use at least 5 characters").max(300, "Keep the title under 300 characters").required("A listing title is required"),
@@ -77,17 +79,12 @@ export const AddService = () => {
 	];
 
 	const onSubmit = async (values: any, actions: any) => {
-		const formData = new FormData();
-		const { files, ...fields } = values;
-		Object.entries(fields).forEach(([key, value]) => formData.append(key, String(value ?? "")));
-		files.forEach((file: File) => formData.append("files", file));
-
 		try {
-			const response = await axios.post("/api/items/add", formData, {
-				onUploadProgress: (event) => {
-					if (event.total) setUploadProgress(Math.round((event.loaded * 100) / event.total));
-				},
-			});
+			if (!user?.id) throw new Error("Please sign in again before uploading photos.");
+			const { files, ...fields } = values;
+			const images = await uploadMediaFiles({ files: files.map((file: File) => ({ file, mediaKind: "image" as const })), userId: user.id, purpose: "listing", itemType: "SERVICE", onProgress: setUploadProgress });
+			const response = await axios.post("/api/items/add", { ...fields, images });
+			setUploadProgress(100);
 			toast({ title: common.successTitle, status: "success", description: response.data.msg, isClosable: true });
 			await router.push("/items/" + response.data.itemId);
 		} catch (error: any) {
@@ -124,6 +121,7 @@ export const AddService = () => {
 			formik.setFieldTouched("files", true, false);
 			return;
 		}
+		previews.forEach((preview) => URL.revokeObjectURL(preview));
 		setPreviews(chosen.map((file) => URL.createObjectURL(file)));
 		formik.setFieldValue("files", chosen);
 		formik.setFieldTouched("files", true, false);

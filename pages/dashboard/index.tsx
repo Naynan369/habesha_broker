@@ -13,7 +13,7 @@ import React, { FC, ReactNode } from "react";
 import { MdAddShoppingCart, MdArrowForward, MdCheckCircle, MdListAlt, MdSave } from "react-icons/md";
 
 export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
-    const user = req.session.user;
+    const user = req.user;
     if (!user) {
         return { redirect: { destination: locale === "am" ? "/am/auth/login/" : "/auth/login/" }, props: {} };
     }

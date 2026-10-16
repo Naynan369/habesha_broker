@@ -6,7 +6,7 @@ import { useLang } from "@libs/hooks/useLang";
 import Head from "next/head";
 
 export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
-	const user = req.session.user;
+	const user = req.user;
 	if (user) {
 		return {
 			redirect: {

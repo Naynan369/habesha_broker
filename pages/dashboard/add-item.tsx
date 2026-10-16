@@ -25,7 +25,7 @@ import { MdArrowBack, MdCheckCircle, MdHomeWork, MdMiscellaneousServices, MdStor
 type FormTypes = "HOUSE" | "CAR" | "BUSINESS_SPACE" | "SERVICE";
 
 export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
-	const user = req.session.user;
+		const user = req.user;
 	if (!user) {
 		return {
 			redirect: {
@@ -138,8 +138,8 @@ export default function AddItem({ user }) {
 							<Heading as="h2" fontSize="lg" letterSpacing="-.02em" mb={{ base: 5, md: 7 }}>{text.listingDetails}</Heading>
 							{type === "HOUSE" ? <HouseAddForm user={user} />
 								: type === "CAR" ? <AddCar user={user} />
-									: type === "BUSINESS_SPACE" ? <AddBusinessSpace />
-										: <AddService />}
+								: type === "BUSINESS_SPACE" ? <AddBusinessSpace user={user} />
+									: <AddService user={user} />}
 						</Box>
 					)}
 				</Flex>

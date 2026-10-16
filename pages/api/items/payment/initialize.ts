@@ -5,12 +5,12 @@ import axios from "axios";
 import crypto from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-type SessionRequest = NextApiRequest & { session?: { user?: { id?: string } } };
+type SessionRequest = NextApiRequest & { user?: { id: string } };
 
 async function handler(req: SessionRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ err: "Method not allowed" });
 
-  const userId = req.session?.user?.id;
+  const userId = req.user?.id;
   if (!userId) return res.status(401).json({ err: "Authentication required" });
 
   const itemId = typeof req.body?.itemId === "string" ? req.body.itemId : "";
@@ -22,6 +22,11 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
   });
   if (!user) return res.status(401).json({ err: "Authentication required" });
   if (!user.verfied) return res.status(403).json({ err: "Verify your email address before paying for a listing" });
+
+  await prisma.item.updateMany({
+    where: { id: itemId, userId: user.id, status: { in: ["PENDING", "DECLINED"] }, paymentStatus: "NOT_REQUIRED" },
+    data: { paymentStatus: "DUE" },
+  });
 
   const item = await prisma.item.findFirst({
     where: { id: itemId, userId: user.id },
@@ -56,14 +61,29 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
   }
 
   const txRef = "HB-" + Date.now() + "-" + crypto.randomBytes(6).toString("hex");
+  const lockedAt = new Date();
+  const reclaimBefore = new Date(lockedAt.getTime() - 120_000);
   const payment = await prisma.$transaction(async (tx) => {
+    const lock = await tx.item.updateMany({
+      where: {
+        id: item.id,
+        userId: user.id,
+        status: { in: ["PENDING", "DECLINED"] },
+        OR: [
+          { paymentStatus: "DUE" },
+          { paymentStatus: "PROCESSING", OR: [{ paymentLockedAt: null }, { paymentLockedAt: { lt: reclaimBefore } }] },
+        ],
+      },
+      data: { paymentStatus: "PROCESSING", paymentLockedAt: lockedAt },
+    });
+    if (!lock.count) return null;
     const created = await tx.listingPayment.create({
       data: { itemId: item.id, txRef, amount: fee, currency: "ETB" },
       select: { id: true, txRef: true },
     });
-    await tx.item.update({ where: { id: item.id }, data: { paymentStatus: "PROCESSING" } });
     return created;
   });
+  if (!payment) return res.status(409).json({ err: "A payment attempt is already being prepared. Refresh this page in a moment." });
 
   const cleanBaseUrl = baseUrl.replace(/\/$/, "");
   const localePrefix = req.body?.locale === "am" ? "/am" : "";
@@ -100,23 +120,20 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
       throw new Error("Chapa did not return a secure checkout link");
     }
     await prisma.listingPayment.update({ where: { id: payment.id }, data: { checkoutUrl } });
+    await prisma.item.updateMany({
+      where: { id: item.id, paymentStatus: "PROCESSING", paymentLockedAt: lockedAt },
+      data: { paymentLockedAt: null },
+    });
     return res.status(201).json({ checkoutUrl, txRef });
   } catch (_error) {
     await prisma.listingPayment.updateMany({
       where: { id: payment.id, status: "INITIATED" },
       data: { status: "FAILED" },
     });
-    const newest = await prisma.listingPayment.findFirst({
-      where: { itemId: item.id },
-      orderBy: { createdAt: "desc" },
-      select: { id: true },
+    await prisma.item.updateMany({
+      where: { id: item.id, paymentStatus: "PROCESSING", paymentLockedAt: lockedAt },
+      data: { paymentStatus: "DUE", paymentLockedAt: null },
     });
-    if (newest?.id === payment.id) {
-      await prisma.item.updateMany({
-        where: { id: item.id, paymentStatus: "PROCESSING" },
-        data: { paymentStatus: "DUE" },
-      });
-    }
     return res.status(502).json({ err: "We could not start the secure payment. Please try again." });
   }
 }

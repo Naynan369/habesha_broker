@@ -3,7 +3,7 @@ import { withSessionApi } from "@config/cookie/cookie";
 import crypto from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-type SessionRequest = NextApiRequest & { session?: { user?: { id?: string } } };
+type SessionRequest = NextApiRequest & { user?: { id: string } };
 
 async function handler(req: SessionRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ err: "Method not allowed" });
@@ -11,7 +11,7 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
     return res.status(404).json({ err: "Not found" });
   }
 
-  const userId = req.session?.user?.id;
+  const userId = req.user?.id;
   if (!userId) return res.status(401).json({ err: "Authentication required" });
   const itemId = typeof req.body?.itemId === "string" ? req.body.itemId : "";
   if (!/^[A-Za-z0-9_-]{8,128}$/.test(itemId)) return res.status(400).json({ err: "Listing ID is invalid" });
@@ -59,7 +59,7 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
         status: { in: ["PENDING", "DECLINED"] },
         paymentStatus: { in: ["DUE", "PROCESSING"] },
       },
-      data: { paymentStatus: "PAID" },
+      data: { paymentStatus: "PAID", paymentLockedAt: null },
     });
     if (!changed.count) throw new Error("Listing payment status changed. Refresh and try again.");
   });

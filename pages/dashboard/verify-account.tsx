@@ -18,9 +18,10 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
+import { useLang } from "@libs/hooks/useLang";
 
 export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
-	const user = req.session.user;
+	const user = req.user;
 	if (!user) return { redirect: { destination: locale === "am" ? "/am/auth/login" : "/auth/login" }, props: {} };
 	if (user.verfied) return { redirect: { destination: locale === "am" ? "/am/dashboard" : "/dashboard" }, props: {} };
 	return { props: { user } };
@@ -32,6 +33,7 @@ export default function VerifyAccountPage({ user }) {
 	const [sending, setSending] = useState(false);
 	const [verifying, setVerifying] = useState(false);
 	const [verified, setVerified] = useState(false);
+	const text = useLang().verificationPage;
 
 	const toast = useToast();
 	const router = useRouter();
@@ -50,7 +52,7 @@ export default function VerifyAccountPage({ user }) {
 			})
 			.catch((err) => {
 				toast({
-					title: "Error Sending An Email",
+					title: text.emailError,
 				});
 			})
 			.finally(() => {
@@ -70,11 +72,10 @@ export default function VerifyAccountPage({ user }) {
 			})
 			.catch((err) => {
 				toast({
-					title: "Error Verifying Account, try again",
+					title: text.verifyError,
 					isClosable: true,
 					status: "error",
 				});
-				setSent(false);
 			})
 			.finally(() => {
 				setVerifying(false);
@@ -84,7 +85,7 @@ export default function VerifyAccountPage({ user }) {
 	return (
 		<>
 			<Head>
-				<title>Verify Account</title>
+				<title>{text.pageTitle}</title>
 			</Head>
 			<Flex
 				minH="100vh"
@@ -106,10 +107,10 @@ export default function VerifyAccountPage({ user }) {
 					direction="column"
 					alignItems="center"
 				>
-					<Heading mb="5">Verify Your Email Address</Heading>
+					<Heading mb="5">{text.heading}</Heading>
 					<Text>
-						We will send a Verification code through your email,{" "}
-						<Text color="blue.500">{user.email}</Text>.
+						{text.instructions}{" "}
+						<Text as="span" color="blue.500">{user.email}</Text>.
 					</Text>
 					{sent ? (
 						<>
@@ -131,12 +132,13 @@ export default function VerifyAccountPage({ user }) {
 							<VStack w={"full"} mt="5">
 								<Button
 									isLoading={verifying}
+								loadingText={text.verifying}
 									w="full"
 									colorScheme="blue"
 									leftIcon={<CheckCircleIcon />}
 									onClick={verifyEmail}
 								>
-									Verify Email
+									{text.verify}
 								</Button>
 								<Button
 									disabled={verifying}
@@ -145,19 +147,20 @@ export default function VerifyAccountPage({ user }) {
 									variant={"ghost"}
 									onClick={() => router.back()}
 								>
-									Cancel
+									{text.cancel}
 								</Button>
 							</VStack>
 						</>
 					) : (
 						<Button
 							isLoading={sending}
+							loadingText={text.sending}
 							leftIcon={<EmailIcon />}
 							w={"full"}
 							colorScheme="blue"
 							onClick={sendEmail}
 						>
-							Send Verification Email
+							{text.sendCode}
 						</Button>
 					)}
 				</Flex>

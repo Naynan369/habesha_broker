@@ -20,6 +20,7 @@ model User {
   profile_url   String?
   role          Role            @default(USER)
   verfied       Boolean         @default(false)
+  sessionVersion Int            @default(0)
   ContactInfo   ContactInfo[]
   AddedItem     Item[]          @relation("Addes")
   ApprovedItem  Item[]          @relation("Approves")
@@ -65,6 +66,7 @@ model Item {
   itemType        ItemType
   status          ItemStatus           @default(PENDING)
   paymentStatus   ListingPaymentStatus @default(NOT_REQUIRED)
+  paymentLockedAt DateTime?
   userId          String
   user            User                 @relation("Addes", fields: [userId], references: [id], onDelete: Cascade)
   approvedId      String?

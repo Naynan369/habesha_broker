@@ -27,10 +27,11 @@ import {
 import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizardProgress";
 import { InputField } from "@components/dashboard/forms/InputField";
 import { useLang } from "@libs/hooks/useLang";
+import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import axios from "axios";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { MdArrowBack, MdArrowForward, MdClose, MdSave } from "react-icons/md";
 import * as yup from "yup";
 
@@ -73,7 +74,7 @@ const CarSchema = yup.object().shape({
 	features: yup.array().of(yup.string().oneOf(CAR_FEATURES)).max(CAR_FEATURES.length),
 });
 
-export const AddCar = (_props: { user?: unknown }) => {
+export const AddCar = ({ user }: { user?: { id: string } }) => {
 	const router = useRouter();
 	const toast = useToast();
 	const lang = useLang();
@@ -87,7 +88,9 @@ export const AddCar = (_props: { user?: unknown }) => {
 	const [uploadProgress, setUploadProgress] = useState(0);
 	const [previews, setPreviews] = useState<string[]>([]);
 	const [step, setStep] = useState(0);
-	useEffect(() => () => previews.forEach((preview) => URL.revokeObjectURL(preview)), [previews]);
+	const previewsRef = useRef(previews);
+	useEffect(() => { previewsRef.current = previews; }, [previews]);
+	useEffect(() => () => previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview)), []);
 
 	const steps = common.wizard.steps as string[];
 	const hints = common.wizard.hints as string[];
@@ -99,19 +102,12 @@ export const AddCar = (_props: { user?: unknown }) => {
 	];
 
 	const onSubmit = async (values: any, actions: any) => {
-		const formdata = new FormData();
-		const { files, ...others } = values;
-		for (const [key, value] of Object.entries(others)) {
-			formdata.append(key, Array.isArray(value) ? JSON.stringify(value) : String(value ?? ""));
-		}
-		files.forEach((file: File) => formdata.append("files", file));
-
 		try {
-			const response = await axios.post("/api/items/add", formdata, {
-				onUploadProgress: (event) => {
-					if (event.total) setUploadProgress(Math.round((event.loaded * 100) / event.total));
-				},
-			});
+			if (!user?.id) throw new Error("Please sign in again before uploading photos.");
+			const { files, ...fields } = values;
+			const images = await uploadMediaFiles({ files: files.map((file: File) => ({ file, mediaKind: "image" as const })), userId: user.id, purpose: "listing", itemType: "CAR", onProgress: setUploadProgress });
+			const response = await axios.post("/api/items/add", { ...fields, images });
+			setUploadProgress(100);
 			toast({ title: common.successTitle, status: "success", description: response.data.msg, isClosable: true });
 			await router.push(`/items/${response.data.itemId}`);
 		} catch (error: any) {

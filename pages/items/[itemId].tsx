@@ -585,7 +585,7 @@ export const ItemDetailErrorMessage = () => {
 };
 
 export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
-	let user = req.session.user;
+	let user = req.user;
 	const { itemId } = params;
 	if (typeof itemId !== "string" || !/^[A-Za-z0-9_-]{8,128}$/.test(itemId)) {
 		return { notFound: true };

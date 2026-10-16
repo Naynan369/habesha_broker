@@ -73,8 +73,7 @@ const config: ChakraTheme = {
 			variants: {
 				...defaultTheme.components.Textarea.variants,
 				filled: (props: any) => {
-					const field = visibleFieldVariant(props).field;
-					return { ...visibleFieldVariant(props), field: { ...field, minHeight: "160px", lineHeight: 1.65, padding: "14px 16px", resize: "vertical" } };
+					return { ...visibleFieldVariant(props).field, minHeight: "160px", lineHeight: 1.65, padding: "14px 16px", resize: "vertical" };
 				},
 			},
 		},
