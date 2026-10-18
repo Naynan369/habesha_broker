@@ -24,7 +24,7 @@ import {
 } from "@chakra-ui/react";
 import { ContactInfo } from "@components/ContactInfo";
 import { withSessionSsr } from "@config/cookie/cookie";
-import { LISTING_FEE_ETB } from "@config/listingPayment";
+import { getListingPaymentConfig, LISTING_CURRENCY, LISTING_FEE } from "@config/listingPayment";
 import { useListingCheckout } from "@libs/hooks/useListingCheckout";
 import { dayjs } from "@config/dayjs";
 import { MyTheme } from "@config/theme/MyTheme";
@@ -133,26 +133,11 @@ const SaveButton = ({ user }) => {
 	);
 };
 
-const ListingPaymentPanel = ({ item, fee, enabled, testMode, labels }) => {
-	const toast = useToast();
-	const router = useRouter();
-	const [simulating, setSimulating] = useState(false);
+const ListingPaymentPanel = ({ item, fee, enabled, labels }) => {
 	const { startCheckout, isLoading: checkoutLoading } = useListingCheckout(item.id, labels);
 	const border = useColorModeValue("orange.200", "orange.900");
 	const surface = useColorModeValue("orange.50", "whiteAlpha.100");
-
-	const simulatePayment = async () => {
-		if (simulating || checkoutLoading || !testMode) return;
-		setSimulating(true);
-		try {
-			await axios.post("/api/items/payment/simulate", { itemId: item.id });
-			toast({ title: labels.testPaidTitle, description: labels.testPaidDescription, status: "success", isClosable: true });
-			router.reload();
-		} catch (error: any) {
-			toast({ title: labels.testPaymentFailed, description: error?.response?.data?.err || error?.message || "Please try again.", status: "error", isClosable: true });
-			setSimulating(false);
-		}
-	};
+	const methodsLabel = labels.methods;
 
 	return (
 		<Flex direction="column" gap="3" p={{ base: 4, md: 5 }} mb="5" border="1px solid" borderColor={border} borderRadius="2xl" bg={surface}>
@@ -162,22 +147,18 @@ const ListingPaymentPanel = ({ item, fee, enabled, testMode, labels }) => {
 			</Box>
 			<Flex align="center" justify="space-between" gap="4" wrap="wrap">
 				<Text fontSize="sm" fontWeight="semibold">{labels.oneTime}</Text>
-				<Heading size="md" color="mainorange">{fee.toLocaleString("en-US")} ETB</Heading>
+				<Heading size="md" color="mainorange">{LISTING_CURRENCY} {fee.toLocaleString("en-US")}</Heading>
 			</Flex>
-			<Button colorScheme="orange" onClick={startCheckout} isLoading={checkoutLoading} isDisabled={checkoutLoading || simulating || !enabled}>
+			<Button colorScheme="orange" onClick={startCheckout} isLoading={checkoutLoading} isDisabled={checkoutLoading || !enabled}>
 				{item.paymentStatus === "PROCESSING" ? labels.continueCheckout : labels.payButton}
 			</Button>
-			{testMode && <Button variant="outline" colorScheme="blue" onClick={simulatePayment} isLoading={simulating} isDisabled={checkoutLoading || simulating}>
-				{labels.simulatePayment}
-			</Button>}
-			{enabled && <Text fontSize="xs" color="gray.600">{labels.methods}</Text>}
-			{!enabled && !testMode && <Text fontSize="xs" color="gray.600">{labels.notConfigured}</Text>}
-			{testMode && <Text fontSize="xs" color="blue.600">{labels.testModeNotice}</Text>}
+			{enabled && <Text fontSize="xs" color="gray.600">{methodsLabel}</Text>}
+			{!enabled && <Text fontSize="xs" color="gray.600">{labels.notConfigured}</Text>}
 		</Flex>
 	);
 };
 
-const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, testPaymentEnabled }) => {
+const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 	const router = useRouter();
 	const lang = useLang();
 	const businessText = lang.businessListing;
@@ -377,7 +358,7 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, testPaymen
 								</Alert>
 							)}
 							{user?.id === data.userId && data.paymentStatus !== "PAID" && data.status !== "APPROVED" && data.status !== "SOLD" && (
-								<ListingPaymentPanel item={data} fee={paymentFee} enabled={paymentEnabled} testMode={testPaymentEnabled} labels={lang.payments} />
+								<ListingPaymentPanel item={data} fee={paymentFee} enabled={paymentEnabled} labels={lang.payments} />
 							)}
 							<Flex align="center" mt="5" gap="2" color={mutedText} fontSize="sm">
 								<Text fontWeight="semibold">Listed</Text>
@@ -606,11 +587,10 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	item["createdAt"] = item.createdAt.toString() as any;
 	if (!user) user = null;
 
-	const paymentEnabled = Boolean(process.env.CHAPA_SECRET_KEY?.trim());
-	const testPaymentEnabled = process.env.NODE_ENV === "development" && process.env.ENABLE_TEST_LISTING_PAYMENTS === "true";
+	const paymentConfig = getListingPaymentConfig();
 
 	return {
-		props: { itemId, item, user, paymentFee: LISTING_FEE_ETB, paymentEnabled, testPaymentEnabled },
+		props: { itemId, item, user, paymentFee: LISTING_FEE, paymentEnabled: paymentConfig.enabled },
 	};
 });
 export default ItemDetail;

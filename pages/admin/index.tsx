@@ -301,7 +301,7 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 						<Badge colorScheme={paymentStatus === "PAID" ? "green" : paymentStatus === "PROCESSING" ? "blue" : paymentStatus === "DUE" ? "orange" : "gray"}>
 							{paymentStatus === "PAID" ? "Payment verified" : paymentStatus === "PROCESSING" ? "Payment in progress" : paymentStatus === "DUE" ? "Payment due" : "No fee required"}
 						</Badge>
-						{latestPayment && <Text fontSize="xs" color={muted} noOfLines={1}>{latestPayment.status} · ETB {Number(latestPayment.amount).toLocaleString("en-US")} · {latestPayment.paymentMethod || "Chapa"} · Ref {latestPayment.txRef}</Text>}
+						{latestPayment && <Text fontSize="xs" color={muted} noOfLines={1}>{latestPayment.status} · {latestPayment.currency || "EUR"} {Number(latestPayment.amount).toLocaleString("en-US")} · {latestPayment.paymentMethod || "Payment method unavailable"} · Ref {latestPayment.txRef}</Text>}
 					</Flex>
 				</Box>
 			</Flex>

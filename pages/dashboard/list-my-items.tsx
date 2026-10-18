@@ -18,7 +18,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 import { MdAdd, MdArrowDownward, MdSearch } from "react-icons/md";
 import { ItemList } from "@components/dashboard/itemList/itemList";
 import { withSessionSsr } from "@config/cookie/cookie";
-import { LISTING_FEE_ETB } from "@config/listingPayment";
+import { getListingPaymentConfig, LISTING_FEE } from "@config/listingPayment";
 import { useRouter } from "next/router";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import Head from "next/head";
@@ -28,6 +28,7 @@ import { useLang } from "@libs/hooks/useLang";
 
 export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 	const user = req.user;
+	const paymentConfig = getListingPaymentConfig();
 	if (!user) {
 		return {
 			redirect: {
@@ -39,8 +40,8 @@ export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 	return {
 		props: {
 			user,
-			paymentFee: LISTING_FEE_ETB,
-			paymentEnabled: Boolean(process.env.CHAPA_SECRET_KEY?.trim()),
+			paymentFee: LISTING_FEE,
+			paymentEnabled: paymentConfig.enabled,
 		},
 	};
 });

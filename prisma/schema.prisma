@@ -89,7 +89,7 @@ model ListingPayment {
   item          Item                @relation(fields: [itemId], references: [id], onDelete: Cascade)
   txRef         String              @unique
   amount        Float
-  currency      String              @default("ETB")
+  currency      String              @default("EUR")
   status        ListingPaymentState @default(INITIATED)
   checkoutUrl   String?
   providerRef   String?

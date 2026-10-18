@@ -7,6 +7,7 @@ import { FC } from "react";
 import { useRouter } from "next/router";
 import { useLang } from "@libs/hooks/useLang";
 import { useListingCheckout } from "@libs/hooks/useListingCheckout";
+import { LISTING_CURRENCY } from "@config/listingPayment";
 
 export interface IItem {
 	id: string;
@@ -80,7 +81,7 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 					<Flex align="center" justify="space-between" gap="3" wrap="wrap">
 						<Box>
 							<Text fontSize="9px" color={muted} fontWeight="bold" letterSpacing="wide" textTransform="uppercase">{paymentLabels.oneTime}</Text>
-							<Text mt="1" fontSize="sm" fontWeight="bold" color={headingColor}>ETB {paymentFee!.toLocaleString("en-US")}</Text>
+							<Text mt="1" fontSize="sm" fontWeight="bold" color={headingColor}>{LISTING_CURRENCY} {paymentFee!.toLocaleString("en-US")}</Text>
 						</Box>
 						<Button size="sm" colorScheme="orange" borderRadius="lg" onClick={startCheckout} isLoading={isLoading} isDisabled={!paymentEnabled || isLoading}>
 							{paymentStatus === "PROCESSING" ? paymentLabels.continueCheckout : paymentLabels.payButton}

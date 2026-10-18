@@ -1,5 +1,5 @@
 import { prisma } from "@config/prisma";
-import { LISTING_FEE_ETB } from "@config/listingPayment";
+import { LISTING_CURRENCY, LISTING_FEE } from "@config/listingPayment";
 import { withSessionApi } from "@config/cookie/cookie";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { isOwnedBlobUrl } from "@libs/helpers/blob";
@@ -207,8 +207,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 				data: { userId: created.userId, itemId: created.id, actionType: "ADDED" },
 			});
 		} catch (_activityError) {}
-		const listingFee = LISTING_FEE_ETB;
-		const feeLabel = Number.isFinite(listingFee) && listingFee > 0 ? "ETB " + listingFee.toLocaleString("en-US") : "the listing fee";
+		const listingFee = LISTING_FEE;
+		const feeLabel = Number.isFinite(listingFee) && listingFee > 0 ? LISTING_CURRENCY + " " + listingFee.toLocaleString("en-US") : "the listing fee";
 		const message = "Listing created. Pay " + feeLabel + " from the listing page. Admin review starts after payment is confirmed.";
 		return res.status(201).json({ msg: message, itemId: created.id });
 	} catch (err: any) {
