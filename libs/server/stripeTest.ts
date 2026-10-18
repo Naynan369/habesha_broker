@@ -106,3 +106,96 @@ export async function verifyStripeTestCheckout(sessionId: string) {
 
 	return { status: "PAID" as const, itemId: payment.itemId };
 }
+
+export async function refundStripeTestCheckout(input: {
+	sessionId: string;
+	paymentId: string;
+	expectedAmountMinor: number;
+	expectedCurrency: string;
+	idempotencyKey: string;
+	existingRefundId?: string | null;
+}) {
+	const secret = getTestSecret();
+	if (!/^cs_test_[A-Za-z0-9_]+$/.test(input.sessionId)) throw new Error("Only Stripe test checkout sessions can be refunded");
+	if (!Number.isSafeInteger(input.expectedAmountMinor) || input.expectedAmountMinor <= 0) throw new Error("Refund amount is invalid");
+
+	const { data: session } = await axios.get(STRIPE_API + "/checkout/sessions/" + encodeURIComponent(input.sessionId), {
+		headers: stripeHeaders(secret),
+		params: { "expand[]": "payment_intent" },
+		timeout: 15000,
+	});
+	const paymentIntent = typeof session?.payment_intent === "string"
+		? session.payment_intent
+		: session?.payment_intent?.id;
+	if (
+		session?.mode !== "payment" ||
+		session?.livemode !== false ||
+		session?.payment_status !== "paid" ||
+		Number(session?.amount_total) !== input.expectedAmountMinor ||
+		String(session?.currency || "").toLowerCase() !== input.expectedCurrency.toLowerCase() ||
+		typeof paymentIntent !== "string" ||
+		!paymentIntent.startsWith("pi_")
+	) {
+		throw new Error("Stripe session is not a paid test payment matching this listing record");
+	}
+	if (input.existingRefundId) {
+		if (!/^re_[A-Za-z0-9]+$/.test(input.existingRefundId)) throw new Error("Stripe refund reference is invalid");
+		const { data: existingRefund } = await axios.get(STRIPE_API + "/refunds/" + encodeURIComponent(input.existingRefundId), {
+			headers: stripeHeaders(secret),
+			timeout: 15000,
+		});
+		const refundPaymentIntent = typeof existingRefund?.payment_intent === "string"
+			? existingRefund.payment_intent
+			: existingRefund?.payment_intent?.id;
+		if (
+			existingRefund?.livemode !== false ||
+			existingRefund?.amount !== input.expectedAmountMinor ||
+			String(existingRefund?.currency || "").toLowerCase() !== input.expectedCurrency.toLowerCase() ||
+			refundPaymentIntent !== paymentIntent
+		) {
+			throw new Error("Stripe refund does not match this listing payment");
+		}
+		return { refundId: existingRefund.id as string, status: String(existingRefund.status || "") };
+	}
+	const { data: refundList } = await axios.get(STRIPE_API + "/refunds", {
+		headers: stripeHeaders(secret),
+		params: { payment_intent: paymentIntent, limit: 100 },
+		timeout: 15000,
+	});
+	const priorRefund = Array.isArray(refundList?.data)
+		? refundList.data.find((entry: any) => entry?.metadata?.habesha_payment_id === input.paymentId)
+		: null;
+	const priorRefundPaymentIntent = typeof priorRefund?.payment_intent === "string"
+		? priorRefund.payment_intent
+		: priorRefund?.payment_intent?.id;
+	// A failed or canceled refund did not return funds, so allow a later admin
+	// attempt to create a new refund with its next idempotency key.
+	if (priorRefund && priorRefund.status !== "failed" && priorRefund.status !== "canceled") {
+		if (
+			priorRefund?.livemode !== false ||
+			priorRefund?.amount !== input.expectedAmountMinor ||
+			String(priorRefund?.currency || "").toLowerCase() !== input.expectedCurrency.toLowerCase() ||
+			priorRefundPaymentIntent !== paymentIntent
+		) {
+			throw new Error("Existing Stripe refund does not match this listing payment");
+		}
+		return { refundId: priorRefund.id as string, status: String(priorRefund.status || "") };
+	}
+
+	const form = new URLSearchParams();
+	form.set("payment_intent", paymentIntent);
+	form.set("amount", String(input.expectedAmountMinor));
+	form.set("metadata[habesha_payment_id]", input.paymentId);
+	const { data: refund } = await axios.post(STRIPE_API + "/refunds", form.toString(), {
+		headers: {
+			...stripeHeaders(secret),
+			"Content-Type": "application/x-www-form-urlencoded",
+			"Idempotency-Key": input.idempotencyKey,
+		},
+		timeout: 20000,
+	});
+	if (typeof refund?.id !== "string" || !refund.id.startsWith("re_")) {
+		throw new Error("Stripe did not return a valid refund record");
+	}
+	return { refundId: refund.id as string, status: String(refund.status || "") };
+}

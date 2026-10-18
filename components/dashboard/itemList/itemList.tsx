@@ -74,6 +74,7 @@ export const ItemList: FC<IItemsList> = ({ user, paymentFee, paymentEnabled, fil
 						paymentStatus={item.paymentStatus}
 						paymentFee={paymentFee}
 						paymentEnabled={paymentEnabled}
+						listingPayment={item.ListingPayments?.[0]}
 					/>
 				))
 			) : (

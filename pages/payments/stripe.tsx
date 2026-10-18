@@ -69,7 +69,7 @@ export default function StripeTestPaymentReturn() {
 						{state === "PENDING" && <Text mt="4" fontSize="sm" color="gray.500">{labels.pendingBody}</Text>}
 						<Flex mt="6" gap="3" wrap="wrap">
 							{state !== "PAID" && state !== "FAILED" && <Button variant="outline" onClick={() => setAttempt((value) => value + 1)}>{labels.retry}</Button>}
-							{itemId && <Button colorScheme="orange" onClick={() => router.push("/items/" + itemId)}>{labels.returnToListing}</Button>}
+							{itemId && <Button colorScheme="orange" onClick={() => router.push("/dashboard/list-my-items", undefined, { locale: router.locale })}>{labels.returnToListing}</Button>}
 						</Flex>
 					</>
 				)}

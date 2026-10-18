@@ -61,7 +61,6 @@ export default function AddItem({ user }) {
 	const navBackground = useColorModeValue("maingray", "#000000");
 	const formBorder = useColorModeValue("gray.300", "whiteAlpha.300");
 	const formShadow = useColorModeValue("0 12px 32px rgba(21,42,44,.08)", "0 14px 34px rgba(0,0,0,.32)");
-
 	const changeType = (type: FormTypes) => setType(type);
 
 	return (

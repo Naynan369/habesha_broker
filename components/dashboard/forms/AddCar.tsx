@@ -26,6 +26,7 @@ import {
 } from "@chakra-ui/react";
 import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizardProgress";
 import { InputField } from "@components/dashboard/forms/InputField";
+import { SellerContactStep, useSellerContact } from "@components/dashboard/forms/SellerContactStep";
 import { useLang } from "@libs/hooks/useLang";
 import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import axios from "axios";
@@ -88,6 +89,7 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 	const [uploadProgress, setUploadProgress] = useState(0);
 	const [previews, setPreviews] = useState<string[]>([]);
 	const [step, setStep] = useState(0);
+	const sellerContact = useSellerContact(user?.id || "");
 	const previewsRef = useRef(previews);
 	useEffect(() => { previewsRef.current = previews; }, [previews]);
 	useEffect(() => () => previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview)), []);
@@ -104,6 +106,7 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 	const onSubmit = async (values: any, actions: any) => {
 		try {
 			if (!user?.id) throw new Error("Please sign in again before uploading photos.");
+			await sellerContact.ensureContact();
 			const { files, ...fields } = values;
 			const images = await uploadMediaFiles({ files: files.map((file: File) => ({ file, mediaKind: "image" as const })), userId: user.id, purpose: "listing", itemType: "CAR", onProgress: setUploadProgress });
 			const response = await axios.post("/api/items/add", { ...fields, images });
@@ -124,6 +127,14 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 		fieldsByStep[step].forEach((field) => { touched[field] = true; });
 		formik.setTouched(touched, false);
 		if (fieldsByStep[step].some((field) => errors[field])) return;
+		if (step === 2) {
+			try {
+				await sellerContact.ensureContact();
+			} catch (error: any) {
+				toast({ title: common.errorTitle, status: "error", description: error?.response?.data?.err || error?.message || common.submitError, isClosable: true });
+				return;
+			}
+		}
 		setStep((current) => Math.min(current + 1, steps.length - 1));
 	};
 
@@ -225,6 +236,7 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 							<Textarea id="description" name="description" value={formik.values.description} onChange={formik.handleChange} onBlur={formik.handleBlur} placeholder={text.descriptionHint} variant="filled" minH="36" maxLength={10000} />
 							<FormErrorMessage>{String(formik.errors.description || "")}</FormErrorMessage>
 						</FormControl>
+						<SellerContactStep contact={sellerContact} />
 					</Flex>}
 
 					{step === 3 && <Flex direction="column" gap="5">
@@ -265,7 +277,7 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 						<Button type="button" variant="ghost" onClick={() => router.push("/dashboard")} leftIcon={<MdClose />} display="inline-flex">{common.cancel}</Button>
 						<Flex ml="auto" gap="3">
 							{step > 0 && <Button type="button" variant="outline" leftIcon={<MdArrowBack />} onClick={() => setStep((current) => current - 1)}>{common.wizard.back}</Button>}
-							{step < steps.length - 1 ? <Button type="button" colorScheme="orange" rightIcon={<MdArrowForward />} onClick={() => nextStep(formik)}>{common.wizard.next}</Button> : <Button type="submit" colorScheme="orange" leftIcon={<MdSave />} isLoading={formik.isSubmitting}>{text.submit}</Button>}
+							{step < steps.length - 1 ? <Button type="button" colorScheme="orange" rightIcon={<MdArrowForward />} onClick={() => nextStep(formik)}>{common.wizard.next}</Button> : <Button type="submit" colorScheme="orange" leftIcon={<MdSave />} isLoading={formik.isSubmitting} isDisabled={sellerContact.loading || sellerContact.loadError}>{text.submit}</Button>}
 						</Flex>
 					</Flex>
 				</form>

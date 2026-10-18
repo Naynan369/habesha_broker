@@ -49,6 +49,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
 	try {
 		const body = sessionReq.body || {};
+		const sellerContact = await prisma.contactInfo.findFirst({
+			where: { userId: user.id, contactType: { in: ["PHONE_NUMBER", "WHATSAPP", "TELEGRAM"] } },
+			select: { id: true },
+		});
+		if (!sellerContact) throw new ListingInputError("Add a phone, WhatsApp, or Telegram contact before creating a listing");
 		const title = String(body.title || "").trim();
 		const price = parseNumber(body.price, "price");
 		const priceType = body.priceType;

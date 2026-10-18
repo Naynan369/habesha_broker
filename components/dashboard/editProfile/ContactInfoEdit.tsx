@@ -130,6 +130,7 @@ export const ContactInfoEdit = ({ user }) => {
 							onChange={(e) => setType(e.target.value)}
 						>
 							<option value="TELEGRAM">Telegram</option>
+							<option value="WHATSAPP">WhatsApp</option>
 							<option value="INSTAGRAM">Instagram</option>
 							<option value="FACEBOOK">Facebook</option>
 							<option value="PHONE_NUMBER">Phone Number</option>

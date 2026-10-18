@@ -96,8 +96,22 @@ model ListingPayment {
   paymentMethod String?
   createdAt     DateTime            @default(now())
   verifiedAt    DateTime?
+  refundStatus  ListingRefundStatus  @default(NOT_REFUNDED)
+  refundAttempt Int                  @default(0)
+  refundRef     String?              @unique
+  refundStartedAt DateTime?
+  refundedAt    DateTime?
+  refundedById  String?
+  refundRequestStatus ListingRefundRequestStatus @default(NONE)
+  refundRequestedAt DateTime?
+  refundRequestReason String?
+  refundReviewedAt DateTime?
+  refundReviewedById String?
+  refundReviewNote String?
 
   @@index([itemId, createdAt])
+  @@index([refundStatus, createdAt])
+  @@index([refundRequestStatus, refundRequestedAt])
 }
 
 model House {
@@ -247,8 +261,22 @@ enum ListingPaymentState {
   FAILED
 }
 
+enum ListingRefundStatus {
+  NOT_REFUNDED
+  PROCESSING
+  REFUNDED
+}
+
+enum ListingRefundRequestStatus {
+  NONE
+  PENDING
+  APPROVED
+  DECLINED
+}
+
 enum ContactType {
   TELEGRAM
+  WHATSAPP
   FACEBOOK
   INSTAGRAM
   PHONE_NUMBER
