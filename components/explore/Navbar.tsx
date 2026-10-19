@@ -73,13 +73,13 @@ export function Navbar({ user }) {
 			<IconButton ml="2" display={{ base: "flex", md: "none" }} onClick={onOpen} aria-label={lang.common.menu} variant="ghost" color={textColor} bg={controlSurface} borderRadius="xl" _hover={{ bg: controlHover, color: "#b85f36" }} _focus={{ outline: "none", boxShadow: "0 0 0 3px rgba(242,182,78,.48)" }} _focusVisible={{ outline: "2px solid #f2b64e", outlineOffset: "2px", boxShadow: "0 0 0 3px rgba(242,182,78,.35)" }} icon={<HamburgerIcon boxSize="5" />} />
 			<Drawer isOpen={isOpen} closeOnOverlayClick onClose={onClose} placement="right" size="sm">
 				<DrawerOverlay bg="rgba(17, 36, 39, .58)" backdropFilter="blur(3px)" />
-					<DrawerContent maxW={{ base: "min(90vw, 390px)", sm: "390px" }} bg={drawerSurface} color={textColor} boxShadow="-20px 0 60px rgba(12, 28, 31, .2)">
+					<DrawerContent h="100dvh" minH="100dvh" maxH="100dvh" maxW={{ base: "min(90vw, 390px)", sm: "390px" }} display="flex" flexDirection="column" bg={drawerSurface} color={textColor} boxShadow="-20px 0 60px rgba(12, 28, 31, .2)">
 					<Flex position="absolute" top="5" right="16" align="center" gap="2"><ColorModeToggle /></Flex>
 					<DrawerCloseButton top="5" right="5" w="10" h="10" borderRadius="full" bg={controlSurface} color={textColor} _hover={{ bg: controlHover }} _focus={{ outline: "none", boxShadow: "0 0 0 3px rgba(242,182,78,.48)" }} _focusVisible={{ outline: "2px solid #f2b64e", outlineOffset: "2px", boxShadow: "0 0 0 3px rgba(242,182,78,.35)" }} aria-label={lang.common.close} />
-						<DrawerHeader px="6" pt="7" pb="6" borderBottom="1px solid" borderColor={borderColor} fontWeight="normal">
+						<DrawerHeader flexShrink={0} px="6" pt="calc(env(safe-area-inset-top) + 1.75rem)" pb="6" borderBottom="1px solid" borderColor={borderColor} fontWeight="normal">
 						<Flex align="center" gap="3" pr="10"><BrandLogo /></Flex>
 					</DrawerHeader>
-					<DrawerBody px="6" py="6" display="flex" flexDirection="column">
+					<DrawerBody flex="1" minH="0" overflowY="auto" px="6" pt="6" pb="calc(env(safe-area-inset-bottom) + 1.5rem)" display="flex" flexDirection="column">
 						<VStack w="full" align="stretch" spacing="2">
 							<Link legacyBehavior href="/" passHref><Button as="a" justifyContent="flex-start" h="12" px="4" gap="3" bg="transparent" color={mutedText} fontWeight="semibold" borderRadius="xl" _hover={{ bg: controlSurface, color: "#b85f36" }} leftIcon={<MdHomeWork size="19" />} onClick={onClose}>{lang.nav.home}</Button></Link>
 							<Link legacyBehavior href="/explore" passHref><Button as="a" justifyContent="flex-start" h="12" px="4" gap="3" bg="#21383e" color="white" fontWeight="semibold" borderRadius="xl" boxShadow="0 8px 18px rgba(33,56,62,.14)" _hover={{ bg: "#142a30" }} leftIcon={<MdExplore size="19" />} rightIcon={<MdArrowForward size="18" />} aria-current="page" onClick={onClose}>{lang.nav.explore}</Button></Link>
