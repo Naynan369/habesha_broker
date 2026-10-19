@@ -583,14 +583,6 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	if (!item || (item.status !== "APPROVED" && item.userId !== user?.id && user?.role !== "ADMIN")) {
 		return { notFound: true };
 	}
-	if (item.status === "APPROVED" && item.userId !== user?.id && user?.role !== "ADMIN") {
-		const sellerContact = await prisma.contactInfo.findFirst({
-			where: { userId: item.userId, contactType: { in: ["PHONE_NUMBER", "WHATSAPP", "TELEGRAM"] } },
-			select: { id: true },
-		});
-		if (!sellerContact) return { notFound: true };
-	}
-
 	item["createdAt"] = item.createdAt.toString() as any;
 	if (!user) user = null;
 

@@ -126,7 +126,6 @@ function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 	if (user && body.userId === user.id) where.userId = user.id;
 	else {
 		where.status = "APPROVED";
-		where.user = { is: { ContactInfo: { some: { contactType: { in: [...sellerContactTypes] } } } } };
 	}
 
 	const validTypes = ["HOUSE", "CAR", "BUSINESS_SPACE", "SERVICE"];
@@ -790,10 +789,6 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		const user = await currentUser(req);
 		if (!item || (item.status !== "APPROVED" && item.userId !== user?.id && user?.role !== "ADMIN")) {
 			return error(res, 404, "Listing not found");
-		}
-		if (item.status === "APPROVED" && item.userId !== user?.id && user?.role !== "ADMIN") {
-			const sellerContact = await prisma.contactInfo.findFirst({ where: { userId: item.userId, contactType: { in: [...sellerContactTypes] } }, select: { id: true } });
-			if (!sellerContact) return error(res, 404, "Listing not found");
 		}
 		return res.status(200).json(item);
 	}
