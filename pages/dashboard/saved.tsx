@@ -66,14 +66,14 @@ export default function SavedItems({ user }) {
 					borderColor={border}
 				>
 					<IconButton
-						mr="5"
+						mr={{ base: 2, sm: 5 }}
 						boxSize="40px"
 						aria-label={copy.back}
 						onClick={() => router.back()}
 					>
 						<ArrowBackIcon />
 					</IconButton>
-						<Heading size="md">{copy.heading}</Heading>
+						<Heading minW="0" noOfLines={1} fontSize={{ base: "sm", sm: "md" }}>{copy.heading}</Heading>
 					<Box flex="1" />
 					<ColorModeToggle />
 				</Flex>
@@ -116,10 +116,10 @@ export default function SavedItems({ user }) {
 							</Flex>
 						)}
 					</Grid>
-					{!loading && data?.total > 30 && <Flex align="center" justify="space-between" gap="3" mt="5" px="2">
-						<Button size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>{pageText.previousPage}</Button>
+					{!loading && data?.total > 30 && <Flex align="center" justify="space-between" direction={{ base: "column", sm: "row" }} gap="3" mt="5" px="2">
+						<Button w={{ base: "full", sm: "auto" }} size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>{pageText.previousPage}</Button>
 						<Text color={muted} fontSize="sm">{pageText.pageCounter.replace("{page}", String(page + 1)).replace("{pages}", String(Math.ceil(data.total / 30)))}</Text>
-						<Button size="sm" colorScheme="orange" isDisabled={(page + 1) * 30 >= data.total} onClick={() => setPage((current) => current + 1)}>{pageText.nextPage}</Button>
+						<Button w={{ base: "full", sm: "auto" }} size="sm" colorScheme="orange" isDisabled={(page + 1) * 30 >= data.total} onClick={() => setPage((current) => current + 1)}>{pageText.nextPage}</Button>
 					</Flex>}
 				</Flex>
 			</Flex>

@@ -15,7 +15,6 @@ import {
 	useColorModeValue,
 } from "@chakra-ui/react";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
-import { MyTheme } from "@config/theme/MyTheme";
 import axios from "axios";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -73,13 +72,16 @@ export default function ForgetPassword() {
 				alignItems="center"
 				justifyContent="center"
 				background={canvas}
-				height="100vh"
-				px={MyTheme.paddings.pagePadding}
+				minH="100vh"
+				px={{ base: 4, sm: 6 }}
+				py={{ base: 20, md: 10 }}
 				position="relative"
 			>
-				<Box position="absolute" top="5" right="5"><ColorModeToggle /></Box>
+				<Box position="absolute" top="5" right={{ base: 4, sm: 6 }}><ColorModeToggle /></Box>
 				<Flex
-					p="10"
+					w="full"
+					maxW="lg"
+					p={{ base: 5, sm: 8, md: 10 }}
 					borderRadius="2xl"
 					boxShadow="2xl"
 					background={surface}
@@ -88,7 +90,7 @@ export default function ForgetPassword() {
 					borderColor={borderColor}
 					direction="column"
 				>
-					<Heading>Forget Password 🤷‍♂️</Heading>
+					<Heading fontSize={{ base: "2xl", sm: "3xl" }}>Forget Password 🤷‍♂️</Heading>
 					{sent ? (
 						<Flex mt="5" direction="column">
 							<Text>

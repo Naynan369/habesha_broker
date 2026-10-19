@@ -318,10 +318,10 @@ export default function ExplorePage({ user, keyword }) {
 						<Text color={bodyColor} mt="2" maxW="460px">{lang.explore.noMatchesDescription}</Text>
 									</Flex>
 								)}
-								{!loading && data?.total > 30 && <Flex align="center" justify="space-between" gap="3" mt="6" p="4" bg={surface} border="1px solid" borderColor={borderColor} borderRadius="xl">
-									<Button size="sm" variant="outline" isDisabled={pageIndex === 0} onClick={() => setPageIndex((page) => Math.max(0, page - 1))}>{lang.explore.previousPage}</Button>
+								{!loading && data?.total > 30 && <Flex align="center" justify="space-between" direction={{ base: "column", sm: "row" }} gap="3" mt="6" p="4" bg={surface} border="1px solid" borderColor={borderColor} borderRadius="xl">
+									<Button w={{ base: "full", sm: "auto" }} size="sm" variant="outline" isDisabled={pageIndex === 0} onClick={() => setPageIndex((page) => Math.max(0, page - 1))}>{lang.explore.previousPage}</Button>
 									<Text color={bodyColor} fontSize="sm" textAlign="center">{lang.explore.pageCounter.replace("{page}", String(pageIndex + 1)).replace("{pages}", String(Math.ceil(data.total / 30)))}</Text>
-									<Button size="sm" colorScheme="orange" isDisabled={(pageIndex + 1) * 30 >= data.total} onClick={() => setPageIndex((page) => page + 1)}>{lang.explore.nextPage}</Button>
+									<Button w={{ base: "full", sm: "auto" }} size="sm" colorScheme="orange" isDisabled={(pageIndex + 1) * 30 >= data.total} onClick={() => setPageIndex((page) => page + 1)}>{lang.explore.nextPage}</Button>
 								</Flex>}
 							</Box>
 						</Grid>

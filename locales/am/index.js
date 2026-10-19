@@ -115,6 +115,9 @@ export const am = {
 		dashboard: "ዳሽቦርድ",
 		menu: "ምናሌ",
 		close: "ምናሌውን ዝጋ",
+		saveListing: "ዝርዝር አስቀምጥ",
+		savedListing: "የተቀመጠ",
+		removeSavedListing: "የተቀመጠውን ዝርዝር አስወግድ",
 	},
 	explore: {
 		pageTitle: "ቤቶችን፣ ተሽከርካሪዎችን፣ የንግድ ቦታዎችንና አገልግሎቶችን ያስሱ | የሐበሻ ደላሎች",

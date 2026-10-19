@@ -82,8 +82,9 @@ export default function AddItem({ user }) {
 					alignItems={"center"}
 				>
 					<Flex align="center" gap={{ base: 3, sm: 5 }}>
-						<BrandLogo />
+						<BrandLogo compact />
 						<Heading
+							display={{ base: "none", sm: "block" }}
 							color="mainyellow"
 							textTransform={"uppercase"}
 							fontSize={{ base: "sm", sm: "xl" }}
@@ -96,10 +97,13 @@ export default function AddItem({ user }) {
 						<ColorModeToggle />
 						<Button
 							onClick={() => router.push("/dashboard")}
+							aria-label={text.cancel}
+							title={text.cancel}
 							variant="outline"
 							size="sm"
 							h="10"
-							px={{ base: 3, sm: 4 }}
+							w={{ base: "10", sm: "auto" }}
+							px={{ base: 0, sm: 4 }}
 							leftIcon={<MdArrowBack size="18" />}
 							bg="whiteAlpha.100"
 							borderColor="whiteAlpha.400"
@@ -110,7 +114,7 @@ export default function AddItem({ user }) {
 							_active={{ transform: "translateY(0)" }}
 							_focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }}
 						>
-							{text.cancel}
+							<Box as="span" display={{ base: "none", sm: "inline" }}>{text.cancel}</Box>
 						</Button>
 					</Flex>
 				</Flex>

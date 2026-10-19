@@ -83,7 +83,7 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 				>
 					<IconButton
 						colorScheme={"whiteAlpha"}
-						mr={{ base: 3, md: 5 }}
+						mr={{ base: 2, md: 5 }}
 						borderRadius="xl"
 						aria-label="Go back"
 						onClick={() => router.back()}
@@ -91,8 +91,8 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 						<ArrowBackIcon />
 					</IconButton>
 					<Flex direction="column" minW="0" gap="1">
-						<BrandLogo />
-						<Text color="whiteAlpha.700" fontSize="9px" letterSpacing=".1em" textTransform="uppercase">{text.sellerWorkspace}</Text>
+						<BrandLogo compact />
+						<Text display={{ base: "none", sm: "block" }} color="whiteAlpha.700" fontSize="9px" letterSpacing=".1em" textTransform="uppercase">{text.sellerWorkspace}</Text>
 					</Flex>
 					<Box flex={1}></Box>
 					<ColorModeToggle />

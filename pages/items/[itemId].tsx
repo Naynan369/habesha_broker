@@ -46,6 +46,7 @@ import { BrandLogo } from "@components/shared/BrandLogo";
 
 const SaveButton = ({ user }) => {
 	const toast = useToast();
+	const lang = useLang();
 	const { itemId } = useRouter().query;
 	const [data, setData] = useState(null);
 	const [loading, setLoading] = useState(false);
@@ -117,6 +118,9 @@ const SaveButton = ({ user }) => {
 		<Button
 			onClick={toggleSaved}
 			disabled={loading}
+			aria-label={data?.saved ? lang.common.removeSavedListing : lang.common.saveListing}
+			minW={{ base: "10", sm: "auto" }}
+			px={{ base: 0, sm: 4 }}
 			colorScheme="whiteAlpha"
 			leftIcon={
 				loading ? (
@@ -128,7 +132,7 @@ const SaveButton = ({ user }) => {
 				)
 			}
 		>
-			{data?.saved ? "Saved" : "Save"}
+			<Text display={{ base: "none", sm: "inline" }}>{data?.saved ? lang.common.savedListing : lang.common.saveListing}</Text>
 		</Button>
 	);
 };
@@ -204,7 +208,7 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 			</Head>
 			<Flex direction="column" overflow="auto" minH="100vh" bg={canvas}>
 				<Flex
-					px={{ base: 4, md: 8, xl: 12 }}
+					px={{ base: 3, md: 8, xl: 12 }}
 					minH={MyTheme.size.navbarHeightCompact}
 					background={navBackground}
 					color="white"
@@ -214,22 +218,23 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 					<IconButton
 						colorScheme="whiteAlpha"
 						aria-label="Go back"
-						mr="4"
+						mr={{ base: 2, md: 4 }}
 						onClick={() => router.back()}
 					>
 						<MdArrowBack size="20px" />
 					</IconButton>
-					<BrandLogo />
+					<BrandLogo compact />
 					<Box flex={1}></Box>
-					<HStack spacing={{ base: 3, md: 4 }} flexShrink={0}>
+					<HStack spacing={{ base: 1, md: 4 }} flexShrink={0}>
 						<ColorModeToggle />
 						{data && (
-							<HStack spacing={{ base: 2, md: 3 }} pl={{ base: 3, md: 4 }} borderLeft="1px solid" borderColor="whiteAlpha.300">
+							<HStack spacing={{ base: 1, md: 3 }} pl={{ base: 2, md: 4 }} borderLeft="1px solid" borderColor="whiteAlpha.300">
 								{user && data.userId === user.id && (
 									<Link legacyBehavior href={"/items/edit/" + itemId} passHref>
-										<Button as="a" size="md" colorScheme="whiteAlpha" leftIcon={<EditIcon />}>Edit Item</Button>
+										<Button as="a" display={{ base: "none", sm: "inline-flex" }} size="md" colorScheme="whiteAlpha" leftIcon={<EditIcon />}>Edit Item</Button>
 									</Link>
 								)}
+								{user && data.userId === user.id && <Link legacyBehavior href={"/items/edit/" + itemId} passHref><IconButton as="a" display={{ base: "inline-flex", sm: "none" }} aria-label="Edit item" title="Edit item" size="sm" colorScheme="whiteAlpha" icon={<EditIcon />} /></Link>}
 								{user && data.status === "APPROVED" && <SaveButton user={user} />}
 							</HStack>
 						)}

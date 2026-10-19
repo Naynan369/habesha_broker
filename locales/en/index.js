@@ -116,6 +116,9 @@ export const en = {
 		dashboard: "Dashboard",
 		menu: "Menu",
 		close: "Close menu",
+		saveListing: "Save listing",
+		savedListing: "Saved",
+		removeSavedListing: "Remove saved listing",
 	},
 	explore: {
 		pageTitle: "Explore homes, vehicles, business spaces and local services | Habesha Brokers",

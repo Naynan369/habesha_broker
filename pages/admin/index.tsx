@@ -119,8 +119,8 @@ export default function AdminDashboard({ user }) {
 					boxShadow="sm"
 				>
 					<Flex direction="column" py="3" gap="1">
-						<BrandLogo />
-						<Heading fontSize="10px" color="mainorange" letterSpacing="0.18em" mt="1" fontWeight="bold">
+						<BrandLogo compact />
+						<Heading display={{ base: "none", sm: "block" }} fontSize="10px" color="mainorange" letterSpacing="0.18em" mt="1" fontWeight="bold">
 							ADMIN CONSOLE
 						</Heading>
 					</Flex>
