@@ -135,7 +135,7 @@ export default function ExplorePage({ user, keyword }) {
 				<title>{lang.explore.pageTitle}</title>
 				<meta name="description" content={lang.explore.metaDescription} />
 			</Head>
-			<Box lang={router.locale || "en"} minH="100vh" bg={canvas} pb={{ base: 12, md: 20 }}>
+			<Box lang={router.locale || "en"} minH="100dvh" bg={canvas} pb={{ base: 12, md: 20 }}>
 				<Navbar user={user} />
 				<Box maxW="1480px" mx="auto" px={{ base: 4, md: 8, xl: 12 }} pt={{ base: 5, md: 8 }}>
 					<Box

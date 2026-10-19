@@ -56,7 +56,7 @@ export default function StripeTestPaymentReturn() {
 			: labels.pendingBody;
 
 	return (
-		<Flex minH="100vh" align="center" justify="center" p="5" bg={pageBg}>
+		<Flex minH="100dvh" align="center" justify="center" p="5" bg={pageBg}>
 			<Box w="full" maxW="lg" bg={surface} border="1px solid" borderColor={borderColor} borderRadius="2xl" boxShadow="xl" p={{ base: 6, md: 8 }}>
 				{state === "checking" ? (
 					<Flex direction="column" align="center" gap="4" py="8"><Spinner size="xl" color="orange.400" /><Heading size="md">{title}</Heading></Flex>

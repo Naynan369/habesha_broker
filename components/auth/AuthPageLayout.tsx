@@ -66,12 +66,12 @@ export const AuthPageLayout = ({ children }: AuthPageLayoutProps) => {
 	);
 
 	return (
-		<Box minH="100vh" bg={canvas} px={{ base: 0, md: 6 }} py={{ base: 0, md: 6 }}>
+		<Box minH="100dvh" bg={canvas} px={{ base: 0, md: 6 }} py={{ base: 0, md: 6 }}>
 			<Box
 				mx="auto"
 				w="full"
 				maxW="1280px"
-				minH={{ base: "100vh", md: "calc(100vh - 48px)" }}
+				minH={{ base: "100dvh", md: "calc(100dvh - 48px)" }}
 				bg={surface}
 				borderRadius={{ base: 0, md: "28px" }}
 				overflow="hidden"

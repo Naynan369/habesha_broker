@@ -95,7 +95,7 @@ export default function VerifyAccountPage({ user }) {
 				<title>{text.pageTitle}</title>
 			</Head>
 			<Flex
-				minH="100vh"
+				minH="100dvh"
 				position="relative"
 				direction="column"
 				justifyContent="center"

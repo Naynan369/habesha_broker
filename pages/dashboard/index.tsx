@@ -47,7 +47,7 @@ export default function Dashboard({ user }) {
     return (
         <>
             <Head><title>{dashboardText.pageTitle}</title></Head>
-            <Flex minH="100vh" direction="column" bg={pageBg}>
+            <Flex minH="100dvh" direction="column" bg={pageBg}>
                 <NavBar logout={handleLogout} />
                 <Container maxW="7xl" flex="1" py={{ base: 8, md: 12 }} px={{ base: 5, md: 8 }}>
                     <Flex as="section" mb={{ base: 7, md: 9 }} p={{ base: 5, md: 8 }} bg={heroSurface} border="1px solid" borderColor={heroBorder} borderRadius="3xl" boxShadow="0 12px 36px rgba(21,42,44,.06)" align={{ base: "flex-start", md: "center" }} justify="space-between" gap="6" direction={{ base: "column", md: "row" }}>
@@ -56,7 +56,7 @@ export default function Dashboard({ user }) {
                             <Heading as="h1" fontSize={{ base: "2xl", md: "4xl" }} letterSpacing="-.04em" lineHeight="1.1">{dashboardText.welcome}, {user.firstName}</Heading>
                             <Text mt="3" color={muted} maxW="2xl" lineHeight="1.7">{dashboardText.description}</Text>
                         </Box>
-                        <Flex flexShrink={0} align="center" gap="2.5" px="4" py="3" borderRadius="full" bg={statusBg} color={statusText} fontSize="sm" fontWeight="semibold" whiteSpace="nowrap">
+                        <Flex align="center" alignSelf={{ base: "flex-start", md: "auto" }} gap="2.5" px="4" py="3" maxW="full" borderRadius="full" bg={statusBg} color={statusText} fontSize="sm" fontWeight="semibold" whiteSpace={{ base: "normal", sm: "nowrap" }} lineHeight="1.35">
                             <MdCheckCircle size="18" />
                             {user.verfied ? dashboardText.verifiedAccount : dashboardText.verificationRequired}
                         </Flex>

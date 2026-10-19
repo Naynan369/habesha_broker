@@ -72,7 +72,7 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 			<Head>
 				<title>{text.pageTitle}</title>
 			</Head>
-			<Flex minH="100vh" bg={pageBg} direction="column">
+			<Flex minH="100dvh" bg={pageBg} direction="column">
 				<Flex
 					alignItems="center"
 					minH={MyTheme.size.navbarHeight}

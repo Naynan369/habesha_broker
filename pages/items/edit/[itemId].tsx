@@ -239,7 +239,7 @@ export default function EditItemPage({ item }) {
 	return (
 		<>
 			<Head><title>Edit listing - Habesha Brokers</title></Head>
-			<Flex direction="column" minH="100vh" bg={pageBg}>
+			<Flex direction="column" minH="100dvh" bg={pageBg}>
 				<Flex bg={surface} borderBottom="1px solid" borderColor={border} minH={MyTheme.size.navbarHeightCompact} alignItems="center" px={MyTheme.paddings.pagePadding} gap="3">
 					<Button variant="outline" onClick={() => router.push(`/items/${item.id}`)}>Back to listing</Button>
 					<Heading size="md" display={{ base: "none", sm: "block" }}>Edit listing</Heading>

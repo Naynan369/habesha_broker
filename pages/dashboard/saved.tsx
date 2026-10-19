@@ -55,7 +55,7 @@ export default function SavedItems({ user }) {
 			<Head>
 				<title>{copy.pageTitle}</title>
 			</Head>
-			<Flex minH="100vh" bg={pageBg} direction="column">
+			<Flex minH="100dvh" bg={pageBg} direction="column">
 				<Flex
 					px={MyTheme.paddings.pagePadding}
 					height={MyTheme.size.navbarHeightCompact}
@@ -79,7 +79,10 @@ export default function SavedItems({ user }) {
 				</Flex>
 				<Flex
 					flex="1"
-					py={{ base: 7, md: 10 }}
+					w="full"
+					maxW="7xl"
+					mx="auto"
+					py={{ base: 6, md: 10 }}
 					px={MyTheme.paddings.pagePadding}
 					direction="column"
 				>

@@ -63,11 +63,15 @@ export default function EditProfilePage({ user }) {
 				<ColorModeToggle />
 			</Flex>
 			<SimpleGrid
-				minH="calc(100vh - 64px)"
+				w="full"
+				maxW="7xl"
+				minH="calc(100dvh - 70px)"
+				mx="auto"
 				bg={pageBg}
 				px={MyTheme.paddings.pagePadding}
-				py="10"
-				columns={[1, 2]}
+				py={{ base: 6, md: 10 }}
+				gap={{ base: 6, lg: 8 }}
+				columns={{ base: 1, lg: 2 }}
 			>
 				<ProfileUpdate user={user} />
 				<Box>

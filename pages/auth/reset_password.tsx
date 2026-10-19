@@ -55,7 +55,7 @@ export default function ResetPasswordPage() {
 	return (
 		<>
 			<Head><title>Reset Password - Habesha Brokers</title></Head>
-			<Flex minH="100vh" align="center" justify="center" bg={canvas} px="5" position="relative">
+			<Flex minH="100dvh" align="center" justify="center" bg={canvas} px="5" position="relative">
 				<Box position="absolute" top="5" right="5"><ColorModeToggle /></Box>
 				<Flex as="section" bg={surface} color={textColor} p={{ base: 6, md: 10 }} border="1px solid" borderColor={borderColor} borderRadius="2xl" boxShadow="2xl" direction="column" w="full" maxW="xl">
 					<Heading mb="5">Reset your password</Heading>

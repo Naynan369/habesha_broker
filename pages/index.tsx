@@ -19,7 +19,7 @@ export default function Home({ user }) {
 	const toggleMenu = () => setMobMenu((open) => !open);
 
 	return (
-		<Box id="pageContainer" minH="100vh" overflowX="hidden" bg={canvas}>
+		<Box id="pageContainer" minH="100dvh" overflowX="hidden" bg={canvas}>
 			<HomeNavbar user={user} openFunc={toggleMenu} background="transparent" />
 			<MobileMenu user={user} open={mobMenu} closeFunc={toggleMenu} />
 			<main>

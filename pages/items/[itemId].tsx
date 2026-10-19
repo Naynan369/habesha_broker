@@ -206,7 +206,7 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 					},
 				})}
 			</Head>
-			<Flex direction="column" overflow="auto" minH="100vh" bg={canvas}>
+			<Flex direction="column" overflow="auto" minH="100dvh" bg={canvas}>
 				<Flex
 					px={{ base: 3, md: 8, xl: 12 }}
 					minH={MyTheme.size.navbarHeightCompact}

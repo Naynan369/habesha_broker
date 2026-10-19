@@ -20,7 +20,7 @@ export const HomeHero = () => {
 	};
 
 	return (
-		<Box id="home" as="section" position="relative" minH={{ base: "760px", md: "min(860px, 100vh)" }} color="white" overflow="hidden" bg="#000000">
+		<Box id="home" as="section" position="relative" minH={{ base: "760px", md: "min(860px, 100dvh)" }} color="white" overflow="hidden" bg="#000000">
 			<Box
 				aria-hidden="true"
 				position="absolute"
@@ -36,7 +36,7 @@ export const HomeHero = () => {
 				position="relative"
 				zIndex="1"
 				maxW="1440px"
-				minH={{ base: "760px", md: "min(860px, 100vh)" }}
+				minH={{ base: "760px", md: "min(860px, 100dvh)" }}
 				mx="auto"
 				px={{ base: 6, md: 12, xl: 16 }}
 				pt={{ base: "112px", md: "136px" }}

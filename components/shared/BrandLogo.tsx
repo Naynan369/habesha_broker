@@ -8,8 +8,8 @@ export function BrandLogo({ compact = false }: { compact?: boolean }) {
 			aria-label="Habesha Brokers"
 			position="relative"
 			flexShrink={0}
-			w={compact ? { base: "112px", sm: "192px" } : { base: "156px", sm: "192px" }}
-			h={compact ? { base: "20px", sm: "32px" } : { base: "26px", sm: "32px" }}
+			w={compact ? { base: "112px", sm: "192px" } : { base: "128px", sm: "192px" }}
+			h={compact ? { base: "20px", sm: "32px" } : { base: "22px", sm: "32px" }}
 			bg="transparent"
 			overflow="hidden"
 		>

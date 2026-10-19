@@ -68,7 +68,7 @@ export default function AddItem({ user }) {
 			<Head>
 				<title>{text.addListing} - {lang.title}</title>
 			</Head>
-			<Flex direction={"column"} minH="100vh" bg={pageBg}>
+			<Flex direction={"column"} minH="100dvh" bg={pageBg}>
 				<Flex
 					height={[
 						MyTheme.size.navbarHeightCompact,

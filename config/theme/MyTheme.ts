@@ -10,10 +10,12 @@ const MyTheme = {
         },
     },
     paddings: {
-        pagePaddingArray: ["20px", "30px", "10%"],
+        pagePaddingArray: ["16px", "24px", "32px", "48px"],
         pagePadding: {
-            base: "20px",
-            md: "10%",
+            base: "16px",
+            sm: "24px",
+            md: "32px",
+            xl: "48px",
         },
     },
     size: {

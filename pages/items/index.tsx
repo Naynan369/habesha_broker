@@ -10,7 +10,7 @@ export default function ItemsPage() {
 	const mutedColor = useColorModeValue("gray.600", "gray.300");
 	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
 	return (
-		<Flex minH="100vh" direction="column" bg={canvas}>
+		<Flex minH="100dvh" direction="column" bg={canvas}>
 			<Flex as="header" align="center" minH="72px" px={{ base: 5, md: 10 }} bg={surface} color={textColor} borderBottom="1px solid" borderColor={borderColor}>
 				<BrandLogo />
 				<Box flex="1" />

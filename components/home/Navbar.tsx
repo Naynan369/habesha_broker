@@ -30,7 +30,7 @@ export const HomeNavbar: FC<INavbar> = ({ background, openFunc, user }) => {
 	return (
 		<Flex height={MyTheme.size.navbarHeight} position="fixed" top="0" right="0" width="100%" align="center" px={{ base: 5, md: 10, xl: 14 }} color="white" zIndex="1001" boxShadow={isScrolled ? "0 8px 28px rgba(5,22,27,.16)" : "none"} backgroundColor={isScrolled ? scrolledBackground : background} backdropFilter="blur(14px)" transition="all 200ms ease">
 			<Link legacyBehavior href="/" passHref><Flex as="a" align="center" gap="3" aria-label={lang.title}>
-				<BrandLogo />
+				<BrandLogo compact />
 			</Flex></Link>
 			<Box flex="1" />
 			<Box mr="2"><ColorModeToggle /></Box>
@@ -79,7 +79,7 @@ export const MobileMenu: FC<IMobMenu> = ({ open, closeFunc, user }) => {
 			<Box position="fixed" inset="0" bg="rgba(17, 36, 39, .58)" backdropFilter="blur(3px)" zIndex="1002" opacity={open ? 1 : 0} visibility={open ? "visible" : "hidden"} pointerEvents={open ? "auto" : "none"} transition="all 220ms ease" onClick={closeFunc} aria-hidden="true" />
 			<Flex role="dialog" aria-modal={open || undefined} aria-label={lang.common.menu} position="fixed" right={open ? "0" : "-100%"} top="0" height="100dvh" minH="100dvh" maxH="100dvh" boxShadow="-20px 0 60px rgba(12, 28, 31, .2)" bg={panelBg} color={panelText} direction="column" w={{ base: "90vw", sm: "390px" }} maxW="390px" zIndex="1003" px="6" pt="env(safe-area-inset-top)" pb="calc(env(safe-area-inset-bottom) + 24px)" overflowY="auto" transition="right 280ms cubic-bezier(.2,.7,.2,1)" visibility={open ? "visible" : "hidden"} pointerEvents={open ? "auto" : "none"} aria-hidden={!open}>
 				<Flex align="center" justify="space-between" gap="4" py="6" borderBottom="1px solid" borderColor={panelBorder}>
-					<BrandLogo />
+					<BrandLogo compact />
 					<Flex align="center" gap="2"><ColorModeToggle /><IconButton flexShrink={0} color={panelText} bg={closeBg} _hover={{ bg: closeHover }} _focus={{ outline: "none", boxShadow: "0 0 0 3px rgba(242,182,78,.48)" }} _focusVisible={{ outline: "2px solid #f2b64e", outlineOffset: "2px", boxShadow: "0 0 0 3px rgba(242,182,78,.35)" }} aria-label={lang.common.close} icon={<CloseIcon />} onClick={closeFunc} borderRadius="full" /></Flex>
 				</Flex>
 				<Flex direction="column" gap="2" pt="6">

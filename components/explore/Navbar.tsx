@@ -38,7 +38,7 @@ export function Navbar({ user }) {
 		<Flex position="sticky" top="0" zIndex="20" bg={surface} color={textColor} alignItems="center" px={MyTheme.paddings.pagePadding} height={MyTheme.size.navbarHeight} boxShadow="0 4px 18px rgba(21, 42, 44, .06)" borderBottom="1px solid" borderColor={borderColor}>
 			<Link legacyBehavior href="/" passHref>
 				<Flex as="a" alignItems="center" gap="3" aria-label={lang.title}>
-					<BrandLogo />
+					<BrandLogo compact />
 				</Flex>
 			</Link>
 			<Box flex="1" />
@@ -77,7 +77,7 @@ export function Navbar({ user }) {
 					<Flex position="absolute" top="5" right="16" align="center" gap="2"><ColorModeToggle /></Flex>
 					<DrawerCloseButton top="5" right="5" w="10" h="10" borderRadius="full" bg={controlSurface} color={textColor} _hover={{ bg: controlHover }} _focus={{ outline: "none", boxShadow: "0 0 0 3px rgba(242,182,78,.48)" }} _focusVisible={{ outline: "2px solid #f2b64e", outlineOffset: "2px", boxShadow: "0 0 0 3px rgba(242,182,78,.35)" }} aria-label={lang.common.close} />
 						<DrawerHeader flexShrink={0} px="6" pt="calc(env(safe-area-inset-top) + 1.75rem)" pb="6" borderBottom="1px solid" borderColor={borderColor} fontWeight="normal">
-						<Flex align="center" gap="3" pr="10"><BrandLogo /></Flex>
+						<Flex align="center" gap="3" pr="10"><BrandLogo compact /></Flex>
 					</DrawerHeader>
 					<DrawerBody flex="1" minH="0" overflowY="auto" px="6" pt="6" pb="calc(env(safe-area-inset-bottom) + 1.5rem)" display="flex" flexDirection="column">
 						<VStack w="full" align="stretch" spacing="2">

@@ -108,7 +108,7 @@ export default function AdminDashboard({ user }) {
 
 	return (
 		<>
-			<Flex direction={"column"} minH="100vh" bg={pageBg}>
+			<Flex direction={"column"} minH="100dvh" bg={pageBg}>
 				<Flex
 					alignItems={"center"}
 					px={{ base: 4, md: 8, xl: 12 }}

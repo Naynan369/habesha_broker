@@ -72,7 +72,7 @@ export default function ForgetPassword() {
 				alignItems="center"
 				justifyContent="center"
 				background={canvas}
-				minH="100vh"
+				minH="100dvh"
 				px={{ base: 4, sm: 6 }}
 				py={{ base: 20, md: 10 }}
 				position="relative"
