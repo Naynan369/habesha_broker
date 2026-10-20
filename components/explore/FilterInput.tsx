@@ -49,10 +49,10 @@ export const FilterInput: FC<IFilterInput> = ({ name, title, isSingleInput, isSe
 					handleFunction(name, value ? { startsWith: value.slice(0, 100), mode: "insensitive" } : undefined);
 				}} maxLength={100} placeholder={text.inputPlaceholder} size="sm" bg={fieldBg} color={fieldText} borderColor={fieldBorder} borderRadius="lg" aria-label={title} />
 			) : (
-				<HStack>
-					<Input value={fieldName?.gt ?? ""} onChange={(event) => updateRange("gt", event.target.value)} type="number" min="0" step={name === "room" || name === "year" ? 1 : "any"} bg={fieldBg} color={fieldText} borderColor={fieldBorder} placeholder={text.minimum} size="sm" borderRadius="lg" aria-label={`${text.minimum} ${title}`} />
+				<HStack w="full" spacing="2">
+					<Input flex="1" minW="0" value={fieldName?.gt ?? ""} onChange={(event) => updateRange("gt", event.target.value)} type="number" min="0" step={name === "room" || name === "year" ? 1 : "any"} bg={fieldBg} color={fieldText} borderColor={fieldBorder} placeholder={text.minimum} size="sm" borderRadius="lg" aria-label={`${text.minimum} ${title}`} />
 					<MinusIcon flexShrink={0} fontSize="sm" color="gray.400" />
-					<Input value={fieldName?.lt ?? ""} onChange={(event) => updateRange("lt", event.target.value)} type="number" min="0" step={name === "room" || name === "year" ? 1 : "any"} bg={fieldBg} color={fieldText} borderColor={fieldBorder} placeholder={text.maximum} size="sm" borderRadius="lg" aria-label={`${text.maximum} ${title}`} />
+					<Input flex="1" minW="0" value={fieldName?.lt ?? ""} onChange={(event) => updateRange("lt", event.target.value)} type="number" min="0" step={name === "room" || name === "year" ? 1 : "any"} bg={fieldBg} color={fieldText} borderColor={fieldBorder} placeholder={text.maximum} size="sm" borderRadius="lg" aria-label={`${text.maximum} ${title}`} />
 				</HStack>
 			)}
 		</Flex>

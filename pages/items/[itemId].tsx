@@ -52,6 +52,8 @@ import Head from "next/head";
 import { formatPrice } from "@libs/helpers/util.client";
 import { ListingImage } from "@components/shared/ListingImage";
 import { getMediaUrl } from "@libs/helpers/media";
+import { FERRARI_LISTING_ID } from "@config/ferrariListing";
+import { closeExpiredFerrariListing } from "@libs/server/unpaidListingExpiration";
 import { SiteNavbar } from "@components/shared/SiteNavbar";
 
 const SaveButton = () => {
@@ -249,7 +251,7 @@ const InteractivePhotoGallery = ({ data, images, preview, categoryLabel, detailT
 	);
 };
 
-const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
+const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, ferrariPaymentSessionCount }) => {
 	const router = useRouter();
 	const lang = useLang();
 	const businessText = lang.businessListing;
@@ -281,6 +283,11 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 		setMinimumRequestDate(localDate.toISOString().slice(0, 10));
 	}, []);
 	const data = item;
+	const canRenewExpiredFerrari = data.id === FERRARI_LISTING_ID
+		&& data.status === "CLOSED"
+		&& data.paymentStatus === "DUE"
+		&& ferrariPaymentSessionCount === 1
+		&& data.ListingPayments?.[0]?.status === "FAILED";
 	const images = Array.isArray(data?.images) ? data.images : [];
 	const detailRelation = data.itemType === "HOUSE" ? "House" : data.itemType === "CAR" ? "Car" : data.itemType === "BUSINESS_SPACE" ? "BusinessSpace" : "Service";
 	const relationData = data[detailRelation];
@@ -499,7 +506,7 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 										</AlertDescription>
 									</Alert>
 								</Box>}
-								{user?.id === data.userId && data.paymentStatus !== "PAID" && data.status !== "APPROVED" && data.status !== "SOLD" && data.status !== "CLOSED" && <ListingPaymentPanel item={data} fee={paymentFee} enabled={paymentEnabled} labels={lang.payments} />}
+								{user?.id === data.userId && data.paymentStatus !== "PAID" && data.status !== "APPROVED" && data.status !== "SOLD" && (data.status !== "CLOSED" || canRenewExpiredFerrari) && <ListingPaymentPanel item={data} fee={paymentFee} enabled={paymentEnabled} labels={lang.payments} />}
 
 								<Box>
 									<Flex id="seller-contact" scrollMarginTop="100px" direction="column" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" p={{ base: 5, md: 6 }} boxShadow="0 10px 28px rgba(21,42,44,.055)">
@@ -692,6 +699,7 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	if (typeof itemId !== "string" || !/^[A-Za-z0-9_-]{8,128}$/.test(itemId)) {
 		return { notFound: true };
 	}
+	if (itemId === FERRARI_LISTING_ID) await closeExpiredFerrariListing();
 
 	const item = await prisma.item.findUnique({
 		where: {
@@ -702,6 +710,7 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 			House: true,
 			BusinessSpace: true,
 			Service: true,
+			ListingPayments: { take: 1, orderBy: { createdAt: "desc" }, select: { status: true } },
 			user: {
 				select: {
 					id: true,
@@ -721,9 +730,12 @@ export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	if (!user) user = null;
 
 	const paymentConfig = getListingPaymentConfig();
+	const ferrariPaymentSessionCount = itemId === FERRARI_LISTING_ID
+		? await prisma.listingPayment.count({ where: { itemId: item.id, providerRef: { startsWith: "cs_test_" } } })
+		: 0;
 
 	return {
-		props: { itemId, item, user, paymentFee: LISTING_FEE, paymentEnabled: paymentConfig.enabled },
+		props: { itemId, item, user, paymentFee: LISTING_FEE, paymentEnabled: paymentConfig.enabled, ferrariPaymentSessionCount },
 	};
 });
 export default ItemDetail;

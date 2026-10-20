@@ -142,34 +142,34 @@ export default function ExplorePage({ user, keyword }) {
 						as="section"
 						position="relative"
 						overflow="hidden"
-						minH={{ base: "490px", md: "500px", xl: "540px" }}
+						minH={{ base: "auto", md: "500px", xl: "540px" }}
 						borderRadius={{ base: "2xl", md: "3xl" }}
 						bgImage="linear-gradient(90deg, rgba(13, 34, 39, .94) 0%, rgba(13, 34, 39, .82) 44%, rgba(13, 34, 39, .18) 100%), url('/assets/images/hero-addis.jpg')"
 						bgSize="cover"
 						bgPosition="center 55%"
 						boxShadow="0 26px 70px rgba(20, 34, 35, .16)"
 					>
-						<Flex minH={{ base: "490px", md: "500px", xl: "540px" }} align="center" px={{ base: 6, md: 12, xl: 16 }} py={{ base: 10, md: 14 }}>
+						<Flex minH={{ base: "auto", md: "500px", xl: "540px" }} align="center" px={{ base: 5, sm: 8, md: 12, xl: 16 }} py={{ base: 8, md: 14 }}>
 							<Box maxW="760px" w="full">
 								<Badge bg="rgba(255,255,255,.13)" color="white" border="1px solid rgba(255,255,255,.24)" borderRadius="full" px="4" py="2" letterSpacing=".14em" fontSize="10px">{lang.explore.kicker}</Badge>
-								<Heading mt={{ base: 5, md: 6 }} color="white" fontSize={{ base: "4xl", sm: "5xl", xl: "6xl" }} lineHeight=".99" letterSpacing="-.055em" maxW="700px">
+								<Heading mt={{ base: 4, md: 6 }} color="white" fontSize={{ base: "3xl", sm: "5xl", xl: "6xl" }} lineHeight={{ base: "1.08", sm: ".99" }} letterSpacing="-.055em" maxW="700px">
 									{lang.explore.heroTitleLead}{" "}<Box as="span" color="#f2b64e">{lang.explore.heroTitleAccent}</Box>
 								</Heading>
-								<Text color="rgba(255,255,255,.84)" mt="5" maxW="560px" fontSize={{ base: "md", md: "lg" }} lineHeight="1.7">
+								<Text color="rgba(255,255,255,.84)" mt={{ base: 3, md: 5 }} maxW="560px" fontSize={{ base: "sm", sm: "md", md: "lg" }} lineHeight="1.65">
 									{lang.explore.heroDescription}
 								</Text>
 								<form onSubmit={handleSearch}>
-									<Flex mt={{ base: 7, md: 9 }} maxW="720px" bg={searchSurface} p="2" gap="2" borderRadius="2xl" boxShadow="0 18px 48px rgba(0,0,0,.22)" direction={{ base: "column", sm: "row" }}>
+									<Flex mt={{ base: 5, md: 9 }} maxW="720px" bg={searchSurface} p="2" gap="2" borderRadius="2xl" boxShadow="0 18px 48px rgba(0,0,0,.22)" direction={{ base: "column", sm: "row" }}>
 										<Flex flex="1" minW="0" align="center" px={{ base: 3, sm: 4 }}>
 											<MdSearch size="22" color={searchIconColor} />
 											<Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} variant="unstyled" px="3" py="3" color={searchText} placeholder={lang.explore.searchPlaceholder} aria-label={lang.explore.searchAria} />
 										</Flex>
-										<Button type="submit" bg="#d7783f" color="white" _hover={{ bg: "#c56731" }} h={{ base: "48px", sm: "54px" }} px={{ base: 5, md: 7 }} borderRadius="xl" leftIcon={<MdSearch size="18" />}>
+										<Button type="submit" w={{ base: "full", sm: "auto" }} flexShrink={0} bg="#d7783f" color="white" _hover={{ bg: "#c56731" }} h={{ base: "46px", sm: "54px" }} px={{ base: 5, md: 7 }} borderRadius="xl" leftIcon={<MdSearch size="18" />}>
 									{lang.explore.searchButton}
 								</Button>
 									</Flex>
 								</form>
-								<Flex mt="5" align="center" gap="3" color="whiteAlpha.800" fontSize="sm" wrap="wrap">
+								<Flex mt={{ base: 4, md: 5 }} align="center" gap={{ base: 2, md: 3 }} color="whiteAlpha.800" fontSize={{ base: "xs", md: "sm" }} wrap="wrap">
 									<Flex align="center" gap="2"><MdHomeWork color="#f2b64e" /> {lang.explore.homes}</Flex>
 									<Box w="1px" h="4" bg="whiteAlpha.500" />
 									<Flex align="center" gap="2"><MdDirectionsCar color="#f2b64e" /> {lang.explore.vehicles}</Flex>
@@ -188,7 +188,7 @@ export default function ExplorePage({ user, keyword }) {
 						</Flex>
 					</Box>
 
-					<Box as="section" mt={{ base: 10, md: 14 }}>
+					<Box as="section" mt={{ base: 8, md: 14 }}>
 						<Flex align={{ base: "flex-start", md: "end" }} justify="space-between" gap="4" mb="5" direction={{ base: "column", md: "row" }}>
 							<Box>
 								<Text color={accentText} textTransform="uppercase" letterSpacing=".16em" fontWeight="bold" fontSize="xs">{lang.explore.categoryKicker}</Text>
@@ -196,7 +196,7 @@ export default function ExplorePage({ user, keyword }) {
 							</Box>
 							<Text color={bodyColor} maxW="430px" fontSize="sm" lineHeight="1.7">{lang.explore.categoryDescription}</Text>
 						</Flex>
-						<SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={{ base: 4, md: 6 }}>
+						<SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={{ base: 3, md: 6 }}>
 							<Box
 								as="button"
 								type="button"
@@ -204,13 +204,13 @@ export default function ExplorePage({ user, keyword }) {
 								aria-pressed={filter.itemType === "HOUSE"}
 								onClick={() => selectCategory("HOUSE")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bgImage="linear-gradient(90deg, rgba(14,34,38,.78), rgba(14,34,38,.12)), url('/assets/images/homes-addis.jpg')" bgSize="cover" bgPosition="center 52%"
+								bgImage="linear-gradient(90deg, rgba(14,34,38,.82), rgba(14,34,38,.18)), url('/assets/images/apartment-interior-showcase.jpg')" bgSize="cover" bgPosition="center 52%"
 								boxShadow={filter.itemType === "HOUSE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
 								transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
-								<Flex h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
+								<Flex h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 5, md: 8 }}>
 									<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.propertyLabel}</Text>
-									<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.homeCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.homeCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
+									<Flex w="full" minW="0" align="end" justify="space-between" gap="3" mt="2"><Box minW="0" flex="1"><Heading color="white" fontSize={{ base: "xl", md: "3xl" }} lineHeight="1.2" letterSpacing="-.035em">{lang.explore.homeCardTitle}</Heading><Text noOfLines={2} color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.homeCardDescription}</Text></Box><Box flexShrink={0}><MdArrowForward color="white" size="24" /></Box></Flex>
 								</Flex>
 							</Box>
 							<Box
@@ -220,13 +220,13 @@ export default function ExplorePage({ user, keyword }) {
 								aria-pressed={filter.itemType === "CAR"}
 								onClick={() => selectCategory("CAR")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bgImage="linear-gradient(90deg, rgba(14,34,38,.82), rgba(14,34,38,.08)), url('/assets/images/vehicles-addis.jpg')" bgSize="cover" bgPosition="center 55%"
+								bgImage="linear-gradient(90deg, rgba(14,34,38,.82), rgba(14,34,38,.18)), url('/assets/images/supercar-showcase.jpg')" bgSize="cover" bgPosition="center 55%"
 								boxShadow={filter.itemType === "CAR" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
 								transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
-								<Flex h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
+								<Flex h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 5, md: 8 }}>
 									<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.vehicleCardLabel}</Text>
-									<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.vehicleCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.vehicleCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
+									<Flex w="full" minW="0" align="end" justify="space-between" gap="3" mt="2"><Box minW="0" flex="1"><Heading color="white" fontSize={{ base: "xl", md: "3xl" }} lineHeight="1.2" letterSpacing="-.035em">{lang.explore.vehicleCardTitle}</Heading><Text noOfLines={2} color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.vehicleCardDescription}</Text></Box><Box flexShrink={0}><MdArrowForward color="white" size="24" /></Box></Flex>
 								</Flex>
 							</Box>
 							<Box
@@ -243,28 +243,30 @@ export default function ExplorePage({ user, keyword }) {
 								transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Flex position="absolute" inset="0" align="center" justify="center" color="whiteAlpha.200"><MdStorefront size="150" /></Flex>
-								<Flex position="relative" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
+								<Flex position="relative" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 5, md: 8 }}>
 									<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.businessSpaces}</Text>
-									<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.businessCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.businessCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
+									<Flex w="full" minW="0" align="end" justify="space-between" gap="3" mt="2"><Box minW="0" flex="1"><Heading color="white" fontSize={{ base: "xl", md: "3xl" }} lineHeight="1.2" letterSpacing="-.035em">{lang.explore.businessCardTitle}</Heading><Text noOfLines={2} color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.businessCardDescription}</Text></Box><Box flexShrink={0}><MdArrowForward color="white" size="24" /></Box></Flex>
 								</Flex>
 							</Box>
-										<Box
-											as="button"
-											type="button"
-											textAlign="left"
-											aria-pressed={filter.itemType === "SERVICE"}
-											onClick={() => selectCategory("SERVICE")}
-											position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-											bg="linear-gradient(135deg, #143a45, #345d5b 58%, #c66b36)"
-											boxShadow={filter.itemType === "SERVICE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
-											transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
-										>
-											<Flex position="absolute" inset="0" align="center" justify="center" color="whiteAlpha.200"><MdMiscellaneousServices size="150" /></Flex>
-											<Flex position="relative" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
-												<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.home.services_txt}</Text>
-												<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.servicesCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.servicesCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
-											</Flex>
-										</Box>
+						<Box
+							as="button"
+							type="button"
+							textAlign="left"
+							aria-pressed={filter.itemType === "SERVICE"}
+							onClick={() => selectCategory("SERVICE")}
+							position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
+							bgImage="linear-gradient(90deg, rgba(14,34,38,.84), rgba(14,34,38,.24)), url('https://images.unsplash.com/photo-1741388222137-c0d3007ec173?auto=format&fit=crop&crop=faces&w=1200&h=800&q=80')"
+							bgSize="cover"
+							bgPosition="center"
+							boxShadow={filter.itemType === "SERVICE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
+							transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
+						>
+							<Flex position="absolute" inset="0" align="center" justify="center" color="whiteAlpha.200"><MdMiscellaneousServices size="150" /></Flex>
+							<Flex position="relative" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 5, md: 8 }}>
+								<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.home.services_txt}</Text>
+								<Flex w="full" minW="0" align="end" justify="space-between" gap="3" mt="2"><Box minW="0" flex="1"><Heading color="white" fontSize={{ base: "xl", md: "3xl" }} lineHeight="1.2" letterSpacing="-.035em">{lang.explore.servicesCardTitle}</Heading><Text noOfLines={2} color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.servicesCardDescription}</Text></Box><Box flexShrink={0}><MdArrowForward color="white" size="24" /></Box></Flex>
+							</Flex>
+						</Box>
 						</SimpleGrid>
 					</Box>
 

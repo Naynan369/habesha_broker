@@ -158,6 +158,24 @@ button, a { -webkit-tap-highlight-color: transparent; }
 	transition-delay: calc(var(--home-stagger-delay, 0ms) + 640ms);
 }
 
+@media (hover: none), (max-width: 640px) {
+	.home-motion-ready [data-home-reveal]:not(.home-motion-visible),
+	.home-motion-ready [data-home-stagger]:not(.home-motion-visible),
+	#categories .home-card-label,
+	#categories .home-card-arrow,
+	#categories .home-card-title,
+	#categories .home-card-description,
+	#categories .home-card-action,
+	#featured-listings .listing-card-featured-badge,
+	#featured-listings .listing-card-title,
+	#featured-listings .listing-card-date,
+	#featured-listings .listing-card-category,
+	#featured-listings .listing-card-price,
+	#featured-listings .listing-card-owner {
+		filter: none;
+	}
+}
+
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
 	#categories [data-home-stagger].home-motion-visible.home-category-card:hover {
 		transform: perspective(900px) rotateX(var(--card-tilt-x, 0deg)) rotateY(var(--card-tilt-y, 0deg)) translateY(-4px);

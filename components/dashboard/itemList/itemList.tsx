@@ -6,6 +6,7 @@ import { FC, useEffect, useState } from "react";
 import Link from "next/link";
 import { MdAdd } from "react-icons/md";
 import { useLang } from "@libs/hooks/useLang";
+import { FERRARI_LISTING_ID } from "@config/ferrariListing";
 import { Item } from "./Item";
 import { ItemLoader } from "./ItemLoader";
 
@@ -76,6 +77,7 @@ export const ItemList: FC<IItemsList> = ({ user, paymentFee, paymentEnabled, fil
 						paymentFee={paymentFee}
 						paymentEnabled={paymentEnabled}
 						listingPayment={item.ListingPayments?.[0]}
+						paymentRetryAllowed={item.id === FERRARI_LISTING_ID && item.status === "CLOSED" && item.paymentStatus === "DUE" && item.ferrariPaymentSessionCount === 1 && item.ListingPayments?.[0]?.status === "FAILED"}
 					/>
 				))
 			) : (

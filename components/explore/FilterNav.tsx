@@ -30,9 +30,9 @@ export function FilterNav({ applyFilters }) {
 
 	return (
 		<Flex direction="column" align="stretch" bg={surface} border="1px solid" borderColor={borderColor} borderRadius="2xl" boxShadow="0 14px 34px rgba(27,47,48,.12)" p={{ base: 4, md: 6 }}>
-			<Flex display={{ base: "flex", lg: "none" }} align="center" justify="space-between" gap="4">
-				<Box><Heading fontSize="md" color={textColor}>{text.panelTitle}</Heading><Text color={mutedColor} fontSize="sm" mt="1">{text.panelDescription}</Text></Box>
-				<Button size="sm" variant="outline" color={textColor} borderColor={borderColor} rightIcon={expanded ? <ChevronUpIcon /> : <ChevronDownIcon />} onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>{text.filtersButton}</Button>
+			<Flex display={{ base: "flex", lg: "none" }} direction={{ base: "column", sm: "row" }} align={{ base: "stretch", sm: "center" }} justify="space-between" gap="3">
+				<Box minW="0"><Heading fontSize="md" color={textColor}>{text.panelTitle}</Heading><Text color={mutedColor} fontSize="sm" mt="1">{text.panelDescription}</Text></Box>
+				<Button w={{ base: "full", sm: "auto" }} flexShrink={0} size="sm" variant="outline" color={textColor} borderColor={borderColor} rightIcon={expanded ? <ChevronUpIcon /> : <ChevronDownIcon />} onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>{text.filtersButton}</Button>
 			</Flex>
 			<Box display={{ base: expanded ? "block" : "none", lg: "block" }} mt={{ base: 5, lg: 0 }}>
 				<Box display={{ base: "none", lg: "block" }} mb="6"><Text color="#ad6348" textTransform="uppercase" letterSpacing=".15em" fontWeight="bold" fontSize="xs">{text.heading}</Text><Heading fontSize="lg" mt="2" color={textColor}>{text.subtitle}</Heading><Text color={mutedColor} fontSize="sm" mt="1">{text.caption}</Text></Box>

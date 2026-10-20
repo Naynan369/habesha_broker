@@ -4,6 +4,7 @@ import { getPasswordRestLink } from "@libs/email/passwordReset";
 import { getVerificationHtml } from "@libs/email/verification";
 import { sendMail } from "@libs/email/sendMail";
 import { refundStripeTestCheckout } from "@libs/server/stripeTest";
+import { FERRARI_LISTING_ID } from "@config/ferrariListing";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -231,7 +232,7 @@ async function listItems(req: SessionRequest, res: NextApiResponse) {
 			{ Service: { is: { OR: searchableText(keyword, ["region", "city", "serviceArea"]) } } },
 		];
 	}
-	const [items, total] = await Promise.all([
+	const [items, total, ferrariPaymentSessionCount] = await Promise.all([
 		prisma.item.findMany({
 			where,
 			include: isAdmin || Boolean(user && body.userId === user.id) ? {
@@ -264,8 +265,12 @@ async function listItems(req: SessionRequest, res: NextApiResponse) {
 			take: 30,
 		}),
 		prisma.item.count({ where }),
+		isAdmin || Boolean(user && body.userId === user.id)
+			? prisma.listingPayment.count({ where: { itemId: FERRARI_LISTING_ID, providerRef: { startsWith: "cs_test_" } } })
+			: Promise.resolve(0),
 	]);
-	return res.status(200).json({ items, total, page, pageSize: 30 });
+	const itemsWithPaymentRetry = items.map((item) => item.id === FERRARI_LISTING_ID ? { ...item, ferrariPaymentSessionCount } : item);
+	return res.status(200).json({ items: itemsWithPaymentRetry, total, page, pageSize: 30 });
 }
 
 async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: string[]) {
