@@ -61,7 +61,7 @@ export default function Dashboard({ user }) {
                             {user.verfied ? dashboardText.verifiedAccount : dashboardText.verificationRequired}
                         </Flex>
                     </Flex>
-                    <SimpleGrid as="section" aria-label={dashboardText.listingShortcuts} columns={{ base: 1, sm: 2, xl: 3 }} spacing={{ base: 4, md: 5 }}>
+                    <SimpleGrid className="dashboard-overview-actions" as="section" aria-label={dashboardText.listingShortcuts} columns={{ base: 1, sm: 2, xl: 4 }} spacing={{ base: 4, md: 5 }}>
                         {user.verfied ? (
                             <>
                                 <ActionButton href="add-item" text={dashboardText.createListing} description={dashboardText.createListingDescription} icon={<MdAddShoppingCart size="23" />} />
@@ -85,23 +85,19 @@ export default function Dashboard({ user }) {
 
 interface IActionButton { href: string; icon: ReactNode; text: string; description: string; }
 const ActionButton: FC<IActionButton> = ({ href, icon, text, description }) => {
-    const surface = useColorModeValue("white", "#0c0c0c");
-    const border = useColorModeValue("gray.200", "whiteAlpha.200");
-    const muted = useColorModeValue("gray.600", "gray.400");
-    const accentBg = useColorModeValue("#fbf3e2", "rgba(233,183,92,.14)");
-    const accentColor = useColorModeValue("#9b6522", "#f0c978");
-    const arrowBg = useColorModeValue("gray.50", "whiteAlpha.100");
     return (
         <Link legacyBehavior href={`/dashboard/${href}`} passHref>
-            <Flex as="a" role="link" minH={{ base: "156px", md: "176px" }} h="full" direction="column" justify="space-between" p={{ base: 5, md: 6 }} bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" color="inherit" boxShadow="0 5px 18px rgba(21,42,44,.045)" transition="transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", borderColor: "mainyellow", boxShadow: "0 14px 30px rgba(21,42,44,.11)" }} _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "3px" }}>
-                <Flex align="center" justify="space-between" gap="4">
-                    <Flex w="12" h="12" flexShrink={0} align="center" justify="center" borderRadius="xl" bg={accentBg} color={accentColor}>{icon}</Flex>
-                    <Flex w="9" h="9" flexShrink={0} align="center" justify="center" borderRadius="full" bg={arrowBg} color={muted}><MdArrowForward size="18" /></Flex>
+            <Flex as="a" role="link" data-action={href} className="dashboard-overview-action" position="relative" isolation="isolate" minW="0" minH={{ base: "205px", md: "246px" }} h="full" direction="column" justify="space-between" overflow="hidden" p={{ base: 5, md: 6 }} bg="linear-gradient(145deg, #173e46 0%, #102f37 56%, #0b2228 100%)" border="1px solid" borderColor="rgba(240,201,120,.2)" borderRadius="3xl" color="white" boxShadow="0 18px 44px rgba(13,38,43,.14)" transition="transform 360ms cubic-bezier(.2,.8,.2,1), border-color 360ms ease, box-shadow 360ms ease" _hover={{ transform: "perspective(1000px) translateY(-8px) rotateX(2deg) scale(1.018)", borderColor: "var(--action-accent)", boxShadow: "0 30px 62px rgba(13,38,43,.28)" }} _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "3px" }}>
+                <Flex className="dashboard-overview-action-top" position="relative" zIndex="1" align="center" justify="space-between" gap="4">
+                    <Flex className="dashboard-overview-action-icon" w={{ base: "16", md: "18" }} h={{ base: "16", md: "18" }} flexShrink={0} align="center" justify="center" borderRadius={{ base: "2xl", md: "3xl" }} bg="rgba(255,255,255,.07)" color="var(--action-accent)" border="1px solid" borderColor="rgba(255,255,255,.14)" boxShadow="inset 0 1px 0 rgba(255,255,255,.12), 0 12px 28px rgba(0,0,0,.15)">{icon}</Flex>
+                    <Flex className="dashboard-overview-action-arrow" w="11" h="11" flexShrink={0} align="center" justify="center" borderRadius="full" bg="rgba(255,255,255,.08)" border="1px solid" borderColor="rgba(255,255,255,.13)" color="whiteAlpha.900"><MdArrowForward size="19" /></Flex>
                 </Flex>
-                <Box mt="5">
-                    <Heading as="h2" fontSize="lg" letterSpacing="-.02em" lineHeight="1.25">{text}</Heading>
-                    <Text color={muted} fontSize="sm" mt="2" lineHeight="1.55" maxW="36ch">{description}</Text>
+                <Box position="relative" zIndex="1" mt="8">
+                    <Heading as="h2" fontSize={{ base: "lg", md: "xl" }} letterSpacing="-.035em" lineHeight="1.2">{text}</Heading>
+                    <Text color="whiteAlpha.800" fontSize="sm" mt="2.5" lineHeight="1.65" maxW="36ch">{description}</Text>
+                    <Box className="dashboard-overview-action-rule" mt="5" w="14" h="1px" borderRadius="full" bg="var(--action-accent)" />
                 </Box>
+                <Box aria-hidden="true" className="dashboard-overview-action-orbit" position="absolute" right="-100px" top="-110px" w="250px" h="250px" borderRadius="full" pointerEvents="none" />
             </Flex>
         </Link>
     );

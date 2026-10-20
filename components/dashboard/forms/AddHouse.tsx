@@ -221,7 +221,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 			floor: "", totalFloors: "", furnishing: "", region: "", city: "", subcity: "", woreda: "", neighborhood: "", landmark: "", features: [], video: null,
 		}} validationSchema={HouseSchema} onSubmit={onSubmit} validateOnBlur>
 			{(formik) => (
-				<form onSubmit={formik.handleSubmit}>
+				<form className="dashboard-listing-form" onSubmit={formik.handleSubmit}>
 					<Modal closeOnOverlayClick={false} closeOnEsc={false} onClose={() => {}} isOpen={formik.isSubmitting}>
 						<ModalOverlay />
 						<ModalContent p="10">

@@ -3,6 +3,7 @@ import {
 	Flex,
 	Heading,
 	Button,
+	Container,
 	IconButton,
 	Input,
 	Menu,
@@ -55,11 +56,12 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 		createdAt: "desc",
 	} as any);
 	const router = useRouter();
-	const pageBg = useColorModeValue("#f5f5f1", "#000000");
-	const surface = useColorModeValue("white", "#0c0c0c");
-	const border = useColorModeValue("gray.200", "whiteAlpha.200");
-	const headingColor = useColorModeValue("maingray", "gray.100");
-	const muted = useColorModeValue("gray.600", "gray.400");
+	const pageBg = useColorModeValue("#f4f5f2", "#050707");
+	const surface = useColorModeValue("#ffffff", "#101415");
+	const border = useColorModeValue("#dce3e1", "whiteAlpha.200");
+	const headingColor = useColorModeValue("#20383d", "#eef2f1");
+	const muted = useColorModeValue("#637278", "#a5b1b4");
+	const controlBg = useColorModeValue("#f7f8f6", "#090c0d");
 	const sortLabel = orderBy.title === "asc"
 		? text.titleAsc
 		: orderBy.title === "desc"
@@ -72,64 +74,59 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 			<Head>
 				<title>{text.pageTitle}</title>
 			</Head>
-			<Flex minH="100dvh" bg={pageBg} direction="column">
+			<Flex className="dashboard-page-enter" minH="100dvh" bg={pageBg} direction="column">
 				<Flex
+					position="sticky"
+					top="0"
+					zIndex="20"
 					alignItems="center"
-					minH={MyTheme.size.navbarHeight}
+					minH={MyTheme.size.navbarHeightCompact}
 					px={{ base: 4, md: 8, xl: 12 }}
-					background={MyTheme.colors.maingray}
+					background="#102f37"
 					color={"white"}
-					boxShadow="0 8px 24px rgba(8,24,30,.12)"
+					boxShadow="0 12px 34px rgba(4,16,19,.18)"
+					borderBottom="1px solid"
+					borderColor="whiteAlpha.200"
 				>
-					<IconButton
-						colorScheme={"whiteAlpha"}
-						mr={{ base: 2, md: 5 }}
-						borderRadius="xl"
-						aria-label="Go back"
-						onClick={() => router.back()}
-					>
-						<ArrowBackIcon />
-					</IconButton>
-					<Flex direction="column" minW="0" gap="1">
-						<BrandLogo compact />
-						<Text display={{ base: "none", sm: "block" }} color="whiteAlpha.700" fontSize="9px" letterSpacing=".1em" textTransform="uppercase">{text.sellerWorkspace}</Text>
-					</Flex>
-					<Box flex={1}></Box>
-					<ColorModeToggle />
+					<Container maxW="1500px" px="0">
+						<Flex align="center" w="full">
+							<IconButton colorScheme="whiteAlpha" mr={{ base: 3, md: 5 }} borderRadius="xl" aria-label="Go back" onClick={() => router.back()} _hover={{ bg: "whiteAlpha.200", transform: "translateX(-2px)" }}>
+								<ArrowBackIcon />
+							</IconButton>
+							<Flex direction="column" minW="0" gap="1" pr={{ sm: 4 }} borderRight={{ base: "none", sm: "1px solid" }} borderColor="whiteAlpha.300">
+								<BrandLogo compact />
+								<Text display={{ base: "none", sm: "block" }} color="whiteAlpha.600" fontSize="9px" letterSpacing=".12em" textTransform="uppercase">{text.sellerWorkspace}</Text>
+							</Flex>
+							<Box flex="1" />
+							<ColorModeToggle />
+						</Flex>
+					</Container>
 				</Flex>
 
-				<Flex
-					flex="1"
-					direction="column"
-					w="full"
-					maxW="1500px"
-					mx="auto"
-					px={{ base: 4, md: 8, xl: 12 }}
-					py={{ base: 6, md: 10 }}
-				>
-					<Flex align={{ base: "flex-start", md: "center" }} justify="space-between" gap="5" mb={{ base: 6, md: 8 }} direction={{ base: "column", md: "row" }}>
-						<Box>
-							<Text color="mainorange" fontSize="xs" fontWeight="bold" letterSpacing="widest" textTransform="uppercase">{text.myAccount}</Text>
-							<Heading mt="2" color={headingColor} fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="tight">{text.heading}</Heading>
-							<Text mt="2" color={muted} fontSize="sm">{text.description}</Text>
+				<Container flex="1" maxW="1500px" py={{ base: 6, md: 10, xl: 12 }} px={{ base: 4, md: 8, xl: 12 }}>
+					<Flex className="dashboard-manage-hero" position="relative" overflow="hidden" align={{ base: "flex-start", md: "center" }} justify="space-between" gap="5" mb={{ base: 5, md: 7 }} p={{ base: 6, sm: 8, lg: 10 }} direction={{ base: "column", md: "row" }} border="1px solid" borderColor="whiteAlpha.200" borderRadius={{ base: "2xl", md: "3xl" }} color="white" bgImage="radial-gradient(circle at 82% 10%, rgba(233,183,92,.22), transparent 27%), linear-gradient(125deg, #102f37 0%, #163d46 58%, #1b4449 100%)" boxShadow="0 26px 70px rgba(9,31,35,.18)">
+						<Box position="relative" zIndex="1">
+							<Text color="#f0c978" fontSize="xs" fontWeight="bold" letterSpacing=".16em" textTransform="uppercase">{text.myAccount}</Text>
+							<Heading as="h1" mt="3" fontSize={{ base: "2xl", md: "4xl" }} letterSpacing="-.045em" lineHeight="1.1">{text.heading}</Heading>
+							<Text mt="3" color="whiteAlpha.800" maxW="2xl" fontSize={{ base: "sm", md: "md" }} lineHeight="1.7">{text.description}</Text>
 						</Box>
-						<Button
-							flexShrink={0}
-							colorScheme="orange"
-							borderRadius="xl"
-							leftIcon={<MdAdd />}
-							onClick={() => router.push("/dashboard/add-item")}
-						>
+						<Button flexShrink={0} position="relative" zIndex="1" colorScheme="orange" borderRadius="xl" h="12" px="6" leftIcon={<MdAdd />} boxShadow="0 12px 24px rgba(198,107,54,.24)" onClick={() => router.push("/dashboard/add-item")} _hover={{ transform: "translateY(-2px)", boxShadow: "0 16px 30px rgba(198,107,54,.34)" }}>
 							{text.createListing}
 						</Button>
+						<Box aria-hidden="true" position="absolute" w="260px" h="260px" right={{ base: "-180px", md: "16%" }} bottom="-210px" border="1px solid" borderColor="whiteAlpha.100" borderRadius="full" boxShadow="0 0 0 28px rgba(255,255,255,.025), 0 0 0 58px rgba(255,255,255,.02)" />
 					</Flex>
 
-					<Flex direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" p={{ base: 4, md: 6 }} boxShadow="0 10px 30px rgba(21,42,44,.06)">
+					<Flex className="dashboard-control-panel" direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius={{ base: "2xl", md: "3xl" }} p={{ base: 4, md: 6, xl: 7 }} boxShadow="0 16px 40px rgba(21,42,44,.06)">
 						<Flex direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "center" }} gap="3">
 							<Input
-								variant="outline"
+								variant="filled"
+								h="12"
 								borderRadius="xl"
-								bg={pageBg}
+								bg={controlBg}
+								color={headingColor}
+								border="1px solid"
+								borderColor={border}
+								_focusVisible={{ borderColor: "mainorange", boxShadow: "0 0 0 1px #C66B36" }}
 								placeholder={text.searchPlaceholder}
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
@@ -140,6 +137,7 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 								leftIcon={<MdSearch />}
 								colorScheme="orange"
 								borderRadius="xl"
+								h="12"
 								w={{ base: "full", md: "auto" }}
 								onClick={() => setKeyword(search.trim())}
 							>
@@ -147,23 +145,23 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 							</Button>
 						</Flex>
 
-						<Flex align="center" justify="space-between" gap="4" mt="6" direction={{ base: "column", lg: "row" }}>
+						<Flex align="flex-start" justify="space-between" gap="5" mt={{ base: 5, md: 7 }} pt={{ base: 5, md: 6 }} borderTop="1px solid" borderColor={border} direction={{ base: "column", lg: "row" }}>
 							<Flex direction="column" flex="1" minW="0">
-								<Text mb="3" fontSize="xs" color={muted} fontWeight="bold" letterSpacing="wide" textTransform="uppercase">{text.filterTitle}</Text>
+								<Text mb="3" fontSize="xs" color={muted} fontWeight="bold" letterSpacing=".12em" textTransform="uppercase">{text.filterTitle}</Text>
 								<Stack direction="row" wrap="wrap" spacing="2">
 									<FilterButton setFilters={setFilters} filters={filters} value="HOUSE" text={text} />
 									<FilterButton setFilters={setFilters} filters={filters} value="CAR" text={text} />
 									<FilterButton setFilters={setFilters} filters={filters} value="BUSINESS_SPACE" text={text} />
 									<FilterButton setFilters={setFilters} filters={filters} value="SERVICE" text={text} />
 								</Stack>
-						</Flex>
+							</Flex>
 							<Flex direction="column" align={{ base: "stretch", lg: "flex-end" }} w={{ base: "full", lg: "auto" }}>
-								<Text mb="3" fontSize="xs" color={muted} fontWeight="bold" letterSpacing="wide" textTransform="uppercase">{text.sortTitle}</Text>
+								<Text mb="3" fontSize="xs" color={muted} fontWeight="bold" letterSpacing=".12em" textTransform="uppercase">{text.sortTitle}</Text>
 								<Menu>
-									<MenuButton as={Button} w={{ base: "full", lg: "auto" }} size="sm" h="10" px="4" rightIcon={<MdArrowDownward />} variant="outline" borderRadius="xl" borderColor={border}>
+									<MenuButton as={Button} w={{ base: "full", lg: "auto" }} size="sm" h="11" px="4" rightIcon={<MdArrowDownward />} variant="outline" borderRadius="xl" borderColor={border} bg={controlBg}>
 										{sortLabel}
 									</MenuButton>
-									<MenuList borderRadius="xl" boxShadow="lg">
+									<MenuList borderRadius="xl" boxShadow="xl" borderColor={border} bg={surface}>
 										<MenuItem onClick={() => setOrderBy({ title: "asc" })}>{text.titleAsc}</MenuItem>
 										<MenuItem onClick={() => setOrderBy({ title: "desc" })}>{text.titleDesc}</MenuItem>
 										<MenuItem onClick={() => setOrderBy({ createdAt: "desc" })}>{text.newest}</MenuItem>
@@ -172,25 +170,26 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 								</Menu>
 							</Flex>
 						</Flex>
-						<Flex mt={{ base: 6, md: 8 }} pt={{ base: 5, md: 6 }} borderTop="1px solid" borderColor={border} direction="column">
-							<Flex align={{ base: "flex-start", sm: "center" }} justify="space-between" gap="3" mb="5" direction={{ base: "column", sm: "row" }}>
-								<Box>
-									<Heading size="md" color={headingColor}>{text.yourListings}</Heading>
-									<Text mt="1" color={muted} fontSize="sm">{text.listingHelp}</Text>
-								</Box>
-							</Flex>
-							<ItemList
-								user={user}
-								orderBy={orderBy}
-								filters={filters}
-								keyword={keyword}
-								copy={text}
-								paymentFee={paymentFee}
-								paymentEnabled={paymentEnabled}
-							/>
-						</Flex>
 					</Flex>
-				</Flex>
+
+					<Flex className="dashboard-listings-panel" mt={{ base: 5, md: 7 }} p={{ base: 4, md: 6, xl: 7 }} bg={surface} border="1px solid" borderColor={border} borderRadius={{ base: "2xl", md: "3xl" }} boxShadow="0 16px 40px rgba(21,42,44,.06)" direction="column">
+						<Flex align={{ base: "flex-start", sm: "center" }} justify="space-between" gap="3" mb="5" direction={{ base: "column", sm: "row" }}>
+							<Box>
+								<Heading size="md" color={headingColor} letterSpacing="-.025em">{text.yourListings}</Heading>
+								<Text mt="1" color={muted} fontSize="sm">{text.listingHelp}</Text>
+							</Box>
+						</Flex>
+						<ItemList
+							user={user}
+							orderBy={orderBy}
+							filters={filters}
+							keyword={keyword}
+							copy={text}
+							paymentFee={paymentFee}
+							paymentEnabled={paymentEnabled}
+						/>
+					</Flex>
+				</Container>
 			</Flex>
 		</>
 	);
@@ -204,6 +203,9 @@ interface IFilterButton {
 }
 
 function FilterButton({ filters, setFilters, value, text }) {
+	const selected = filters.indexOf(value) !== -1;
+	const unselectedText = useColorModeValue("#52656a", "#bbc5c6");
+	const unselectedBorder = useColorModeValue("#d7dfdd", "whiteAlpha.300");
 	const handleToggle = () => {
 		if (filters.indexOf(value) !== -1) {
 			setFilters(filters.filter((val: string) => val != value));
@@ -214,14 +216,21 @@ function FilterButton({ filters, setFilters, value, text }) {
 
 	return (
 		<Button
-			colorScheme={filters.indexOf(value) !== -1 ? "orange" : "gray"}
+			color={selected ? "white" : unselectedText}
+			bg={selected ? "maingray" : "transparent"}
 			borderRadius="full"
 			size="sm"
-			px="4"
-			h="9"
+			px="4.5"
+			h="10"
+			border="1px solid"
+			borderColor={selected ? "maingray" : unselectedBorder}
 			aria-pressed={filters.indexOf(value) !== -1}
-			variant={filters.indexOf(value) !== -1 ? "solid" : "outline"}
+			variant="ghost"
 			onClick={handleToggle}
+			transition="all 180ms ease"
+			_hover={{ bg: selected ? "#1c4a53" : "rgba(198,107,54,.08)", borderColor: selected ? "#1c4a53" : "mainorange", color: selected ? "white" : "mainorange", transform: "translateY(-1px)" }}
+			_active={{ transform: "scale(.97)" }}
+			_focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }}
 		>
 			{value === "BUSINESS_SPACE" ? text.categoryBusinessSpaces : value === "HOUSE" ? text.categoryHomes : value === "SERVICE" ? text.categoryServices : text.categoryVehicles}
 		</Button>

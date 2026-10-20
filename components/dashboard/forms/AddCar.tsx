@@ -170,7 +170,7 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 			region: "", city: "", subcity: "", neighborhood: "", landmark: "", features: [],
 		}} validationSchema={CarSchema} onSubmit={onSubmit} validateOnBlur>
 			{(formik) => (
-				<form onSubmit={formik.handleSubmit}>
+				<form className="dashboard-listing-form" onSubmit={formik.handleSubmit}>
 					<Modal closeOnOverlayClick={false} closeOnEsc={false} onClose={() => {}} isOpen={formik.isSubmitting}>
 						<ModalOverlay />
 						<ModalContent p="10">

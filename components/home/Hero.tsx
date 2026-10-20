@@ -20,36 +20,6 @@ export const HomeHero = () => {
 	const searchSurface = useColorModeValue("white", "#111111");
 	const searchText = useColorModeValue("gray.800", "gray.100");
 	const searchBorder = useColorModeValue("whiteAlpha.500", "whiteAlpha.300");
-	const amharic = locale === "am";
-	const sceneLabels = amharic ? {
-		home: "ቤቶች",
-		vehicle: "ተሽከርካሪዎች",
-		day: "ቀን",
-		night: "ሌሊት",
-		interior: "ውስጡን ይመልከቱ",
-		facade: "ውጫዊ እይታ",
-		reset: "እንደገና አስጀምር",
-		architecture: "ቤቶች እና አፓርታማዎች",
-		vehicleDetail: "መኪናዎች",
-		dragHint: "ለማዞር ይጎትቱ · ለማጉላት ያንሸራትቱ",
-		browseHomes: "ቤቶችን ይመልከቱ",
-		browseVehicles: "መኪናዎችን ይመልከቱ",
-		localePrefix: "/am",
-	} : {
-		home: "Homes",
-		vehicle: "Vehicles",
-		day: "Day",
-		night: "Night",
-		interior: "Open interior",
-		facade: "Show facade",
-		reset: "Reset view",
-		architecture: "Homes & apartments",
-		vehicleDetail: "Vehicles",
-		dragHint: "Drag to orbit · scroll to zoom",
-		browseHomes: "Explore homes",
-		browseVehicles: "Explore vehicles",
-		localePrefix: "",
-	};
 
 	const submitSearch = () => {
 		const keyword = search.trim();
@@ -70,7 +40,7 @@ export const HomeHero = () => {
 			<Box aria-hidden="true" position="absolute" top="-30%" right="-10%" w="70vw" h="85%" bg="radial-gradient(ellipse, rgba(226,178,100,.13), transparent 65%)" />
 			<Box aria-hidden="true" position="absolute" bottom="-30%" left="-8%" w="55vw" h="70%" bg="radial-gradient(ellipse, rgba(73,127,119,.17), transparent 70%)" />
 			<Box position="absolute" inset="0" zIndex="1" aria-label="Illustrated apartment and car background">
-				<HeroThreeScene labels={sceneLabels} />
+				<HeroThreeScene />
 			</Box>
 			<Flex
 				position="relative"

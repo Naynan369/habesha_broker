@@ -78,6 +78,7 @@ export default function AdminDashboard({ user }) {
 	const [statusFilter, setStatusFilter] = useState("PENDING");
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [activeSection, setActiveSection] = useState("OVERVIEW");
+	const [paymentQueueStatus, setPaymentQueueStatus] = useState("ALL");
 	const pageBg = useColorModeValue("#f4f6f8", "#000000");
 	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
@@ -92,6 +93,17 @@ export default function AdminDashboard({ user }) {
 	}[activeSection] || "Manage Habesha Brokers marketplace operations.";
 	const navHoverBg = useColorModeValue("blackAlpha.50", "whiteAlpha.100");
 
+	const openListingQueue = () => {
+		setSearchInput("");
+		setSearchQuery("");
+		setStatusFilter("PENDING");
+		setActiveSection("LISTINGS");
+	};
+	const openPaymentQueue = (status: string) => {
+		setPaymentQueueStatus(status);
+		setActiveSection("PAYMENTS");
+	};
+
 	const handleLogout = async () => {
 		logout();
 		try {
@@ -103,7 +115,7 @@ export default function AdminDashboard({ user }) {
 
 	return (
 		<>
-			<Flex direction={"column"} minH="100dvh" bg={pageBg}>
+			<Flex className="admin-dashboard-shell" direction="column" minH="100dvh" bg={pageBg}>
 				<SiteNavbar mode="admin" user={user} onLogout={handleLogout} />
 
 				<Flex
@@ -111,10 +123,11 @@ export default function AdminDashboard({ user }) {
 					maxW="1480px"
 					mx="auto"
 					px={{ base: 4, md: 8, xl: 10 }}
-					py={{ base: 6, md: 9 }}
-					direction={"column"}
+					py={{ base: 5, md: 9 }}
+					direction="column"
+					className="admin-dashboard-content"
 				>
-					<Flex align={{ base: "flex-start", md: "flex-end" }} justify="space-between" gap="4" mb={{ base: 5, md: 8 }} direction={{ base: "column", sm: "row" }}>
+					<Flex className="admin-console-hero" align={{ base: "flex-start", md: "flex-end" }} justify="space-between" gap="4" mb={{ base: 5, md: 8 }} p={{ base: 4, sm: 5, md: 7 }} border="1px solid" borderColor={border} borderRadius={{ base: "2xl", md: "3xl" }} bgGradient={useColorModeValue("linear(to-br, white, #f7f1e9)", "linear(to-br, #111111, #050505)")} boxShadow="0 20px 48px rgba(20,32,38,.08)" direction={{ base: "column", sm: "row" }}>
 						<Box>
 							<Text fontSize="xs" fontWeight="bold" letterSpacing="0.16em" color="mainorange" textTransform="uppercase">Marketplace operations</Text>
 							<Heading mt="2" fontSize={{ base: "2xl", md: "3xl" }} color={textColor} letterSpacing="tight" fontWeight="bold">{sectionTitle}</Heading>
@@ -122,16 +135,17 @@ export default function AdminDashboard({ user }) {
 						</Box>
 						<Badge alignSelf={{ base: "flex-start", sm: "flex-end" }} colorScheme="purple" borderRadius="full" px="3" py="1.5" fontSize="xs" textTransform="uppercase" letterSpacing="wide">Administrator access</Badge>
 					</Flex>
-					<Flex gap={{ base: 1, md: 2 }} overflowX="auto" borderBottom="1px solid" borderColor={border} mb={{ base: 5, md: 7 }} role="tablist" aria-label="Administration sections">
-						{[["OVERVIEW", "Overview"], ["LISTINGS", "Listings"], ["PAYMENTS", "Payments"], ["USERS", "Users"]].map(([value, label]) => (
-							<Button key={value} role="tab" aria-selected={activeSection === value} flexShrink={0} onClick={() => setActiveSection(value)} variant="ghost" color={activeSection === value ? "mainorange" : muted} borderRadius="0" borderBottom="2px solid" borderColor={activeSection === value ? "mainorange" : "transparent"} px={{ base: 3, md: 5 }} pb="3" mb="-1px" fontWeight={activeSection === value ? "bold" : "medium"} _hover={{ bg: navHoverBg, color: textColor }}>{label}</Button>
-						))}
-					</Flex>
-					{activeSection === "OVERVIEW" && <>
-						<StatsBar key={refreshKey} />
+					<SimpleGrid className="admin-section-nav" columns={{ base: 2, sm: 4 }} spacing="2" p="1" mb={{ base: 5, md: 7 }} bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" role="tablist" aria-label="Administration sections">
+						{[["OVERVIEW", "Overview"], ["LISTINGS", "Listings"], ["PAYMENTS", "Payments"], ["USERS", "Users"]].map(([value, label]) => {
+							const selected = activeSection === value;
+							return <Button key={value} role="tab" aria-selected={selected} minW="0" minH="11" w="full" px={{ base: 2, sm: 3 }} whiteSpace="normal" onClick={() => setActiveSection(value)} color={selected ? "white" : muted} bg={selected ? "mainorange" : "transparent"} borderRadius="xl" fontSize={{ base: "xs", sm: "sm" }} fontWeight={selected ? "bold" : "medium"} boxShadow={selected ? "0 5px 14px rgba(198,107,54,.22)" : "none"} _hover={{ bg: selected ? "mainorange" : navHoverBg, color: selected ? "white" : textColor }}>{label}</Button>;
+						})}
+					</SimpleGrid>
+					{activeSection === "OVERVIEW" && <Box key={`overview-${refreshKey}`} className="admin-section-enter">
+						<StatsBar onOpenListings={openListingQueue} onOpenPayments={openPaymentQueue} />
 						<PaymentsPanel compact refreshKey={refreshKey} />
-					</>}
-					{activeSection === "LISTINGS" && <Flex direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }}>
+					</Box>}
+					{activeSection === "LISTINGS" && <Flex className="admin-section-enter admin-data-panel" direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }}>
 						<Flex direction={{ base: "column", lg: "row" }} align={{ base: "stretch", lg: "center" }} gap="5" mb="3">
 							<Box>
 								<Heading size="md" color={textColor}>Listing review</Heading>
@@ -158,13 +172,13 @@ export default function AdminDashboard({ user }) {
 								</InputGroup>
 							</FormControl>
 						</Flex>
-						<ButtonGroup spacing="2" my="5" flexWrap="wrap" role="group" aria-label="Filter listing reviews">
+						<SimpleGrid columns={{ base: 2, sm: 3, xl: 6 }} spacing="2" my="5" role="group" aria-label="Filter listing reviews">
 							{[["PAYMENT", "Awaiting payment"], ["PENDING", "Pending review"], ["APPROVED", "Approved"], ["DECLINED", "Declined"], ["SOLD", "Sold"], ["CLOSED", "Closed"]].map(([value, label]) => (
-								<Button key={value} size="sm" px="4" h="9" borderRadius="full" colorScheme={statusFilter === value ? "orange" : "gray"} variant={statusFilter === value ? "solid" : "outline"} onClick={() => setStatusFilter(value)}>
+								<Button key={value} size="sm" w="full" minW="0" px={{ base: 2, sm: 3 }} h="9" borderRadius="full" fontSize={{ base: "xs", sm: "sm" }} colorScheme={statusFilter === value ? "orange" : "gray"} variant={statusFilter === value ? "solid" : "outline"} onClick={() => setStatusFilter(value)}>
 									{label}
 								</Button>
 							))}
-						</ButtonGroup>
+						</SimpleGrid>
 						<Flex direction="column" borderTop="1px solid" borderColor={border}>
 							<ItemsList
 								searchQuery={searchQuery}
@@ -174,8 +188,8 @@ export default function AdminDashboard({ user }) {
 							/>
 						</Flex>
 					</Flex>}
-					{activeSection === "PAYMENTS" && <PaymentsPanel refreshKey={refreshKey} />}
-					{activeSection === "USERS" && <UsersPanel currentUserId={user.id} />}
+					{activeSection === "PAYMENTS" && <Box key={`payments-${paymentQueueStatus}`} className="admin-section-enter"><PaymentsPanel refreshKey={refreshKey} initialStatus={paymentQueueStatus} /></Box>}
+					{activeSection === "USERS" && <Box className="admin-section-enter"><UsersPanel currentUserId={user.id} /></Box>}
 				</Flex>
 			</Flex>
 		</>
@@ -213,10 +227,10 @@ const ItemsList: FC<IItemList> = ({ searchQuery, statusFilter, refreshKey, onMod
 	}
 	return <>
 		{data.items.map((item) => <ItemCard key={item.id} item={item} onModerated={onModerated} />)}
-		{data.total > 30 && <Flex align="center" justify="space-between" gap="3" mt="5" py="3">
-			<Button size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>{pageText.previousPage}</Button>
+		{data.total > 30 && <Flex align="center" justify="space-between" direction={{ base: "column", sm: "row" }} gap="3" mt="5" py="3">
+			<Button w={{ base: "full", sm: "auto" }} size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>{pageText.previousPage}</Button>
 			<Text color={muted} fontSize="sm">{pageText.pageCounter.replace("{page}", String(page + 1)).replace("{pages}", String(Math.ceil(data.total / 30)))}</Text>
-			<Button size="sm" colorScheme="orange" isDisabled={(page + 1) * 30 >= data.total} onClick={() => setPage((current) => current + 1)}>{pageText.nextPage}</Button>
+			<Button w={{ base: "full", sm: "auto" }} size="sm" colorScheme="orange" isDisabled={(page + 1) * 30 >= data.total} onClick={() => setPage((current) => current + 1)}>{pageText.nextPage}</Button>
 		</Flex>}
 	</>;
 };
@@ -283,7 +297,7 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 	};
 
 	return (
-		<Flex align={{ base: "flex-start", lg: "center" }} gap="4" p={{ base: 4, md: 5 }} mt="4" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" boxShadow="sm" transition="box-shadow .2s, border-color .2s" _hover={{ boxShadow: "md", borderColor: "orange.200" }} direction={{ base: "column", lg: "row" }}>
+		<Flex className="admin-listing-review-card" align={{ base: "flex-start", lg: "center" }} gap="4" p={{ base: 4, md: 5 }} mt="4" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" boxShadow="sm" transition="box-shadow .2s, border-color .2s" _hover={{ boxShadow: "md", borderColor: "orange.200" }} direction={{ base: "column", lg: "row" }}>
 			<Flex align="center" gap="4" minW="0" flex="1">
 				<Box flexShrink={0}><ListingImage src={item.images?.[0]} alt={title} itemType={itemType} w="88px" h="72px" borderRadius="lg" /></Box>
 				<Box minW="0">
@@ -328,9 +342,9 @@ function formatMoney(amount: number, currency: string) {
 	}
 }
 
-function PaymentsPanel({ compact = false, refreshKey = 0 }: { compact?: boolean; refreshKey?: number }) {
+function PaymentsPanel({ compact = false, refreshKey = 0, initialStatus = "ALL" }: { compact?: boolean; refreshKey?: number; initialStatus?: string }) {
 	const [page, setPage] = useState(0);
-	const [status, setStatus] = useState("ALL");
+	const [status, setStatus] = useState(initialStatus);
 	const [searchInput, setSearchInput] = useState("");
 	const [query, setQuery] = useState("");
 	const [listRefresh, setListRefresh] = useState(0);
@@ -345,8 +359,11 @@ function PaymentsPanel({ compact = false, refreshKey = 0 }: { compact?: boolean;
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const tableHead = useColorModeValue("gray.50", "#111113");
 	const rowHoverBg = useColorModeValue("gray.50", "whiteAlpha.50");
+	const mobileCardBg = useColorModeValue("gray.50", "whiteAlpha.50");
 	const toast = useToast();
+	const visiblePayments = compact ? data?.payments?.slice(0, 6) || [] : data?.payments || [];
 	useEffect(() => setPage(0), [status, query]);
+	useEffect(() => setStatus(initialStatus), [initialStatus]);
 
 	const handleRefund = async (payment: any) => {
 		const amount = formatMoney(Number(payment.amount) || 0, payment.currency || "EUR");
@@ -393,7 +410,7 @@ function PaymentsPanel({ compact = false, refreshKey = 0 }: { compact?: boolean;
 		}
 	};
 
-	return <Flex direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }} mt={compact ? { base: 5, md: 7 } : 0}>
+	return <Flex className="admin-data-panel" direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }} mt={compact ? { base: 5, md: 7 } : 0}>
 		<Flex direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "center" }} gap="4" mb="5">
 			<Box flex="1">
 				<Heading size="md">{compact ? "Recent listing-fee payments" : "Listing-fee payments"}</Heading>
@@ -410,10 +427,26 @@ function PaymentsPanel({ compact = false, refreshKey = 0 }: { compact?: boolean;
 			</Flex>}
 		</Flex>
 		{loading ? <Flex py="10" justify="center"><Spinner /></Flex> : error ? <Alert status="error" borderRadius="lg"><AlertIcon /><AlertTitle>Could not load payment records</AlertTitle></Alert> : !data?.payments?.length ? <Text py="8" textAlign="center" color={muted}>No listing-fee payment records found.</Text> : <>
-			<TableContainer border="1px solid" borderColor={border} borderRadius="xl">
+				<Flex display={{ base: "flex", lg: "none" }} direction="column" gap="3">
+				{visiblePayments.map((payment) => <Box key={payment.id} className="admin-mobile-record" p="4" border="1px solid" borderColor={border} borderRadius="xl" bg={mobileCardBg}>
+					<Flex align="flex-start" justify="space-between" gap="3">
+						<Box minW="0"><Text fontSize="xs" color={muted} fontWeight="bold" textTransform="uppercase" letterSpacing=".08em">{payment.paymentMethod || "Payment"}</Text><Text mt="1" fontWeight="bold" noOfLines={2}>{payment.item?.title || "Listing removed"}</Text><Text mt="1" fontSize="xs" color={muted} noOfLines={1}>{payment.item?.user?.email || "Account unavailable"}</Text></Box>
+						<Text flexShrink="0" fontWeight="bold" fontSize="sm">{formatMoney(Number(payment.amount) || 0, payment.currency || "EUR")}</Text>
+					</Flex>
+					<Flex mt="3" wrap="wrap" gap="2" align="center"><Badge borderRadius="full" colorScheme={payment.status === "PAID" ? "green" : payment.status === "FAILED" ? "red" : "orange"}>{payment.status === "INITIATED" ? "IN PROGRESS" : payment.status}</Badge>{payment.refundRequestStatus === "PENDING" && <Badge borderRadius="full" colorScheme="orange">REFUND REQUEST</Badge>}{payment.refundRequestStatus === "APPROVED" && <Badge borderRadius="full" colorScheme="green">REQUEST APPROVED</Badge>}{payment.refundRequestStatus === "DECLINED" && <Badge borderRadius="full" colorScheme="red">REQUEST DECLINED</Badge>}{payment.refundStatus === "PROCESSING" && <Badge borderRadius="full" colorScheme="orange">REFUND PROCESSING</Badge>}{payment.refundStatus === "REFUNDED" && <Badge borderRadius="full" colorScheme="purple">REFUNDED</Badge>}</Flex>
+					<Text mt="3" fontSize="xs" color={muted} wordBreak="break-all">Ref: {payment.txRef}</Text>
+					<Text mt="1" fontSize="xs" color={muted}>{dayjs(payment.verifiedAt || payment.createdAt).format("MMM D, YYYY · HH:mm")}</Text>
+					{payment.refundRequestReason && <Text mt="2" fontSize="sm" color={muted}>Request note: {payment.refundRequestReason}</Text>}
+					{!compact && <Flex mt="3" gap="2" wrap="wrap">
+						{payment.refundRequestStatus === "PENDING" && payment.refundStatus === "NOT_REFUNDED" && <Button size="sm" variant="outline" isLoading={decliningId === payment.id} isDisabled={Boolean((decliningId && decliningId !== payment.id) || (refundingId && refundingId !== payment.id))} onClick={() => handleDeclineRefundRequest(payment)}>Decline request</Button>}
+						{payment.status === "PAID" && payment.refundStatus !== "REFUNDED" && payment.txRef?.startsWith("HB-STRIPE-") && payment.providerRef?.startsWith("cs_test_") ? <Button size="sm" colorScheme="red" variant="outline" isLoading={refundingId === payment.id} isDisabled={Boolean((refundingId && refundingId !== payment.id) || (decliningId && decliningId !== payment.id)) || (payment.refundStatus === "PROCESSING" && payment.refundStartedAt && dayjs(payment.refundStartedAt).isAfter(dayjs().subtract(2, "minute")))} onClick={() => handleRefund(payment)}>{payment.refundStatus === "PROCESSING" ? "Check refund" : payment.refundRequestStatus === "PENDING" ? "Approve & refund" : "Full refund"}</Button> : payment.refundStatus === "REFUNDED" ? <Text alignSelf="center" fontSize="xs" color={muted}>Completed</Text> : <Text alignSelf="center" fontSize="xs" color={muted}>Unavailable</Text>}
+					</Flex>}
+				</Box>)}
+			</Flex>
+			<TableContainer display={{ base: "none", lg: "block" }} border="1px solid" borderColor={border} borderRadius="xl">
 				<Table size="sm" variant="simple" minW={compact ? "760px" : "900px"} sx={{ "th": { bg: tableHead, color: muted, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", borderColor: border, py: 3 }, "td": { borderColor: border, py: 3 } }}>
 					<Thead><Tr><Th>Payment</Th><Th>Listing</Th><Th display={{ base: "none", md: "table-cell" }}>Account</Th><Th>Amount</Th><Th>Status</Th><Th display={{ base: "none", lg: "table-cell" }}>Recorded</Th>{!compact && <Th>Action</Th>}</Tr></Thead>
-					<Tbody>{(compact ? data.payments.slice(0, 6) : data.payments).map((payment) => <Tr key={payment.id} _hover={{ bg: rowHoverBg }}>
+					<Tbody>{visiblePayments.map((payment) => <Tr key={payment.id} _hover={{ bg: rowHoverBg }}>
 						<Td><Text fontWeight="semibold" noOfLines={1}>{payment.paymentMethod || "Payment"}</Text><Text fontSize="xs" color={muted} noOfLines={1}>{payment.txRef}</Text>{payment.refundRef && <Text fontSize="xs" color={muted} noOfLines={1}>Refund {payment.refundRef}</Text>}</Td>
 						<Td><Text fontWeight="medium" noOfLines={1}>{payment.item?.title || "Listing removed"}</Text><Text fontSize="xs" color={muted}>{payment.item?.itemType?.replace(/_/g, " ") || "—"}</Text>{payment.refundRequestStatus === "PENDING" && <><Badge mt="1" colorScheme="orange" borderRadius="full">REFUND REQUEST PENDING</Badge>{payment.refundRequestReason && <Text mt="1" fontSize="xs" color={muted} noOfLines={3}>{payment.refundRequestReason}</Text>}</>}</Td>
 						<Td display={{ base: "none", md: "table-cell" }}><Text noOfLines={1}>{payment.item?.user?.email || "—"}</Text></Td>
@@ -424,10 +457,10 @@ function PaymentsPanel({ compact = false, refreshKey = 0 }: { compact?: boolean;
 					</Tr>)}</Tbody>
 				</Table>
 			</TableContainer>
-			{!compact && data.total > data.pageSize && <Flex align="center" justify="space-between" gap="3" mt="5">
-				<Button size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>Previous</Button>
+			{!compact && data.total > data.pageSize && <Flex align="center" justify="space-between" direction={{ base: "column", sm: "row" }} gap="3" mt="5">
+				<Button w={{ base: "full", sm: "auto" }} size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>Previous</Button>
 				<Text color={muted} fontSize="sm">Page {page + 1} of {Math.ceil(data.total / data.pageSize)}</Text>
-				<Button size="sm" colorScheme="orange" isDisabled={(page + 1) * data.pageSize >= data.total} onClick={() => setPage((current) => current + 1)}>Next</Button>
+				<Button w={{ base: "full", sm: "auto" }} size="sm" colorScheme="orange" isDisabled={(page + 1) * data.pageSize >= data.total} onClick={() => setPage((current) => current + 1)}>Next</Button>
 			</Flex>}
 		</>}
 	</Flex>;
@@ -450,6 +483,7 @@ function UsersPanel({ currentUserId }: { currentUserId: string }) {
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const tableHead = useColorModeValue("gray.50", "#111113");
 	const rowHoverBg = useColorModeValue("gray.50", "whiteAlpha.50");
+	const mobileCardBg = useColorModeValue("gray.50", "whiteAlpha.50");
 	useEffect(() => setPage(0), [role, query]);
 
 	const updateRole = async (target: any, newRole: string) => {
@@ -470,7 +504,7 @@ function UsersPanel({ currentUserId }: { currentUserId: string }) {
 		}
 	};
 
-	return <Flex direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }}>
+	return <Flex className="admin-data-panel" direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }}>
 		<Flex direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "center" }} gap="4" mb="5">
 			<Box flex="1"><Heading size="md">User accounts</Heading><Text mt="1" fontSize="sm" color={muted}>Search accounts, check email verification, and manage administrator access.</Text></Box>
 			<Flex gap="3" direction={{ base: "column", sm: "row" }}>
@@ -479,7 +513,13 @@ function UsersPanel({ currentUserId }: { currentUserId: string }) {
 			</Flex>
 		</Flex>
 		{loading ? <Flex py="10" justify="center"><Spinner /></Flex> : error ? <Alert status="error" borderRadius="lg"><AlertIcon /><AlertTitle>Could not load accounts</AlertTitle></Alert> : !data?.users?.length ? <Text py="8" textAlign="center" color={muted}>No matching accounts found.</Text> : <>
-			<TableContainer border="1px solid" borderColor={border} borderRadius="xl">
+				<Flex display={{ base: "flex", lg: "none" }} direction="column" gap="3">
+				{data.users.map((account) => <Box key={account.id} className="admin-mobile-record" p="4" border="1px solid" borderColor={border} borderRadius="xl" bg={mobileCardBg}>
+					<Flex justify="space-between" align="flex-start" gap="3"><Box minW="0"><Text fontWeight="bold" noOfLines={1}>{account.firstName} {account.lastName}</Text><Text mt="1" fontSize="sm" color={muted} wordBreak="break-word">{account.email}</Text></Box><Badge flexShrink="0" colorScheme={account.verfied ? "green" : "orange"} borderRadius="full">{account.verfied ? "Verified" : "Unverified"}</Badge></Flex>
+					<Flex mt="3" justify="space-between" align="center" gap="3"><Text fontSize="sm" color={muted}>{account._count?.AddedItem ?? 0} listings</Text>{account.id === currentUserId ? <Badge colorScheme="purple" borderRadius="full" px="3">Administrator · you</Badge> : <Select size="sm" maxW="48" value={account.role} isDisabled={workingId === account.id} onChange={(event) => updateRole(account, event.target.value)} aria-label={`Change role for ${account.email}`} borderRadius="lg"><option value="USER">User</option><option value="ADMIN">Administrator</option></Select>}</Flex>
+				</Box>)}
+			</Flex>
+			<TableContainer display={{ base: "none", lg: "block" }} border="1px solid" borderColor={border} borderRadius="xl">
 				<Table size="sm" variant="simple" minW="680px" sx={{ "th": { bg: tableHead, color: muted, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", borderColor: border, py: 3 }, "td": { borderColor: border, py: 3 } }}>
 					<Thead><Tr><Th>Account</Th><Th>Listings</Th><Th>Email status</Th><Th>Account access</Th></Tr></Thead>
 					<Tbody>{data.users.map((account) => <Tr key={account.id} _hover={{ bg: rowHoverBg }}>
@@ -490,12 +530,27 @@ function UsersPanel({ currentUserId }: { currentUserId: string }) {
 					</Tr>)}</Tbody>
 				</Table>
 			</TableContainer>
-			{data.total > data.pageSize && <Flex align="center" justify="space-between" gap="3" mt="5"><Button size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((value) => Math.max(0, value - 1))}>Previous</Button><Text color={muted} fontSize="sm">Page {page + 1} of {Math.ceil(data.total / data.pageSize)}</Text><Button size="sm" colorScheme="orange" isDisabled={(page + 1) * data.pageSize >= data.total} onClick={() => setPage((value) => value + 1)}>Next</Button></Flex>}
+			{data.total > data.pageSize && <Flex align="center" justify="space-between" direction={{ base: "column", sm: "row" }} gap="3" mt="5"><Button w={{ base: "full", sm: "auto" }} size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((value) => Math.max(0, value - 1))}>Previous</Button><Text color={muted} fontSize="sm">Page {page + 1} of {Math.ceil(data.total / data.pageSize)}</Text><Button w={{ base: "full", sm: "auto" }} size="sm" colorScheme="orange" isDisabled={(page + 1) * data.pageSize >= data.total} onClick={() => setPage((value) => value + 1)}>Next</Button></Flex>}
 		</>}
 	</Flex>;
 }
 
-function StatsBar() {
+function QueueCard({ label, count, detail, action, tone, onClick }: { label: string; count: number; detail: string; action: string; tone: string; onClick: () => void }) {
+	const muted = useColorModeValue("gray.600", "gray.400");
+	const border = useColorModeValue("gray.200", "whiteAlpha.200");
+	const background = useColorModeValue("white", "#0c0c0c");
+	const inset = useColorModeValue(`${tone}.50`, "whiteAlpha.100");
+	return <Box as="button" type="button" className="admin-queue-card" onClick={onClick} textAlign="left" w="full" minW="0" p={{ base: 4, md: 5 }} bg={background} border="1px solid" borderColor={border} borderRadius="2xl" overflow="hidden" position="relative" _focusVisible={{ outline: "3px solid", outlineColor: `${tone}.300`, outlineOffset: "2px" }}>
+		<Flex align="flex-start" justify="space-between" gap="3">
+			<Box minW="0"><Text color={muted} fontSize="xs" fontWeight="bold" letterSpacing=".1em" textTransform="uppercase">{label}</Text><Heading mt="2" fontSize={{ base: "2xl", md: "3xl" }} lineHeight="1">{count}</Heading></Box>
+			<Flex className="admin-queue-orbit" flexShrink="0" w="11" h="11" align="center" justify="center" borderRadius="full" bg={inset} color={`${tone}.500`} fontSize="xl" aria-hidden="true">↗</Flex>
+		</Flex>
+		<Text mt="3" color={muted} fontSize="sm" lineHeight="1.55" minH={{ sm: "44px" }}>{detail}</Text>
+		<Flex className="admin-queue-action" mt="4" align="center" justify="space-between" color={`${tone}.500`} fontSize="sm" fontWeight="bold"><Text>{action}</Text><Text aria-hidden="true">→</Text></Flex>
+	</Box>;
+}
+
+function StatsBar({ onOpenListings, onOpenPayments }: { onOpenListings: () => void; onOpenPayments: (status: string) => void }) {
 	const [data, loading, err] = useFetch({
 		fetchFunction: () => axios.get("/api/admin/stat"),
 	});
@@ -552,8 +607,8 @@ function StatsBar() {
 	];
 
 	return <Flex direction="column" gap={{ base: 4, md: 5 }}>
-		<SimpleGrid spacing={{ base: 3, lg: 4 }} columns={{ base: 1, sm: 2, xl: 4 }}>
-			{cards.map((card) => <Box key={card.label} position="relative" overflow="hidden" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} minH="138px" boxShadow="0 4px 18px rgba(20,30,40,.045)" transition="transform .18s ease, box-shadow .18s ease" _hover={{ transform: "translateY(-2px)", boxShadow: "0 10px 24px rgba(20,30,40,.09)" }}>
+		<SimpleGrid className="admin-stats-grid" spacing={{ base: 3, lg: 4 }} columns={{ base: 1, sm: 2, xl: 4 }}>
+			{cards.map((card) => <Box className="admin-stat-card" key={card.label} position="relative" overflow="hidden" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} minH="138px" boxShadow="0 4px 18px rgba(20,30,40,.045)" transition="transform .18s ease, box-shadow .18s ease" _hover={{ transform: "translateY(-2px)", boxShadow: "0 10px 24px rgba(20,30,40,.09)" }}>
 				<Box position="absolute" insetInline="0" top="0" h="2px" bg={`${card.tone}.400`} />
 				<Flex align="flex-start" justify="space-between" gap="3">
 					<Box minW="0">
@@ -565,15 +620,20 @@ function StatsBar() {
 				</Flex>
 			</Box>)}
 		</SimpleGrid>
+		<SimpleGrid className="admin-work-queue" columns={{ base: 1, sm: 3 }} spacing={{ base: 3, md: 4 }}>
+			<QueueCard label="Listing review" count={data.waitingItems ?? 0} detail="Paid listings waiting for an administrator decision." action="Open review queue" tone="orange" onClick={onOpenListings} />
+			<QueueCard label="Refund requests" count={data.pendingRefundRequests ?? 0} detail="Customer requests that need a refund decision." action="Review refund requests" tone="purple" onClick={() => onOpenPayments("REFUND_REQUESTED")} />
+			<QueueCard label="Payment records" count={(data.paidPayments ?? 0) + (data.initiatedPayments ?? 0) + (data.failedPayments ?? 0)} detail="Review listing fees, payment status, and refund activity." action="Open payment records" tone="teal" onClick={() => onOpenPayments("ALL")} />
+		</SimpleGrid>
 		<SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 4, md: 5 }}>
-			<Box bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} boxShadow="0 4px 18px rgba(20,30,40,.035)">
+			<Box className="admin-data-panel" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} boxShadow="0 4px 18px rgba(20,30,40,.035)">
 				<Flex align="center" justify="space-between" mb="2"><Box><Heading size="sm" color={statText}>Marketplace inventory</Heading><Text mt="1" color={labelText} fontSize="xs">Listings grouped by category</Text></Box><Badge colorScheme="gray" borderRadius="full" px="3">{data.listings ?? 0} total</Badge></Flex>
 				{inventory.map((entry, index) => <Flex key={entry.label} align="center" gap="3" py="3" borderBottom={index < inventory.length - 1 ? "1px solid" : "none"} borderColor={border}>
 					<Flex w="8" h="8" align="center" justify="center" bg={iconSurface} color={`${entry.tone}.500`} borderRadius="lg"><Icon as={entry.icon} boxSize="3.5" /></Flex>
 					<Text flex="1" fontSize="sm" color={statText} fontWeight="medium">{entry.label}</Text><Text fontSize="sm" color={statText} fontWeight="bold">{entry.value}</Text>
 				</Flex>)}
 			</Box>
-			<Box bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} boxShadow="0 4px 18px rgba(20,30,40,.035)">
+			<Box className="admin-data-panel" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} boxShadow="0 4px 18px rgba(20,30,40,.035)">
 				<Flex align="center" justify="space-between" mb="4"><Box><Heading size="sm" color={statText}>Payment health</Heading><Text mt="1" color={labelText} fontSize="xs">Listing publication fee transactions</Text></Box><Icon as={FaCreditCard} color="mainorange" /></Flex>
 				<SimpleGrid columns={{ base: 2, lg: 4 }} spacing="3">
 					{paymentStates.map((state) => <Box key={state.label} bg={insetSurface} border="1px solid" borderColor={border} borderRadius="lg" p={{ base: 3, md: 4 }}>

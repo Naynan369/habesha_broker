@@ -41,8 +41,8 @@ export const InputField: FC<IInputField> = ({
 	const placeholderText = useColorModeValue("#5b6a70", "#aebdc1");
 	const hoverBorder = useColorModeValue("#5f7075", "whiteAlpha.500");
 	return (
-		<FormControl isRequired={required} isInvalid={!!formik.errors[name] && !!formik.touched[name]}>
-			<FormLabel htmlFor={name} mb="2" fontSize="sm" fontWeight="semibold">{label}</FormLabel>
+		<FormControl minW="0" isRequired={required} isInvalid={!!formik.errors[name] && !!formik.touched[name]}>
+			<FormLabel htmlFor={name} mb="2" fontSize="sm" lineHeight="1.4" fontWeight="semibold" letterSpacing="-.01em" color={fieldText}>{label}</FormLabel>
 			<InputGroup>
 				{prefix && <InputLeftElement>{prefix}</InputLeftElement>}
 				<Input
@@ -62,9 +62,11 @@ export const InputField: FC<IInputField> = ({
 					border="1px solid"
 					borderColor={fieldBorder}
 					borderRadius="xl"
+					boxShadow="0 3px 10px rgba(21,42,44,.035)"
+					transition="box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease"
 					_placeholder={{ color: placeholderText, opacity: 1 }}
 					_hover={{ bg: fieldBg, borderColor: hoverBorder }}
-					_focus={{ bg: fieldBg, borderColor: "mainorange", boxShadow: "0 0 0 1px #C66B36" }}
+					_focus={{ bg: fieldBg, borderColor: "mainorange", boxShadow: "0 0 0 1px #C66B36, 0 8px 18px rgba(198,107,54,.08)" }}
 				></Input>
 				{suffix && <InputRightElement width="auto" h="12" px="3" pointerEvents="none" color={placeholderText}>{suffix}</InputRightElement>}
 			</InputGroup>

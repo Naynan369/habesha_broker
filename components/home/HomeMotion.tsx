@@ -2,13 +2,18 @@ import { Box } from "@chakra-ui/react";
 import { useEffect, useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
-export const HomeMotionSystem = () => {
+export const HomeMotionSystem = ({ showProgress = true }: { showProgress?: boolean }) => {
 	const progress = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		let frame = 0;
 		let observer: IntersectionObserver | undefined;
+		let mutationObserver: MutationObserver | undefined;
+		const selector = "[data-home-reveal], [data-home-stagger]";
+		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const registeredTargets = new WeakSet<HTMLElement>();
 		const updateProgress = () => {
+			if (!showProgress) return;
 			if (frame) window.cancelAnimationFrame(frame);
 			frame = window.requestAnimationFrame(() => {
 				const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -17,8 +22,6 @@ export const HomeMotionSystem = () => {
 			});
 		};
 
-		const targets = Array.from(document.querySelectorAll<HTMLElement>("[data-home-reveal], [data-home-stagger]"));
-		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 		if ("IntersectionObserver" in window && !reducedMotion) {
 			observer = new IntersectionObserver((entries) => {
 				entries.forEach((entry) => {
@@ -28,24 +31,52 @@ export const HomeMotionSystem = () => {
 				});
 			}, { threshold: 0.12, rootMargin: "0px 0px -5% 0px" });
 		}
-		targets.forEach((target) => {
+
+		const registerTarget = (target: HTMLElement) => {
+			if (target.classList.contains("home-motion-visible") || registeredTargets.has(target)) return;
 			const bounds = target.getBoundingClientRect();
 			const alreadyVisible = bounds.top < window.innerHeight * 0.92 && bounds.bottom > 0;
-			if (alreadyVisible || reducedMotion || !observer) target.classList.add("home-motion-visible");
-			else observer.observe(target);
-		});
+			if (alreadyVisible || reducedMotion || !observer) {
+				target.classList.add("home-motion-visible");
+				return;
+			}
+			registeredTargets.add(target);
+			observer.observe(target);
+		};
+
+		const registerNode = (node: Node) => {
+			if (!(node instanceof HTMLElement)) return;
+			if (node.matches(selector)) registerTarget(node);
+			node.querySelectorAll<HTMLElement>(selector).forEach(registerTarget);
+		};
+
+		document.querySelectorAll<HTMLElement>(selector).forEach(registerTarget);
+		if ("MutationObserver" in window) {
+			mutationObserver = new MutationObserver((mutations) => {
+				mutations.forEach((mutation) => mutation.addedNodes.forEach(registerNode));
+			});
+			mutationObserver.observe(document.documentElement, { childList: true, subtree: true });
+		}
+
 		document.documentElement.classList.add("home-motion-ready");
-		updateProgress();
-		window.addEventListener("scroll", updateProgress, { passive: true });
-		window.addEventListener("resize", updateProgress);
+		if (showProgress) {
+			updateProgress();
+			window.addEventListener("scroll", updateProgress, { passive: true });
+			window.addEventListener("resize", updateProgress);
+		}
 		return () => {
 			observer?.disconnect();
+			mutationObserver?.disconnect();
 			document.documentElement.classList.remove("home-motion-ready");
-			window.removeEventListener("scroll", updateProgress);
-			window.removeEventListener("resize", updateProgress);
+			if (showProgress) {
+				window.removeEventListener("scroll", updateProgress);
+				window.removeEventListener("resize", updateProgress);
+			}
 			if (frame) window.cancelAnimationFrame(frame);
 		};
-	}, []);
+	}, [showProgress]);
+
+	if (!showProgress) return null;
 
 	return (
 		<Box aria-hidden="true" position="fixed" top="0" left="0" right="0" h="2px" zIndex="1100" pointerEvents="none">

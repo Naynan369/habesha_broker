@@ -193,7 +193,7 @@ export const AddBusinessSpace = ({ user }: { user?: { id: string } }) => {
 			validateOnBlur
 		>
 			{(formik) => (
-				<form onSubmit={formik.handleSubmit}>
+				<form className="dashboard-listing-form" onSubmit={formik.handleSubmit}>
 					<Modal isOpen={formik.isSubmitting} closeOnOverlayClick={false} closeOnEsc={false} onClose={() => {}}>
 						<ModalOverlay />
 						<ModalContent p="10">

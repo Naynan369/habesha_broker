@@ -43,7 +43,7 @@ export const ItemList: FC<IItemsList> = ({ user, paymentFee, paymentEnabled, fil
 
 	if (error) {
 		return (
-			<Alert status="error" p="10" flexDirection="column" borderRadius="xl">
+			<Alert status="error" p={{ base: 6, md: 10 }} flexDirection="column" borderRadius="2xl" border="1px solid" borderColor="red.200" boxShadow="0 12px 30px rgba(137,46,38,.08)">
 				<AlertIcon boxSize="40px" />
 				<AlertTitle mt="5" mb="2">Problem loading your listings</AlertTitle>
 				<AlertDescription>Check your connection and try again.</AlertDescription>
@@ -52,7 +52,7 @@ export const ItemList: FC<IItemsList> = ({ user, paymentFee, paymentEnabled, fil
 	}
 
 	return (
-		<Grid justifyContent="center" columnGap={{ base: 4, md: 6 }} rowGap={{ base: 4, md: 6 }} templateColumns={{ base: "minmax(0, 1fr)", sm: "repeat(auto-fill, minmax(18rem, 1fr))" }} w="full">
+		<Grid className="dashboard-listings-grid" justifyContent="center" columnGap={{ base: 4, md: 6 }} rowGap={{ base: 4, md: 6 }} templateColumns={{ base: "minmax(0, 1fr)", sm: "repeat(auto-fill, minmax(18rem, 1fr))" }} w="full">
 			{loading || !data ? (
 				[...Array(6)].map((_, index) => <ItemLoader key={index} />)
 			) : data.items?.length ? (
@@ -79,8 +79,8 @@ export const ItemList: FC<IItemsList> = ({ user, paymentFee, paymentEnabled, fil
 					/>
 				))
 			) : (
-				<Flex gridColumn="1 / -1" minH="300px" align="center" justify="center" direction="column" textAlign="center" px="6" py="12" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 6px 22px rgba(21,42,44,.04)">
-					<Box w="14" h="14" display="grid" placeItems="center" borderRadius="full" bg={emptyIconBg} color={emptyIconColor}>
+				<Flex gridColumn="1 / -1" minH={{ base: "280px", md: "340px" }} align="center" justify="center" direction="column" textAlign="center" px="6" py="12" bg={surface} border="1px dashed" borderColor={border} borderRadius="2xl" boxShadow="inset 0 0 0 6px rgba(128,145,145,.025)">
+					<Box w="16" h="16" display="grid" placeItems="center" borderRadius="2xl" bg={emptyIconBg} color={emptyIconColor} boxShadow="0 10px 24px rgba(198,107,54,.10)">
 						<MdAdd size="22" />
 					</Box>
 					<Heading mt="5" size="md" color={heading}>

@@ -9,9 +9,11 @@ import axios from "axios";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { MdArrowForward, MdDirectionsCar, MdHomeWork, MdMiscellaneousServices, MdSearch, MdSearchOff, MdStorefront } from "react-icons/md";
 import { FilterNav } from "@components/explore/FilterNav";
 import { Navbar } from "@components/explore/Navbar";
+import { HomeMotionSystem } from "@components/home/HomeMotion";
 import { ItemCard, ItemLoader } from "@components/explore/ItemCard";
 import { withSessionSsr } from "@config/cookie/cookie";
 
@@ -131,6 +133,7 @@ export default function ExplorePage({ user, keyword }) {
 
 	return (
 		<>
+			<HomeMotionSystem showProgress={false} />
 			<Head>
 				<title>{lang.explore.pageTitle}</title>
 				<meta name="description" content={lang.explore.metaDescription} />
@@ -196,21 +199,22 @@ export default function ExplorePage({ user, keyword }) {
 							</Box>
 							<Text color={bodyColor} maxW="430px" fontSize="sm" lineHeight="1.7">{lang.explore.categoryDescription}</Text>
 						</Flex>
-						<SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} spacing={{ base: 4, md: 6 }}>
+						<SimpleGrid id="explore-category-cards" columns={{ base: 1, md: 2, xl: 4 }} spacing={{ base: 4, md: 6 }}>
 							<Box
 								as="button"
 								type="button"
 								textAlign="left"
 								aria-pressed={filter.itemType === "HOUSE"}
+								className="explore-category-card" data-home-stagger
 								onClick={() => selectCategory("HOUSE")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bgImage="linear-gradient(90deg, rgba(14,34,38,.78), rgba(14,34,38,.12)), url('/assets/images/homes-addis.jpg')" bgSize="cover" bgPosition="center 52%"
+								bgImage="linear-gradient(90deg, rgba(14,34,38,.78), rgba(14,34,38,.12)), url('/assets/images/apartment-interior-showcase.jpg')" bgSize="cover" bgPosition="center 52%"
 								boxShadow={filter.itemType === "HOUSE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
 								transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Flex h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
-									<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.propertyLabel}</Text>
-									<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.homeCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.homeCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
+									<Text className="explore-category-label" color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.propertyLabel}</Text>
+									<Flex className="explore-category-content" w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.homeCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.homeCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
 								</Flex>
 							</Box>
 							<Box
@@ -218,15 +222,16 @@ export default function ExplorePage({ user, keyword }) {
 								type="button"
 								textAlign="left"
 								aria-pressed={filter.itemType === "CAR"}
+								className="explore-category-card" data-home-stagger
 								onClick={() => selectCategory("CAR")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bgImage="linear-gradient(90deg, rgba(14,34,38,.82), rgba(14,34,38,.08)), url('/assets/images/vehicles-addis.jpg')" bgSize="cover" bgPosition="center 55%"
+								bgImage="linear-gradient(90deg, rgba(14,34,38,.82), rgba(14,34,38,.08)), url('/assets/images/supercar-showcase.jpg')" bgSize="cover" bgPosition="center 55%"
 								boxShadow={filter.itemType === "CAR" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
 								transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Flex h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
-									<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.vehicleCardLabel}</Text>
-									<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.vehicleCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.vehicleCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
+									<Text className="explore-category-label" color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.vehicleCardLabel}</Text>
+									<Flex className="explore-category-content" w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.vehicleCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.vehicleCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
 								</Flex>
 							</Box>
 							<Box
@@ -234,9 +239,10 @@ export default function ExplorePage({ user, keyword }) {
 								type="button"
 								textAlign="left"
 								aria-pressed={filter.itemType === "BUSINESS_SPACE"}
+								className="explore-category-card" data-home-stagger
 								onClick={() => selectCategory("BUSINESS_SPACE")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bgImage="linear-gradient(90deg, rgba(14,34,38,.86), rgba(14,34,38,.22)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&h=800&q=85')"
+								bgImage="linear-gradient(90deg, rgba(14,34,38,.86), rgba(14,34,38,.22)), url('/assets/images/apartment-showcase.jpg')"
 								bgSize="cover"
 								bgPosition="center"
 								boxShadow={filter.itemType === "BUSINESS_SPACE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
@@ -244,8 +250,8 @@ export default function ExplorePage({ user, keyword }) {
 							>
 								<Flex position="absolute" inset="0" align="center" justify="center" color="whiteAlpha.200"><MdStorefront size="150" /></Flex>
 								<Flex position="relative" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
-									<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.businessSpaces}</Text>
-									<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.businessCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.businessCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
+									<Text className="explore-category-label" color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.businessSpaces}</Text>
+									<Flex className="explore-category-content" w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.businessCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.businessCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
 								</Flex>
 							</Box>
 										<Box
@@ -253,16 +259,19 @@ export default function ExplorePage({ user, keyword }) {
 											type="button"
 											textAlign="left"
 											aria-pressed={filter.itemType === "SERVICE"}
+								className="explore-category-card" data-home-stagger
 											onClick={() => selectCategory("SERVICE")}
 											position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-											bg="linear-gradient(135deg, #143a45, #345d5b 58%, #c66b36)"
+											bgImage="linear-gradient(90deg, rgba(14,34,38,.84), rgba(14,34,38,.20)), url('https://images.unsplash.com/photo-1741388222137-c0d3007ec173?auto=format&fit=crop&crop=faces&w=1200&h=800&q=80')"
+									bgSize="cover"
+									bgPosition="center 52%"
 											boxShadow={filter.itemType === "SERVICE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
 											transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 										>
 											<Flex position="absolute" inset="0" align="center" justify="center" color="whiteAlpha.200"><MdMiscellaneousServices size="150" /></Flex>
 											<Flex position="relative" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
-												<Text color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.home.services_txt}</Text>
-												<Flex w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.servicesCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.servicesCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
+												<Text className="explore-category-label" color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.home.services_txt}</Text>
+												<Flex className="explore-category-content" w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.servicesCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.servicesCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
 											</Flex>
 										</Box>
 						</SimpleGrid>
@@ -274,16 +283,16 @@ export default function ExplorePage({ user, keyword }) {
 							<Text color={bodyColor} maxW="520px" fontSize="sm" lineHeight="1.7">{lang.explore.serviceCategoryDescription}</Text>
 						</Flex>
 						<Flex wrap="wrap" gap="3" mb="5"><Button variant={filter.Service?.some?.category ? "outline" : "solid"} color={filter.Service?.some?.category ? titleColor : "white"} bg={filter.Service?.some?.category ? surface : "maingray"} borderColor={borderColor} onClick={() => selectServiceCategory()}>{lang.explore.allServices}</Button></Flex>
-						<SimpleGrid columns={{ base: 1, sm: 2, xl: 3 }} spacing="4">
+						<SimpleGrid id="explore-service-categories" columns={{ base: 1, sm: 2, xl: 3 }} spacing="4">
 							{SERVICE_CATEGORIES.map((category, index) => {
 								const card = lang.home.service_cards[index];
 								const selected = filter.Service?.some?.category === category;
-								return <Box as="button" type="button" key={category} onClick={() => selectServiceCategory(category)} aria-pressed={selected} textAlign="left" p="5" minH="130px" bg={surface} border="1px solid" borderColor={selected ? "#d7783f" : borderColor} borderRadius="xl" boxShadow={selected ? "0 0 0 2px #d7783f" : "sm"} transition="all 160ms ease" _hover={{ transform: "translateY(-2px)", boxShadow: "md" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "2px" }}><Flex align="center" gap="3"><Box flexShrink={0} w="10" h="10" display="grid" placeItems="center" borderRadius="xl" bg={accentSurface} color={accentText}><MdMiscellaneousServices size="21" /></Box><Text color={titleColor} fontWeight="bold" lineHeight="1.4">{lang.serviceListing.categories[category]}</Text></Flex><Text mt="3" color={bodyColor} fontSize="sm" lineHeight="1.6">{card.description}</Text></Box>;
+								return <Box as="button" type="button" key={category} className="explore-service-card" data-home-stagger style={{ "--home-stagger-delay": Math.min(index, 4) * 90 + "ms" } as CSSProperties} onClick={() => selectServiceCategory(category)} aria-pressed={selected} textAlign="left" p="5" minH="130px" bg={surface} border="1px solid" borderColor={selected ? "#d7783f" : borderColor} borderRadius="xl" boxShadow={selected ? "0 0 0 2px #d7783f" : "sm"} transition="all 160ms ease" _hover={{ transform: "translateY(-2px)", boxShadow: "md" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "2px" }}><Flex align="center" gap="3"><Box flexShrink={0} w="10" h="10" display="grid" placeItems="center" borderRadius="xl" bg={accentSurface} color={accentText}><MdMiscellaneousServices size="21" /></Box><Text color={titleColor} fontWeight="bold" lineHeight="1.4">{lang.serviceListing.categories[category]}</Text></Flex><Text mt="3" color={bodyColor} fontSize="sm" lineHeight="1.6">{card.description}</Text></Box>;
 							})}
 						</SimpleGrid>
 					</Box>}
 
-					<Box as="section" mt={{ base: 12, md: 16 }}>
+					<Box as="section" id="explore-listings" mt={{ base: 12, md: 16 }}>
 						<Flex align={{ base: "flex-start", md: "end" }} justify="space-between" gap="4" mb="6" direction={{ base: "column", md: "row" }}>
 							<Box>
 								<Text color={accentText} textTransform="uppercase" letterSpacing=".16em" fontWeight="bold" fontSize="xs">{lang.explore.marketplaceKicker}</Text>
@@ -309,7 +318,29 @@ export default function ExplorePage({ user, keyword }) {
 									<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">{[...Array(4)].map((_, index) => <ItemLoader key={index} />)}</SimpleGrid>
 								) : data.items?.length ? (
 									<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
-										{data.items.map((item) => <ItemCard key={item.id} id={item.id} title={item.title} date={item.createdAt} photoURL={item.images?.[0]} ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")} ownerPhoto={item?.user?.profile_url} price={item.price} itemType={item.itemType} priceFrequency={item.BusinessSpace?.priceFrequency} featured={item.featured} status={item.status} serviceCategory={item.Service?.category} />)}
+										{data.items.map((item, index) => (
+											<Box
+												key={item.id}
+												className="explore-listing-card"
+												data-home-stagger
+												style={{ "--home-stagger-delay": Math.min(index, 5) * 110 + "ms" } as CSSProperties}
+											>
+												<ItemCard
+													id={item.id}
+													title={item.title}
+													date={item.createdAt}
+													photoURL={item.images?.[0]}
+													ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")}
+													ownerPhoto={item?.user?.profile_url}
+													price={item.price}
+													itemType={item.itemType}
+													priceFrequency={item.BusinessSpace?.priceFrequency}
+													featured={item.featured}
+													status={item.status}
+													serviceCategory={item.Service?.category}
+												/>
+											</Box>
+										))}
 									</SimpleGrid>
 								) : (
 					<Flex align="center" justify="center" direction="column" bg={surface} borderRadius="2xl" border="1px solid" borderColor={borderColor} p={{ base: 8, md: 12 }} textAlign="center">

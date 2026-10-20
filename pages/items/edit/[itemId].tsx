@@ -133,7 +133,7 @@ export default function EditItemPage({ item }) {
 		}
 	};
 
-	const field = (title: string, name: string, type?: string, helpText?: string) => (
+	const field = (title: string, name: string, type?: string, helpText?: string, placeholder?: string) => (
 		<EditInputField
 			key={name}
 			title={title}
@@ -142,9 +142,10 @@ export default function EditItemPage({ item }) {
 			value={Array.isArray(values.specificProps[name]) ? values.specificProps[name].join(", ") : String(values.specificProps[name] ?? "")}
 			onChange={(value) => updateSpecific(name, value)}
 			helpText={helpText}
+			placeholder={placeholder}
 		/>
 	);
-	const select = (title: string, name: string, options: Array<[string, string]>) => (
+	const select = (title: string, name: string, options: Array<[string, string]>, required = true) => (
 		<EditInputField
 			key={name}
 			title={title}
@@ -152,16 +153,16 @@ export default function EditItemPage({ item }) {
 			value={Array.isArray(values.specificProps[name]) ? values.specificProps[name].join(", ") : String(values.specificProps[name] ?? "")}
 			onChange={(value) => updateSpecific(name, value)}
 			isSelect
-			required
+			required={required}
 		>
-			<option value="" disabled>Choose {title.toLowerCase()}</option>
+			{required && <option value="" disabled>Choose {title.toLowerCase()}</option>}
 			{options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
 		</EditInputField>
 	);
 
 	const detailFields = item.itemType === "SERVICE" ? (
 		<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
-					{select(serviceText.category, "category", Object.entries(serviceText.categories) as Array<[string, string]>) }
+			{select(serviceText.category, "category", Object.entries(serviceText.categories) as Array<[string, string]>) }
 			{field(serviceText.region, "region")}
 			{field(serviceText.city, "city")}
 			{field(serviceText.serviceArea, "serviceArea")}
@@ -178,7 +179,7 @@ export default function EditItemPage({ item }) {
 				{field(homeText.bathrooms, "bathrooms", "number")}
 				{field(homeText.floor, "floor", "number")}
 				{field(homeText.totalFloors, "totalFloors", "number")}
-				{select(homeText.furnishing, "furnishing", [["", "Not specified"], ...Object.entries(homeText.furnishingTypes)] as Array<[string, string]>) }
+				{select(homeText.furnishing, "furnishing", [["", "Not specified"], ...Object.entries(homeText.furnishingTypes)] as Array<[string, string]>, false) }
 				{[["region", homeText.region], ["city", homeText.city], ["subcity", homeText.subcity], ["woreda", homeText.woreda], ["neighborhood", homeText.neighborhood], ["landmark", homeText.landmark]].map(([name, label]) => field(label, name))}
 			</SimpleGrid>
 			<Box mt="5" p="4" border="1px solid" borderColor={panelBorder} borderRadius="xl" bg={panelBg}>
@@ -223,9 +224,9 @@ export default function EditItemPage({ item }) {
 			{select("Space type", "spaceType", [["SHOP", "Shop"], ["OFFICE", "Office"], ["WAREHOUSE", "Warehouse"], ["MARKET_STALL", "Market stall"], ["WORKSHOP", "Workshop"], ["LAND", "Commercial land"]])}
 			{select("Availability", "type", [["RENT", "For rent"], ["FORSALE", "For sale"]])}
 			{values.specificProps.type === "RENT" && select("Rent frequency", "priceFrequency", [["DAILY", "Daily"], ["WEEKLY", "Weekly"], ["MONTHLY", "Monthly"], ["YEARLY", "Yearly"]])}
-			{field("Floor area (m²)", "area", "number")}
-			{["region", "city", "subcity", "woreda", "neighborhood", "landmark"].map((name) => field(name.replace(/([A-Z])/g, " $1"), name))}
-			{["electricity", "water", "roadAccess", "parking"].map((name) => select(name.replace(/([A-Z])/g, " $1"), name, [["true", "Yes"], ["false", "No"]]))}
+			{field("Floor area (m²)", "area", "number", undefined, "e.g. 80")}
+			{[["region", "Region"], ["city", "City"], ["subcity", "Subcity"], ["woreda", "Woreda"], ["neighborhood", "Neighborhood"], ["landmark", "Nearby landmark"]].map(([name, label]) => field(label, name))}
+			{[["electricity", "Electricity"], ["water", "Water"], ["roadAccess", "Road access"], ["parking", "Parking"]].map(([name, label]) => select(label, name, [["true", "Yes"], ["false", "No"]]))}
 		</SimpleGrid>
 	);
 
@@ -240,14 +241,14 @@ export default function EditItemPage({ item }) {
 		<>
 			<Head><title>Edit listing - Habesha Brokers</title></Head>
 			<Flex direction="column" minH="100dvh" bg={pageBg}>
-				<Flex bg={surface} borderBottom="1px solid" borderColor={border} minH={MyTheme.size.navbarHeightCompact} alignItems="center" px={MyTheme.paddings.pagePadding} gap="3">
+				<Flex bg={surface} borderBottom="1px solid" borderColor={border} minH={MyTheme.size.navbarHeightCompact} alignItems="center" px={{ base: 4, sm: 6, md: 8 }} gap="3">
 					<Button variant="outline" onClick={() => router.push(`/items/${item.id}`)}>Back to listing</Button>
 					<Heading size="md" display={{ base: "none", sm: "block" }}>Edit listing</Heading>
 					<Box flex="1" />
 					<ColorModeToggle />
 				</Flex>
 
-				<Flex direction="column" px={MyTheme.paddings.pagePadding} py={{ base: 6, md: 10 }} maxW="5xl" w="full" mx="auto">
+				<Flex direction="column" px={{ base: 4, sm: 6, md: 8 }} py={{ base: 6, md: 10 }} maxW="5xl" w="full" mx="auto">
 					<Flex align={{ base: "flex-start", sm: "center" }} justify="space-between" gap="4" mb="6" direction={{ base: "column", sm: "row" }}>
 						<Box>
 							<Badge colorScheme="teal" borderRadius="full" px="3" py="1">{item.itemType.replace(/_/g, " ")}</Badge>
@@ -263,7 +264,7 @@ export default function EditItemPage({ item }) {
 					</Alert>
 
 					{item.images?.length > 0 && (
-						<Box bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" p={{ base: 4, md: 6 }} mb="6">
+						<Box bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" p={{ base: 4, md: 6 }} mb="6" boxShadow="0 8px 28px rgba(21,42,44,.06)">
 							<Heading size="sm" mb="4">Listing photos</Heading>
 							<SimpleGrid columns={{ base: 2, sm: 3, md: 4 }} spacing="3">
 								{item.images.map((image: string, index: number) => (
@@ -273,29 +274,34 @@ export default function EditItemPage({ item }) {
 						</Box>
 					)}
 					{item.itemType === "HOUSE" && item.House?.video && (
-						<Box bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" p={{ base: 4, md: 6 }} mb="6">
+						<Box bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" p={{ base: 4, md: 6 }} mb="6" boxShadow="0 8px 28px rgba(21,42,44,.06)">
 							<Heading size="sm" mb="4">{homeText.video}</Heading>
 							<video aria-label={homeText.videoPreview} controls preload="metadata" src={getMediaUrl(item.House.video, "items")} style={{ width: "100%", maxHeight: 400, borderRadius: 12, background: "#000000" }} />
 						</Box>
 					)}
 
 					<form onSubmit={saveChanges}>
-						<Box bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" p={{ base: 4, md: 7 }} boxShadow="0 8px 28px rgba(21,42,44,.06)">
-							<Heading size="md" mb="5">Listing information</Heading>
-							<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
-								<EditInputField title="Title" name="title" value={values.title} onChange={(value) => updateValue("title", value)} required />
-								<EditInputField title="Price (ETB)" name="price" type="number" value={values.price} onChange={(value) => updateValue("price", value)} required />
+						<Box bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" p={{ base: 4, sm: 6, md: 8 }} boxShadow="0 12px 34px rgba(21,42,44,.08)">
+							<Heading size="md">Listing information</Heading>
+							<Text mt="2" mb="6" fontSize="sm" color={muted}>Review the labeled fields and save when your changes are ready.</Text>
+							<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5" alignItems="start">
+								<Box gridColumn={{ base: "auto", md: "1 / -1" }} minW="0">
+									<EditInputField title="Title" name="title" value={values.title} onChange={(value) => updateValue("title", value)} placeholder="e.g. 3-bedroom apartment in Bole" required />
+								</Box>
+								<EditInputField title="Price (ETB)" name="price" type="number" value={values.price} onChange={(value) => updateValue("price", value)} placeholder="e.g. 12,500,000" required />
 								<EditInputField title="Price type" name="priceType" value={values.priceType} onChange={(value) => updateValue("priceType", value)} isSelect required>
+									<option value="" disabled>Choose a price type</option>
 									<option value="FIXED">Fixed</option>
 									<option value="NEGOTIABLE">Negotiable</option>
 								</EditInputField>
 							</SimpleGrid>
-							<Box mt="5">
-								<EditInputField title="Description" name="description" value={values.description} onChange={(value) => updateValue("description", value)} isTextarea />
+							<Box mt="6">
+								<EditInputField title="Description" name="description" value={values.description} onChange={(value) => updateValue("description", value)} placeholder="Condition, features, location, and important terms" isTextarea />
 							</Box>
 
 							<Divider my={{ base: 6, md: 8 }} />
-							<Heading size="md" mb="5">{item.itemType === "HOUSE" ? "Home details" : item.itemType === "CAR" ? "Vehicle details" : item.itemType === "SERVICE" ? serviceText.category : "Business space details"}</Heading>
+							<Heading size="md" mb="2">{item.itemType === "HOUSE" ? "Home details" : item.itemType === "CAR" ? "Vehicle details" : item.itemType === "SERVICE" ? serviceText.category : "Business space details"}</Heading>
+							<Text mb="6" fontSize="sm" color={muted}>Update the specific information for this listing type.</Text>
 							{detailFields}
 
 							<Flex mt="8" pt="5" borderTop="1px solid" borderColor={border} justify="flex-end" gap="3" direction={{ base: "column-reverse", sm: "row" }}>
