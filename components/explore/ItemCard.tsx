@@ -49,9 +49,9 @@ export const ItemLoader = () => {
 	const surface = useColorModeValue("white", "#111111");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	return (
-		<Flex minH={{ base: "390px", md: "405px" }} direction="column" borderRadius="2xl" border="1px solid" borderColor={border} overflow="hidden" bg={surface}>
-			<Skeleton h={{ base: "205px", md: "220px" }} />
-			<Flex flex="1" p={{ base: 5, md: 6 }} direction="column"><Skeleton height="5" mb="3" /><Skeleton height="3" w="45%" mb="6" /><Skeleton height="7" w="55%" mb="7" /><Flex mt="auto" align="center" gap="3"><SkeletonCircle /><Skeleton w="40%" height="4" /></Flex></Flex>
+		<Flex minH="405px" direction="column" borderRadius="2xl" border="1px solid" borderColor={border} overflow="hidden" bg={surface}>
+			<Skeleton h="220px" />
+			<Flex flex="1" p="6" direction="column"><Skeleton height="5" mb="3" /><Skeleton height="3" w="45%" mb="6" /><Skeleton height="7" w="55%" mb="7" /><Flex mt="auto" align="center" gap="3"><SkeletonCircle /><Skeleton w="40%" height="4" /></Flex></Flex>
 		</Flex>
 	);
 };

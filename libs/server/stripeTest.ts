@@ -25,12 +25,10 @@ export async function createStripeTestCheckout(input: {
 	email: string;
 	baseUrl: string;
 	localePrefix: string;
-	expiresAt?: number;
 }) {
 	const secret = getTestSecret();
 	const form = new URLSearchParams();
 	form.set("mode", "payment");
-	if (input.expiresAt) form.set("expires_at", String(input.expiresAt));
 	form.set("customer_email", input.email);
 	form.set("client_reference_id", input.txRef);
 	form.set("metadata[txRef]", input.txRef);
@@ -53,38 +51,6 @@ export async function createStripeTestCheckout(input: {
 		throw new Error("Stripe did not return a valid test checkout session");
 	}
 	return { sessionId, checkoutUrl };
-}
-
-export async function getStripeTestCheckoutSession(sessionId: string) {
-	if (!/^cs_test_[A-Za-z0-9_]+$/.test(sessionId)) throw new Error("Stripe test checkout session is invalid");
-	const response = await axios.get(STRIPE_API + "/checkout/sessions/" + encodeURIComponent(sessionId), {
-		headers: stripeHeaders(getTestSecret()),
-		timeout: 15000,
-	});
-	const session = response.data;
-	return {
-		id: String(session?.id || ""),
-		status: String(session?.status || ""),
-		paymentStatus: String(session?.payment_status || ""),
-		expiresAt: Number(session?.expires_at || 0),
-	};
-}
-
-export async function expireStripeTestCheckoutSession(sessionId: string) {
-	const current = await getStripeTestCheckoutSession(sessionId);
-	if (current.status !== "open") return current;
-	const response = await axios.post(
-		STRIPE_API + "/checkout/sessions/" + encodeURIComponent(sessionId) + "/expire",
-		"",
-		{ headers: { ...stripeHeaders(getTestSecret()), "Content-Type": "application/x-www-form-urlencoded" }, timeout: 15000 },
-	);
-	const session = response.data;
-	return {
-		id: String(session?.id || current.id),
-		status: String(session?.status || "expired"),
-		paymentStatus: String(session?.payment_status || current.paymentStatus),
-		expiresAt: Number(session?.expires_at || current.expiresAt),
-	};
 }
 
 export async function verifyStripeTestCheckout(sessionId: string) {

@@ -20,6 +20,36 @@ export const HomeHero = () => {
 	const searchSurface = useColorModeValue("white", "#111111");
 	const searchText = useColorModeValue("gray.800", "gray.100");
 	const searchBorder = useColorModeValue("whiteAlpha.500", "whiteAlpha.300");
+	const amharic = locale === "am";
+	const sceneLabels = amharic ? {
+		home: "ቤቶች",
+		vehicle: "ተሽከርካሪዎች",
+		day: "ቀን",
+		night: "ሌሊት",
+		interior: "ውስጡን ይመልከቱ",
+		facade: "ውጫዊ እይታ",
+		reset: "እንደገና አስጀምር",
+		architecture: "ቤቶች እና አፓርታማዎች",
+		vehicleDetail: "መኪናዎች",
+		dragHint: "ለማዞር ይጎትቱ · ለማጉላት ያንሸራትቱ",
+		browseHomes: "ቤቶችን ይመልከቱ",
+		browseVehicles: "መኪናዎችን ይመልከቱ",
+		localePrefix: "/am",
+	} : {
+		home: "Homes",
+		vehicle: "Vehicles",
+		day: "Day",
+		night: "Night",
+		interior: "Open interior",
+		facade: "Show facade",
+		reset: "Reset view",
+		architecture: "Homes & apartments",
+		vehicleDetail: "Vehicles",
+		dragHint: "Drag to orbit · scroll to zoom",
+		browseHomes: "Explore homes",
+		browseVehicles: "Explore vehicles",
+		localePrefix: "",
+	};
 
 	const submitSearch = () => {
 		const keyword = search.trim();
@@ -31,7 +61,7 @@ export const HomeHero = () => {
 			id="home"
 			as="section"
 			position="relative"
-			minH={{ base: "100svh", lg: "min(900px, 100dvh)" }}
+			minH={{ base: "1040px", sm: "980px", lg: "min(900px, 100dvh)" }}
 			color="white"
 			overflow="hidden"
 			bg="#071918"
@@ -39,20 +69,23 @@ export const HomeHero = () => {
 			<Box aria-hidden="true" position="absolute" inset="0" bgGradient="linear(to-br, #0a2423 0%, #071918 48%, #102826 100%)" />
 			<Box aria-hidden="true" position="absolute" top="-30%" right="-10%" w="70vw" h="85%" bg="radial-gradient(ellipse, rgba(226,178,100,.13), transparent 65%)" />
 			<Box aria-hidden="true" position="absolute" bottom="-30%" left="-8%" w="55vw" h="70%" bg="radial-gradient(ellipse, rgba(73,127,119,.17), transparent 70%)" />
+			<Box position="absolute" inset="0" zIndex="1" aria-label="Illustrated apartment and car background">
+				<HeroThreeScene labels={sceneLabels} />
+			</Box>
 			<Flex
 				position="relative"
 				zIndex="3"
 				pointerEvents="none"
 				maxW="1440px"
-				minH={{ base: "100svh", lg: "min(900px, 100dvh)" }}
+				minH={{ base: "1040px", sm: "980px", lg: "min(900px, 100dvh)" }}
 				mx="auto"
 				px={{ base: 5, sm: 7, md: 10, xl: 14 }}
-				pt={{ base: "104px", lg: "138px" }}
-				pb={{ base: 6, md: 10 }}
+				pt={{ base: "126px", lg: "138px" }}
+				pb={{ base: 8, md: 10 }}
 				direction="column"
-				justify={{ base: "flex-start", lg: "center" }}
+				justify="center"
 			>
-				<Flex position="relative" direction="column" align="flex-start" justify={{ base: "flex-start", lg: "center" }} flex="1">
+				<Flex direction="column" align="flex-start" justify="center" flex="1">
 					<Box w="full" maxW="650px" position="relative" zIndex="3" py={{ base: 2, lg: 7 }} pointerEvents="auto">
 						<Flex className="hero-enter hero-enter-1" align="center" gap="3" mb="6">
 							<Box w="9" h="1px" bg="mainyellow" />
@@ -93,30 +126,9 @@ export const HomeHero = () => {
 							<Flex align="center" gap="2" color="whiteAlpha.800"><MdVerified color="#E9B75C" /><Text fontSize="sm">{lang.home.hero_note_direct}</Text></Flex>
 						</Flex>
 					</Box>
-					<Box
-						className="home-hero-scene-stage"
-						position={{ base: "relative", lg: "absolute" }}
-						left={{ lg: 0 }}
-						right={{ lg: 0 }}
-						top={{ lg: "-138px" }}
-						bottom={{ lg: "-40px" }}
-						w="full"
-						h={{ base: "clamp(300px, 46svh, 380px)", sm: "clamp(320px, 44svh, 410px)", lg: "full" }}
-						mt={{ base: 7, lg: 0 }}
-						zIndex={{ base: 1, lg: 1 }}
-						pointerEvents="auto"
-						borderRadius={{ base: "2xl", lg: "none" }}
-						border={{ base: "1px solid", lg: "0" }}
-						borderColor={{ base: "whiteAlpha.200", lg: "transparent" }}
-						boxShadow={{ base: "0 22px 56px rgba(0,0,0,.24)", lg: "none" }}
-						overflow="hidden"
-						bg="radial-gradient(ellipse at 50% 40%, rgba(226,178,100,.12), rgba(7,25,24,.28) 72%)"
-					>
-						<HeroThreeScene />
-					</Box>
 				</Flex>
 
-				<Flex mt={{ base: 6, lg: 1 }} align="center" justify="space-between" gap="4" flexWrap="wrap" borderTop="1px solid" borderColor="whiteAlpha.300" pt="5" pointerEvents="none">
+				<Flex mt={{ base: 5, lg: 1 }} align="center" justify="space-between" gap="4" flexWrap="wrap" borderTop="1px solid" borderColor="whiteAlpha.300" pt="5" pointerEvents="none">
 					<Text color="whiteAlpha.700" fontSize="xs" letterSpacing=".16em" textTransform="uppercase">{lang.home.hero_bottomline}</Text>
 					<Link legacyBehavior href="/explore" passHref><Flex as="a" pointerEvents="auto" align="center" gap="2" color="white" fontWeight="semibold" fontSize="sm" _hover={{ color: "mainyellow" }}>{lang.home.browse_action}<MdArrowForward /></Flex></Link>
 				</Flex>

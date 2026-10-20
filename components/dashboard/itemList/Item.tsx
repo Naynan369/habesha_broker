@@ -22,7 +22,6 @@ export interface IItem {
 	paymentFee?: number;
 	paymentEnabled?: boolean;
 	listingPayment?: any;
-	paymentRetryAllowed?: boolean;
 	itemType: string;
 	ownerName: string;
 	featured?: boolean;
@@ -31,7 +30,7 @@ export interface IItem {
 	listingIntent?: string;
 }
 
-export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, paymentStatus, paymentFee, paymentEnabled, listingPayment, paymentRetryAllowed, priceFrequency, serviceCategory, listingIntent }) => {
+export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, paymentStatus, paymentFee, paymentEnabled, listingPayment, priceFrequency, serviceCategory, listingIntent }) => {
 	const router = useRouter();
 	const { locale } = router;
 	const lang = useLang();
@@ -60,7 +59,7 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 	const itemTypeLabel = itemType === "SERVICE"
 		? lang.serviceListing.categories[serviceCategory] || copy.categoryServices
 		: itemType === "BUSINESS_SPACE" ? copy.categoryBusinessSpaces : itemType === "CAR" ? copy.categoryVehicles : copy.categoryHomes;
-	const needsPayment = typeof paymentFee === "number" && status !== "APPROVED" && status !== "SOLD" && (status !== "CLOSED" || paymentRetryAllowed) && paymentStatus !== "PAID";
+	const needsPayment = typeof paymentFee === "number" && status !== "APPROVED" && status !== "SOLD" && status !== "CLOSED" && paymentStatus !== "PAID";
 	const eligibleForRefundRequest = paymentRecord?.status === "PAID" && paymentRecord?.refundStatus === "NOT_REFUNDED" && paymentRecord?.txRef?.startsWith("HB-STRIPE-") && paymentRecord?.providerRef?.startsWith("cs_test_");
 	const canRequestRefund = eligibleForRefundRequest && !["PENDING", "APPROVED"].includes(paymentRecord?.refundRequestStatus);
 	const refundNotice = paymentRecord?.refundStatus === "REFUNDED"

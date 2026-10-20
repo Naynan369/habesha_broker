@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
@@ -17,6 +18,24 @@ function setCarOnTrack(car: THREE.Group, angle: number) {
 	// The car model reads as nose-forward when flipped relative to the track tangent.
 	car.rotation.y = Math.atan2(-tangentZ, tangentX) + Math.PI;
 }
+
+type SceneLabels = {
+	home: string;
+	vehicle: string;
+	day: string;
+	night: string;
+	interior: string;
+	facade: string;
+	reset: string;
+	architecture: string;
+	vehicleDetail: string;
+	dragHint: string;
+	browseHomes: string;
+	browseVehicles: string;
+	localePrefix: string;
+};
+
+type HeroThreeSceneProps = { labels: SceneLabels };
 
 const makeToon = (color: string, extra: Partial<THREE.MeshToonMaterialParameters> = {}) =>
 	new THREE.MeshToonMaterial({ color, ...extra });
@@ -293,24 +312,30 @@ function buildCar(scene: THREE.Scene) {
 	return car;
 }
 
-export default function HeroThreeScene() {
+export default function HeroThreeScene({ labels }: HeroThreeSceneProps) {
 	const host = useRef<HTMLDivElement>(null);
+	const focusRef = useRef<(feature: Feature) => void>(() => {});
+	const resetRef = useRef<() => void>(() => {});
+	const glassRef = useRef<THREE.Group | null>(null);
 	const selectionRef = useRef<Feature>("HOME");
+	const lightingRef = useRef<{ ambient: THREE.HemisphereLight; key: THREE.DirectionalLight; fill: THREE.DirectionalLight } | null>(null);
+	const [selection, setSelection] = useState<Feature>("HOME");
+	const [dayMode, setDayMode] = useState(true);
+	const [cutaway, setCutaway] = useState(false);
 
 	useEffect(() => {
 		const mount = host.current;
 		if (!mount) return;
 		const scene = new THREE.Scene();
-		let compactViewport = mount.clientWidth < 640;
-		const camera = new THREE.PerspectiveCamera(compactViewport ? 45 : 40, 1, 0.1, 100);
+		const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
 		camera.position.set(5.6, 8.1, 13.6);
-		const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: !compactViewport, powerPreference: compactViewport ? "low-power" : "high-performance" });
+		const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
 		renderer.outputColorSpace = THREE.SRGBColorSpace;
 		renderer.toneMapping = THREE.ACESFilmicToneMapping;
 		renderer.toneMappingExposure = 1.04;
-		renderer.shadowMap.enabled = !compactViewport;
+		renderer.shadowMap.enabled = true;
 		renderer.shadowMap.type = THREE.PCFShadowMap;
-		renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, compactViewport ? 1.25 : 1.6));
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
 		renderer.domElement.setAttribute("aria-label", "Interactive 3D apartment and car illustration. Drag to rotate and click the apartment or car to inspect.");
 		Object.assign(renderer.domElement.style, { width: "100%", height: "100%", display: "block", cursor: "grab", touchAction: "pan-y" });
 		mount.appendChild(renderer.domElement);
@@ -330,8 +355,11 @@ export default function HeroThreeScene() {
 		const fillLight = new THREE.DirectionalLight("#9fc5d0", 0.78);
 		fillLight.position.set(7, 5, -6);
 		scene.add(fillLight);
-		const { building } = buildApartment(scene);
+		lightingRef.current = { ambient, key: keyLight, fill: fillLight };
+
+		const { building, glassGroup } = buildApartment(scene);
 		const car = buildCar(scene);
+		glassRef.current = glassGroup;
 		const homeRing = new THREE.Mesh(new THREE.TorusGeometry(1.82, 0.018, 8, 96), new THREE.MeshBasicMaterial({ color: "#e8b75d", transparent: true, opacity: 0.84 }));
 		homeRing.rotation.x = Math.PI / 2;
 		homeRing.scale.set(1, 0.72, 1);
@@ -354,13 +382,22 @@ export default function HeroThreeScene() {
 		controls.rotateSpeed = 0.72;
 		controls.minPolarAngle = Math.PI * 0.22;
 		controls.maxPolarAngle = Math.PI * 0.43;
-		controls.target.set(compactViewport ? -0.75 : -4.5, 2.0, 0.05);
+		controls.target.set(-4.5, 2.0, 0.05);
 		controls.update();
+		let initialPosition = camera.position.clone();
+		const initialTarget = controls.target.clone();
 		const targetGoal = controls.target.clone();
 		const focusFeature = (feature: Feature) => {
 			selectionRef.current = feature;
 			const target = feature === "HOME" ? new THREE.Vector3(-1.55, 2.15, 0) : new THREE.Vector3(car.position.x, 0.92, car.position.z);
 			targetGoal.copy(target);
+		};
+		focusRef.current = focusFeature;
+		resetRef.current = () => {
+			targetGoal.copy(initialTarget);
+			camera.position.copy(initialPosition);
+			controls.target.copy(initialTarget);
+			controls.update();
 		};
 		controls.addEventListener("end", () => targetGoal.copy(controls.target));
 
@@ -369,17 +406,10 @@ export default function HeroThreeScene() {
 			const width = mount.clientWidth;
 			const height = mount.clientHeight;
 			if (!width || !height) return;
-			const nextCompactViewport = width < 640;
 			camera.aspect = width / height;
-			if (!cameraConfigured || nextCompactViewport !== compactViewport) {
+			if (!cameraConfigured) {
 				const viewDirection = new THREE.Vector3(7.75, 6.1, 13.55).normalize();
-				if (cameraConfigured) controls.target.set(nextCompactViewport ? -0.75 : -4.5, 2.0, 0.05);
-				targetGoal.copy(controls.target);
-				camera.fov = nextCompactViewport ? 45 : 40;
-				camera.position.copy(controls.target).addScaledVector(viewDirection, nextCompactViewport ? 16.8 : 17.2);
-				compactViewport = nextCompactViewport;
-				renderer.shadowMap.enabled = !compactViewport;
-				renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, compactViewport ? 1.25 : 1.6));
+				camera.position.copy(controls.target).addScaledVector(viewDirection, width < 640 ? 25.5 : 17.2);
 				cameraConfigured = true;
 			}
 			camera.updateProjectionMatrix();
@@ -388,6 +418,7 @@ export default function HeroThreeScene() {
 		const resizeObserver = new ResizeObserver(resize);
 		resizeObserver.observe(mount);
 		resize();
+		initialPosition = camera.position.clone();
 
 		const raycaster = new THREE.Raycaster();
 		const pointer = new THREE.Vector2();
@@ -414,6 +445,7 @@ export default function HeroThreeScene() {
 			if (distance > 7) return;
 			const feature = hitTest(event);
 			if (!feature) return;
+			setSelection(feature);
 			focusFeature(feature);
 		};
 		renderer.domElement.addEventListener("pointermove", onPointerMove);
@@ -469,16 +501,12 @@ export default function HeroThreeScene() {
 		let frame = 0;
 		let inViewport = false;
 		let lastTime = 0;
-		let lastRenderTime = 0;
-		let drawingStarted: number | null = null;
+		const drawingStarted = performance.now();
 		let carAngle = -Math.PI / 2;
 		const animate = (time: number) => {
 			frame = window.requestAnimationFrame(animate);
-			if (drawingStarted === null) drawingStarted = time;
-			if (compactViewport && time - lastRenderTime < 1000 / 30) return;
 			const dt = Math.min(0.05, (time - lastTime) / 1000 || 0);
 			lastTime = time;
-			lastRenderTime = time;
 			if (!reduceMotion && time >= drawingStarted + 3800) {
 				carAngle = (carAngle + dt * 0.36) % (Math.PI * 2);
 				setCarOnTrack(car, carAngle);
@@ -539,6 +567,10 @@ export default function HeroThreeScene() {
 			renderer.domElement.removeEventListener("pointerup", onPointerUp);
 			renderer.domElement.removeEventListener("pointercancel", onPointerCancel);
 			controls.dispose();
+			focusRef.current = () => {};
+			resetRef.current = () => {};
+			glassRef.current = null;
+			lightingRef.current = null;
 			const geometries = new Set<THREE.BufferGeometry>();
 			const materials = new Set<THREE.Material>();
 			scene.traverse((object) => {
@@ -555,13 +587,59 @@ export default function HeroThreeScene() {
 			mount.removeChild(renderer.domElement);
 		};
 	}, []);
+
+	useEffect(() => {
+		if (glassRef.current) glassRef.current.visible = !cutaway;
+		if (lightingRef.current) {
+			lightingRef.current.ambient.intensity = dayMode ? 1.45 : 0.62;
+			lightingRef.current.key.intensity = dayMode ? 1.85 : 0.58;
+			lightingRef.current.fill.intensity = dayMode ? 0.78 : 0.3;
+		}
+	}, [cutaway, dayMode]);
+
+	const select = (feature: Feature) => {
+		selectionRef.current = feature;
+		setSelection(feature);
+		focusRef.current(feature);
+	};
+	const buttonStyle: CSSProperties = {
+		border: "1px solid rgba(255,255,255,.18)", borderRadius: 999, background: "rgba(8,25,27,.82)", color: "#f9f4e8",
+		padding: "9px 12px", fontFamily: "inherit", fontSize: 11, fontWeight: 650, lineHeight: 1.1, letterSpacing: ".01em",
+		cursor: "pointer", backdropFilter: "blur(12px)", boxShadow: "0 8px 24px rgba(0,0,0,.16)", transition: "background 160ms ease, border-color 160ms ease, transform 160ms ease",
+	};
+	const activeStyle: CSSProperties = { ...buttonStyle, background: "#e9b75c", borderColor: "#e9b75c", color: "#173236" };
+
 	return (
-		<div className="hero-three-scene" style={{ position: "relative", width: "100%", height: "100%", minHeight: 0, overflow: "hidden", background: "transparent", isolation: "isolate" }}>
+		<div style={{ position: "relative", width: "100%", height: "100%", minHeight: 360, overflow: "hidden", background: "transparent", isolation: "isolate" }}>
 			<div ref={host} style={{ position: "absolute", inset: 0 }} />
 			<div className="scene-shade" aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(90deg,rgba(7,25,24,.94) 0%,rgba(7,25,24,.87) 30%,rgba(7,25,24,.48) 49%,rgba(7,25,24,.04) 77%)" }} />
-			<style>{`
-				@media(max-width:900px){.scene-shade{background:linear-gradient(180deg,rgba(7,25,24,.34) 0%,rgba(7,25,24,.38) 30%,rgba(7,25,24,.78) 78%,rgba(7,25,24,.94) 100%)!important}}
-			`}</style>
+			<div style={{ position: "absolute", top: "clamp(112px, 14vh, 154px)", left: "auto", right: "clamp(16px, 4vw, 64px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, pointerEvents: "none" }}>
+				<div>
+					<div style={{ padding: "8px 11px", borderRadius: 999, width: "fit-content", color: "#f1d9a8", background: "rgba(8,25,27,.72)", border: "1px solid rgba(240,213,161,.24)", fontSize: 9, fontWeight: 800, letterSpacing: ".17em", whiteSpace: "nowrap", boxShadow: "0 4px 16px rgba(0,0,0,.16)" }}>HABESHA · ILLUSTRATED</div>
+					<div style={{ margin: "7px 0 0 5px", color: "rgba(239,232,215,.72)", fontSize: 9, fontWeight: 650, letterSpacing: ".02em" }}>{labels.dragHint}</div>
+				</div>
+				<div style={{ display: "flex", gap: 6, pointerEvents: "auto" }}>
+					<button type="button" style={dayMode ? activeStyle : buttonStyle} onClick={() => setDayMode((current) => !current)} aria-label={dayMode ? labels.night : labels.day}>{dayMode ? "☼" : "☾"} <span className="scene-control-label">{dayMode ? labels.day : labels.night}</span></button>
+					<button type="button" style={cutaway ? activeStyle : buttonStyle} onClick={() => setCutaway((current) => !current)} aria-label={cutaway ? labels.facade : labels.interior} aria-pressed={cutaway}>{cutaway ? "▱" : "▣"} <span className="scene-control-label">{cutaway ? labels.facade : labels.interior}</span></button>
+				</div>
+			</div>
+			<div style={{ position: "absolute", left: "auto", right: "clamp(16px, 4vw, 64px)", bottom: "clamp(84px, 10vh, 112px)", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10 }}>
+				<div style={{ padding: "12px 14px", maxWidth: "min(270px, 66%)", borderRadius: 18, color: "#f7f4eb", background: "rgba(14,37,40,.86)", border: "1px solid rgba(240,213,161,.2)", boxShadow: "0 12px 30px rgba(0,0,0,.2)", backdropFilter: "blur(12px)" }}>
+					<div style={{ color: "#edbd68", fontSize: 9, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase" }}>{selection === "HOME" ? labels.architecture : labels.vehicleDetail}</div>
+					<div style={{ marginTop: 4, fontSize: 14, fontWeight: 700 }}>{selection === "HOME" ? labels.home : labels.vehicle}</div>
+					<a href={`${labels.localePrefix}/explore?itemType=${selection === "HOME" ? "HOUSE" : "CAR"}`} style={{ display: "inline-flex", marginTop: 7, color: "#f2cc83", textDecoration: "none", fontSize: 11, fontWeight: 700 }}>
+						{selection === "HOME" ? labels.browseHomes : labels.browseVehicles} <span aria-hidden="true" style={{ marginLeft: 6 }}>↗</span>
+					</a>
+				</div>
+				<div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 7 }}>
+					<div style={{ display: "flex", gap: 5 }}>
+						<button type="button" style={selection === "HOME" ? activeStyle : buttonStyle} aria-pressed={selection === "HOME"} onClick={() => select("HOME")}>{labels.home}</button>
+						<button type="button" style={selection === "CAR" ? activeStyle : buttonStyle} aria-pressed={selection === "CAR"} onClick={() => select("CAR")}>{labels.vehicle}</button>
+					</div>
+					<button type="button" style={{ ...buttonStyle, padding: "8px 11px" }} onClick={() => { setSelection("HOME"); selectionRef.current = "HOME"; resetRef.current(); }} aria-label={labels.reset}>↺ <span className="scene-control-label">{labels.reset}</span></button>
+				</div>
+			</div>
+			<style>{`@media(max-width:900px){.scene-shade{background:linear-gradient(180deg,rgba(7,25,24,.34) 0%,rgba(7,25,24,.38) 30%,rgba(7,25,24,.78) 78%,rgba(7,25,24,.94) 100%)!important}}@media(max-width:540px){.scene-control-label{display:none}}`}</style>
 		</div>
 	);
 }
