@@ -10,7 +10,7 @@ import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { FC, ReactNode } from "react";
-import { MdAddShoppingCart, MdArrowForward, MdCheckCircle, MdListAlt, MdSave } from "react-icons/md";
+import { MdAddShoppingCart, MdArrowForward, MdCheckCircle, MdEventAvailable, MdListAlt, MdSave } from "react-icons/md";
 
 export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
     const user = req.user;
@@ -48,7 +48,7 @@ export default function Dashboard({ user }) {
         <>
             <Head><title>{dashboardText.pageTitle}</title></Head>
             <Flex minH="100dvh" direction="column" bg={pageBg}>
-                <NavBar logout={handleLogout} />
+                <NavBar logout={handleLogout} user={user} />
                 <Container maxW="7xl" flex="1" py={{ base: 8, md: 12 }} px={{ base: 5, md: 8 }}>
                     <Flex as="section" mb={{ base: 7, md: 9 }} p={{ base: 5, md: 8 }} bg={heroSurface} border="1px solid" borderColor={heroBorder} borderRadius="3xl" boxShadow="0 12px 36px rgba(21,42,44,.06)" align={{ base: "flex-start", md: "center" }} justify="space-between" gap="6" direction={{ base: "column", md: "row" }}>
                         <Box>
@@ -71,6 +71,7 @@ export default function Dashboard({ user }) {
                             <ActionButton href="verify-account" text={dashboardText.verifyAccount} description={dashboardText.verifyAccountDescription} icon={<MdCheckCircle size="23" />} />
                         )}
                         <ActionButton href="saved" text={dashboardText.savedListings} description={dashboardText.savedListingsDescription} icon={<MdSave size="23" />} />
+                        <ActionButton href="service-requests" text={dashboardText.serviceRequests} description={dashboardText.serviceRequestsDescription} icon={<MdEventAvailable size="23" />} />
                     </SimpleGrid>
                     <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 5, lg: 6 }} mt={{ base: 7, md: 9 }} alignItems="stretch">
                         <Profile user={user} />

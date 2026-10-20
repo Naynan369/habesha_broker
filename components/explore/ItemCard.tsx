@@ -24,18 +24,18 @@ export const ItemCard: FC<IItem> = (props) => {
 	const postedTime = dayjs(props.date).locale(router.locale === "am" ? "am" : "en").fromNow();
 	return (
 	<Link legacyBehavior href={`/items/${props.id}`} passHref>
-		<Flex as="a" direction="column" minW="0" bg={surface} border="1px solid" borderColor={borderColor} borderRadius="2xl" overflow="hidden" cursor="pointer" textDecoration="none" transition="all 180ms ease" _hover={{ boxShadow: "0 18px 40px rgba(20,40,35,.18)", transform: "translateY(-3px)", borderColor: "mainorange" }} _focusVisible={{ outline: "3px solid", outlineColor: "orange.300" }}>
-			<Box position="relative" h={{ base: "205px", md: "235px" }} bg={imageFallback}>
+		<Flex as="a" className="listing-card" direction="column" minW="0" bg={surface} border="1px solid" borderColor={borderColor} borderRadius="2xl" overflow="hidden" cursor="pointer" textDecoration="none" transition="all 180ms ease" _hover={{ boxShadow: "0 18px 40px rgba(20,40,35,.18)", transform: "translateY(-3px)", borderColor: "mainorange" }} _focusVisible={{ outline: "3px solid", outlineColor: "orange.300" }}>
+			<Box className="listing-card-media" position="relative" h={{ base: "205px", md: "235px" }} bg={imageFallback}>
 				<ListingImage alt={props.title} src={props.photoURL} itemType={props.itemType} w="full" h="full" />
-				{props.featured && <Badge position="absolute" top="4" left="4" colorScheme="orange" borderRadius="full" px="3" py="1">{card.featured}</Badge>}
+				{props.featured && <Badge className="listing-card-featured-badge" position="absolute" top="4" left="4" colorScheme="orange" borderRadius="full" px="3" py="1">{card.featured}</Badge>}
 			</Box>
-			<Flex direction="column" flex="1" p={{ base: 5, md: 6 }}>
+			<Flex className="listing-card-content" direction="column" flex="1" p={{ base: 5, md: 6 }}>
 				<Flex align="flex-start" justify="space-between" gap="3">
-					<Box minW="0"><Heading noOfLines={2} fontSize="lg" lineHeight="1.35" color={textColor}>{props.title}</Heading><Text color={mutedColor} fontSize="xs" mt="2">{card.posted} {postedTime}</Text></Box>
-					<Badge flexShrink={0} colorScheme="teal" variant="subtle" borderRadius="full" px="2.5" py="1">{categoryLabel}</Badge>
+					<Box minW="0"><Heading className="listing-card-title" noOfLines={2} fontSize="lg" lineHeight="1.35" color={textColor}>{props.title}</Heading><Text className="listing-card-date" color={mutedColor} fontSize="xs" mt="2">{card.posted} {postedTime}</Text></Box>
+					<Badge className="listing-card-category" flexShrink={0} colorScheme="teal" variant="subtle" borderRadius="full" px="2.5" py="1">{categoryLabel}</Badge>
 				</Flex>
-				<Flex align="baseline" gap="2" mt="5"><Heading fontSize="2xl" color={textColor} letterSpacing="-.03em">{Intl.NumberFormat("en-US").format(Number(props.price) || 0)}</Heading>{props.itemType === "BUSINESS_SPACE" && props.priceFrequency && <Text fontSize="xs" color={mutedColor}>{lang.businessListing.frequencies[props.priceFrequency]}</Text>}<Text fontSize="sm" color={mutedColor} fontWeight="semibold">{card.currency}</Text></Flex>
-				<Flex align="center" justify="space-between" mt="5" pt="4" borderTop="1px solid" borderColor={dividerColor} gap="3">
+				<Flex className="listing-card-price" align="baseline" gap="2" mt="5"><Heading fontSize="2xl" color={textColor} letterSpacing="-.03em">{Intl.NumberFormat("en-US").format(Number(props.price) || 0)}</Heading>{props.itemType === "BUSINESS_SPACE" && props.priceFrequency && <Text fontSize="xs" color={mutedColor}>{lang.businessListing.frequencies[props.priceFrequency]}</Text>}<Text fontSize="sm" color={mutedColor} fontWeight="semibold">{card.currency}</Text></Flex>
+				<Flex className="listing-card-owner" align="center" justify="space-between" mt="5" pt="4" borderTop="1px solid" borderColor={dividerColor} gap="3">
 					<Flex align="center" minW="0"><Avatar size="sm" name={props.ownerName || card.sellerFallback} src={getMediaUrl(props.ownerPhoto, "profile")} /><Box ml="3" minW="0"><Text color={mutedColor} fontSize="xs">{card.listedBy}</Text><Text noOfLines={1} fontSize="sm" fontWeight="semibold" color={textColor}>{props.ownerName || card.sellerFallback}</Text></Box></Flex>
 					<Flex align="center" gap="2" color="mainred" flexShrink={0}><Text fontSize="sm" fontWeight="bold">{card.view}</Text><MdArrowForward /></Flex>
 				</Flex>

@@ -27,19 +27,23 @@ export interface IItem {
 	featured?: boolean;
 	priceFrequency?: string;
 	serviceCategory?: string;
+	listingIntent?: string;
 }
 
-export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, paymentStatus, paymentFee, paymentEnabled, listingPayment, priceFrequency, serviceCategory }) => {
-	const { locale } = useRouter();
+export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, paymentStatus, paymentFee, paymentEnabled, listingPayment, priceFrequency, serviceCategory, listingIntent }) => {
+	const router = useRouter();
+	const { locale } = router;
 	const lang = useLang();
 	const copy = lang.listingManagementPage;
 	const paymentLabels = lang.payments;
 	const { startCheckout, isLoading } = useListingCheckout(id, paymentLabels);
 	const { isOpen, onOpen, onClose } = useDisclosure();
+	const soldDisclosure = useDisclosure();
 	const toast = useToast();
 	const [paymentRecord, setPaymentRecord] = useState(listingPayment);
 	const [refundReason, setRefundReason] = useState("");
 	const [requestingRefund, setRequestingRefund] = useState(false);
+	const [updatingListingStatus, setUpdatingListingStatus] = useState(false);
 	useEffect(() => setPaymentRecord(listingPayment), [listingPayment]);
 	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
@@ -49,12 +53,13 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 	const divider = useColorModeValue("gray.100", "whiteAlpha.200");
 	const paymentSurface = useColorModeValue("orange.50", "whiteAlpha.100");
 	const inputBg = useColorModeValue("white", "#080808");
-	const statusColor = paymentStatus === "DUE" || paymentStatus === "NOT_REQUIRED" ? "orange" : paymentStatus === "PROCESSING" ? "blue" : status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange";
-	const statusLabel = paymentStatus === "DUE" || paymentStatus === "NOT_REQUIRED" ? copy.paymentDue : paymentStatus === "PROCESSING" ? copy.paymentProcessing : paymentStatus === "PAID" && status === "PENDING" ? copy.paidPending : status === "APPROVED" ? copy.approved : status === "DECLINED" ? copy.declined : status === "SOLD" ? copy.sold : copy.pending;
+	const statusColor = status === "CLOSED" ? "gray" : status === "SOLD" ? "purple" : paymentStatus === "DUE" || paymentStatus === "NOT_REQUIRED" ? "orange" : paymentStatus === "PROCESSING" ? "blue" : status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : "orange";
+	const statusLabel = status === "CLOSED" ? copy.closed : status === "SOLD" ? copy.sold : paymentStatus === "DUE" || paymentStatus === "NOT_REQUIRED" ? copy.paymentDue : paymentStatus === "PROCESSING" ? copy.paymentProcessing : paymentStatus === "PAID" && status === "PENDING" ? copy.paidPending : status === "APPROVED" ? copy.approved : status === "DECLINED" ? copy.declined : copy.pending;
+	const canMarkSold = itemType === "CAR" || (itemType === "HOUSE" || itemType === "BUSINESS_SPACE") && listingIntent === "FORSALE";
 	const itemTypeLabel = itemType === "SERVICE"
 		? lang.serviceListing.categories[serviceCategory] || copy.categoryServices
 		: itemType === "BUSINESS_SPACE" ? copy.categoryBusinessSpaces : itemType === "CAR" ? copy.categoryVehicles : copy.categoryHomes;
-	const needsPayment = typeof paymentFee === "number" && status !== "APPROVED" && status !== "SOLD" && paymentStatus !== "PAID";
+	const needsPayment = typeof paymentFee === "number" && status !== "APPROVED" && status !== "SOLD" && status !== "CLOSED" && paymentStatus !== "PAID";
 	const eligibleForRefundRequest = paymentRecord?.status === "PAID" && paymentRecord?.refundStatus === "NOT_REFUNDED" && paymentRecord?.txRef?.startsWith("HB-STRIPE-") && paymentRecord?.providerRef?.startsWith("cs_test_");
 	const canRequestRefund = eligibleForRefundRequest && !["PENDING", "APPROVED"].includes(paymentRecord?.refundRequestStatus);
 	const refundNotice = paymentRecord?.refundStatus === "REFUNDED"
@@ -68,6 +73,30 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 					: paymentRecord?.refundRequestStatus === "DECLINED"
 						? copy.refundRequestDeclined
 						: "";
+
+	const updateListingStatus = async () => {
+		setUpdatingListingStatus(true);
+		const action = status === "CLOSED" ? "reopen" : "close";
+		try {
+			await axios.post("/api/items/close", { itemId: id, action });
+			toast({ title: action === "close" ? copy.listingClosed : copy.listingReopened, description: action === "close" ? copy.listingClosedHelp : copy.listingReopenedHelp, status: "success", isClosable: true });
+			router.reload();
+		} catch (statusError: any) {
+			toast({ title: copy.listingStatusFailed, description: statusError?.response?.data?.err || copy.refundRequestTryAgain, status: "error", isClosable: true });
+		} finally { setUpdatingListingStatus(false); }
+	};
+
+	const markListingSold = async () => {
+		setUpdatingListingStatus(true);
+		try {
+			await axios.post("/api/items/close", { itemId: id, action: "sold" });
+			soldDisclosure.onClose();
+			toast({ title: copy.listingMarkedSold, description: copy.listingMarkedSoldHelp, status: "success", isClosable: true });
+			router.reload();
+		} catch (statusError: any) {
+			toast({ title: copy.listingStatusFailed, description: statusError?.response?.data?.err || copy.refundRequestTryAgain, status: "error", isClosable: true });
+		} finally { setUpdatingListingStatus(false); }
+	};
 
 	const submitRefundRequest = async () => {
 		if (!paymentRecord?.id || refundReason.trim().length < 10) return;
@@ -139,6 +168,25 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 					</Flex>
 				</Flex>
 			)}
+			{(status === "APPROVED" || status === "CLOSED") && <Flex align={{ base: "stretch", sm: "center" }} justify="space-between" gap="3" wrap="wrap" px={{ base: 4, md: 5 }} pb="4">
+				<Text fontSize="xs" color={muted}>{status === "CLOSED" ? copy.listingClosedHelp : canMarkSold ? copy.saleListingHelp : copy.closeListingHelp}</Text>
+				<Flex gap="2" wrap="wrap" justify="flex-end">
+					{status === "APPROVED" && canMarkSold && <Button size="sm" variant="outline" colorScheme="purple" onClick={soldDisclosure.onOpen} isLoading={updatingListingStatus} borderRadius="lg">{copy.markAsSold}</Button>}
+					<Button size="sm" variant={status === "CLOSED" ? "solid" : "outline"} colorScheme={status === "CLOSED" ? "green" : "gray"} onClick={updateListingStatus} isLoading={updatingListingStatus} borderRadius="lg">{status === "CLOSED" ? copy.reopenListing : copy.closeListing}</Button>
+				</Flex>
+			</Flex>}
+			<Modal isOpen={soldDisclosure.isOpen} onClose={() => { if (!updatingListingStatus) soldDisclosure.onClose(); }} isCentered size="md">
+				<ModalOverlay />
+				<ModalContent bg={surface} border="1px solid" borderColor={border} borderRadius="2xl">
+					<ModalHeader color={headingColor}>{copy.markSoldConfirmationTitle}</ModalHeader>
+					<ModalCloseButton isDisabled={updatingListingStatus} />
+					<ModalBody><Text color={muted}>{copy.markSoldConfirmationDescription}</Text></ModalBody>
+					<ModalFooter gap="3">
+						<Button variant="ghost" borderRadius="lg" onClick={soldDisclosure.onClose} isDisabled={updatingListingStatus}>{copy.cancel}</Button>
+						<Button colorScheme="purple" borderRadius="lg" onClick={markListingSold} isLoading={updatingListingStatus}>{copy.confirmMarkSold}</Button>
+					</ModalFooter>
+				</ModalContent>
+			</Modal>
 			<Modal isOpen={isOpen} onClose={() => { if (!requestingRefund) onClose(); }} isCentered size="lg">
 				<ModalOverlay />
 				<ModalContent bg={surface} border="1px solid" borderColor={border} borderRadius="2xl">

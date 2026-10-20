@@ -15,7 +15,7 @@ interface IRecentActivity {
 	action: string;
 	type: "CAR" | "HOUSE" | "BUSINESS_SPACE" | "SERVICE";
 	date: string;
-	status: "PENDING" | "APPROVED" | "DECLINED" | "SOLD";
+	status: "PENDING" | "APPROVED" | "DECLINED" | "SOLD" | "CLOSED";
 }
 
 export const RecentActivity: FC<IRecentActivity> = ({
@@ -31,8 +31,8 @@ export const RecentActivity: FC<IRecentActivity> = ({
 	const iconBg = useColorModeValue("orange.50", "rgba(233,183,92,.14)");
 	const iconColor = useColorModeValue("orange.700", "orange.200");
 	const icon = type === "CAR" ? <MdCarRental fontSize="1.6em" /> : type === "BUSINESS_SPACE" ? <MdStorefront fontSize="1.6em" /> : type === "SERVICE" ? <MdMiscellaneousServices fontSize="1.6em" /> : <MdHouse fontSize="1.6em" />;
-	const statusLabel = status === "APPROVED" ? labels.statusApproved : status === "DECLINED" ? labels.statusDeclined : status === "SOLD" ? labels.statusSold : labels.statusPending;
-	const statusColor = status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange";
+	const statusLabel = status === "APPROVED" ? labels.statusApproved : status === "DECLINED" ? labels.statusDeclined : status === "SOLD" ? labels.statusSold : status === "CLOSED" ? labels.statusClosed : labels.statusPending;
+	const statusColor = status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : status === "CLOSED" ? "gray" : "orange";
 	const actionLabel = action === "ADDED" ? labels.actionAdded : action === "SAVED" ? labels.actionSaved : action === "APPROVED" ? labels.actionApproved : action.replace(/_/g, " ").toLowerCase();
 
 	return (

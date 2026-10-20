@@ -111,7 +111,7 @@ function safeStringFilter(value: any) {
 function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 	const where: any = {};
 	if (isAdmin) {
-		where.status = ["PENDING", "APPROVED", "DECLINED", "SOLD"].includes(body.status)
+		where.status = ["PENDING", "APPROVED", "DECLINED", "SOLD", "CLOSED"].includes(body.status)
 			? body.status
 			: "PENDING";
 		if (typeof body.id === "string" && body.id) where.id = body.id;
@@ -204,7 +204,7 @@ function searchableText(term: string, fields: string[]) {
 async function listItems(req: SessionRequest, res: NextApiResponse) {
 	const adminView = Boolean(
 		req.user?.role === "ADMIN" &&
-		(typeof req.body?.id === "string" || ["PENDING", "APPROVED", "DECLINED", "SOLD"].includes(req.body?.status))
+		(typeof req.body?.id === "string" || ["PENDING", "APPROVED", "DECLINED", "SOLD", "CLOSED"].includes(req.body?.status))
 	);
 	const user = adminView ? req.user : await currentUser(req);
 	const isAdmin = adminView;
@@ -578,6 +578,103 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 	return error(res, 404, "Route not found");
 }
 
+async function serviceRequestRoutes(req: SessionRequest, res: NextApiResponse, slug: string[]) {
+	const user = await requireUser(req, res);
+	if (!user) return;
+	const body = req.body || {};
+
+	if (slug.length === 1 && req.method === "GET") {
+		const view = req.query.view === "sent" ? "sent" : "received";
+		const page = Math.max(0, Math.min(10000, Math.floor(Number(req.query.page) || 0)));
+		const where = view === "sent" ? { customerId: user.id } : { providerId: user.id };
+		const [requests, total] = await Promise.all([
+			prisma.serviceRequest.findMany({
+				where,
+				include: {
+					item: { select: { id: true, title: true, images: true, itemType: true, status: true, price: true, priceType: true } },
+					customer: { select: { id: true, firstName: true, lastName: true, email: true } },
+					provider: { select: { id: true, firstName: true, lastName: true } },
+				},
+				orderBy: { createdAt: "desc" },
+				skip: page * 20,
+				take: 20,
+			}),
+			prisma.serviceRequest.count({ where }),
+		]);
+		return res.status(200).json({ requests, total, page, pageSize: 20, view });
+	}
+
+	if (slug.length === 1 && req.method === "POST") {
+		const verifiedUser = await requireUser(req, res, true);
+		if (!verifiedUser) return;
+		const itemId = String(body.itemId || "");
+		const message = typeof body.message === "string" ? body.message.trim() : "";
+		const phone = typeof body.contactPhone === "string" ? body.contactPhone.trim() : "";
+		if (!isValidRecordId(itemId)) return error(res, 400, "Service listing is invalid");
+		if (message.length < 10 || message.length > 2000) return error(res, 400, "Please provide a message between 10 and 2,000 characters");
+		if (phone.length > 40) return error(res, 400, "Phone number is too long");
+		let preferredAt: Date | null = null;
+		if (body.preferredAt) {
+			if (typeof body.preferredAt !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(body.preferredAt)) return error(res, 400, "Preferred date is invalid");
+			const selectedDay = new Date(`${body.preferredAt}T00:00:00.000Z`);
+			if (!Number.isFinite(selectedDay.getTime()) || selectedDay.toISOString().slice(0, 10) !== body.preferredAt) return error(res, 400, "Preferred date is invalid");
+			preferredAt = new Date(`${body.preferredAt}T12:00:00.000Z`);
+			const today = new Date(); today.setUTCHours(0, 0, 0, 0);
+			const latest = new Date(today); latest.setUTCDate(latest.getUTCDate() + 180); latest.setUTCHours(23, 59, 59, 999);
+			if (preferredAt < today || preferredAt > latest) return error(res, 400, "Choose a date within the next 180 days");
+		}
+		const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true, userId: true, itemType: true, status: true } });
+		if (!item || item.itemType !== "SERVICE" || item.status !== "APPROVED") return error(res, 404, "Published service not found");
+		if (item.userId === verifiedUser.id) return error(res, 409, "You cannot request your own service");
+		const openRequest = await prisma.serviceRequest.findFirst({
+			where: { itemId: item.id, customerId: verifiedUser.id, status: { in: ["NEW", "ACCEPTED"] } },
+			select: { id: true },
+		});
+		if (openRequest) return error(res, 409, "You already have an open request for this service");
+		const request = await prisma.serviceRequest.create({
+			data: {
+				itemId: item.id,
+				customerId: verifiedUser.id,
+				providerId: item.userId,
+				message,
+				preferredAt,
+				contactPhone: phone || null,
+			},
+			select: { id: true, status: true, createdAt: true },
+		});
+		return res.status(201).json({ request });
+	}
+
+	if (slug[1] === "update" && req.method === "POST") {
+		const requestId = String(body.requestId || "");
+		const action = String(body.action || "");
+		if (!isValidRecordId(requestId)) return error(res, 400, "Service request is invalid");
+		const existing = await prisma.serviceRequest.findUnique({ where: { id: requestId }, select: { id: true, customerId: true, providerId: true, status: true } });
+		if (!existing) return error(res, 404, "Service request not found");
+		let where: any;
+		let status: "ACCEPTED" | "DECLINED" | "COMPLETED" | "CANCELLED";
+		if (action === "cancel") {
+			if (existing.customerId !== user.id) return error(res, 403, "Only the customer can cancel this request");
+			where = { id: existing.id, customerId: user.id, status: "NEW" };
+			status = "CANCELLED";
+		} else {
+			if (existing.providerId !== user.id) return error(res, 403, "Only this service provider can update the request");
+			if (action === "accept" || action === "decline") {
+				where = { id: existing.id, providerId: user.id, status: "NEW" };
+				status = action === "accept" ? "ACCEPTED" : "DECLINED";
+			} else if (action === "complete") {
+				where = { id: existing.id, providerId: user.id, status: "ACCEPTED" };
+				status = "COMPLETED";
+			} else return error(res, 400, "Action is invalid");
+		}
+		const changed = await prisma.serviceRequest.updateMany({ where, data: { status } });
+		if (!changed.count) return error(res, 409, "This request has already changed. Refresh and try again.");
+		return res.status(200).json({ ok: true, status });
+	}
+
+	return error(res, 404, "Route not found");
+}
+
 async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: string[]) {
 	const route = slug.slice(1).join("/");
 	const body = req.body || {};
@@ -635,6 +732,37 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		if (!isValidRecordId(itemId)) return res.status(200).json({ ok: true });
 		await prisma.savedItems.deleteMany({ where: { userId: user.id, itemId } });
 		return res.status(200).json({ ok: true });
+	}
+
+	if (route === "close" && req.method === "POST") {
+		const user = await requireUser(req, res, true);
+		if (!user) return;
+		const itemId = String(body.itemId || "");
+		const action = body.action;
+		if (!isValidRecordId(itemId) || !["close", "reopen", "sold"].includes(action)) return error(res, 400, "Listing ID or action is invalid");
+		const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true, userId: true, status: true, paymentStatus: true, itemType: true, House: { select: { type: true } }, BusinessSpace: { select: { type: true } } } });
+		if (!item || item.userId !== user.id) return error(res, 404, "Listing not found");
+		if (action === "sold") {
+			if (item.status !== "APPROVED") return error(res, 409, "Only published listings can be marked sold");
+			const isSaleListing = item.itemType === "CAR"
+				|| (item.itemType === "HOUSE" && item.House?.type === "FORSALE")
+				|| (item.itemType === "BUSINESS_SPACE" && item.BusinessSpace?.type === "FORSALE");
+			if (!isSaleListing) return error(res, 409, "Only listings offered for sale can be marked sold");
+			const changed = await prisma.item.updateMany({ where: { id: item.id, userId: user.id, status: "APPROVED" }, data: { status: "SOLD" } });
+			if (!changed.count) return error(res, 409, "This listing changed. Refresh and try again.");
+			return res.status(200).json({ ok: true, status: "SOLD" });
+		}
+		if (action === "close") {
+			if (item.status !== "APPROVED") return error(res, 409, "Only published listings can be closed");
+			const changed = await prisma.item.updateMany({ where: { id: item.id, userId: user.id, status: "APPROVED" }, data: { status: "CLOSED" } });
+			if (!changed.count) return error(res, 409, "This listing changed. Refresh and try again.");
+			return res.status(200).json({ ok: true, status: "CLOSED" });
+		}
+		if (item.status !== "CLOSED") return error(res, 409, "Only closed listings can be reopened");
+		if (item.paymentStatus !== "PAID") return error(res, 409, "A confirmed listing fee is required before reopening");
+		const changed = await prisma.item.updateMany({ where: { id: item.id, userId: user.id, status: "CLOSED", paymentStatus: "PAID" }, data: { status: "PENDING", approvedId: null } });
+		if (!changed.count) return error(res, 409, "This listing changed. Refresh and try again.");
+		return res.status(200).json({ ok: true, status: "PENDING" });
 	}
 
 	if (route === "edit" && req.method === "POST") {
@@ -1132,6 +1260,21 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 		return res.status(200).json({ ok: true });
 	}
 
+	if (route === "setFeatured" && req.method === "POST") {
+		const itemId = String(req.body?.itemId || "");
+		const featured = req.body?.featured;
+		if (!isValidRecordId(itemId) || typeof featured !== "boolean") return error(res, 400, "Listing ID or featured state is invalid");
+		const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true, status: true, featured: true } });
+		if (!item) return error(res, 404, "Listing not found");
+		if (featured && item.status !== "APPROVED") return error(res, 409, "Only published listings can be featured");
+		const changed = await prisma.item.updateMany({
+			where: { id: itemId, ...(featured ? { status: "APPROVED" } : {}) },
+			data: { featured },
+		});
+		if (!changed.count) return error(res, 409, "This listing changed. Refresh and try again.");
+		return res.status(200).json({ ok: true, featured });
+	}
+
 	return error(res, 404, "Route not found");
 }
 
@@ -1141,6 +1284,7 @@ export async function apiHandler(req: NextApiRequest, res: NextApiResponse) {
 	try {
 		if (slug[0] === "user") return await userRoutes(sessionReq, res, slug);
 		if (slug[0] === "items") return await itemRoutes(sessionReq, res, slug);
+		if (slug[0] === "serviceRequests") return await serviceRequestRoutes(sessionReq, res, slug);
 		if (slug[0] === "admin") return await adminRoutes(sessionReq, res, slug);
 		if (slug[0] === "recentActions" && req.method === "GET") {
 			const user = await requireUser(sessionReq, res);

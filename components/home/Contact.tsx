@@ -2,8 +2,8 @@ import { Box, Button, useToast, Flex, FormControl, FormLabel, Heading, Input, Te
 import { am } from "@locales/am";
 import { en } from "@locales/en";
 import { useRouter } from "next/router";
-import { FormEvent } from "react";
 import { MdArrowOutward, MdEmail, MdLocationOn } from "react-icons/md";
+import type { CSSProperties, FormEvent } from "react";
 
 const contactEmail = "naolchala6@gmail.com";
 
@@ -37,7 +37,7 @@ export const HomeContact = () => {
 				<Text color="whiteAlpha.700" maxW="450px" lineHeight="1.8">{lang.home.contact_description}</Text>
 			</Flex>
 			<Flex maxW="1440px" w="full" mx="auto" mt={{ base: 8, md: 12 }} direction={{ base: "column", lg: "row" }} gap={{ base: 6, lg: 8 }} align="stretch">
-				<Flex flex="1" minH={{ base: "300px", md: "440px" }} direction="column" bg="whiteAlpha.100" border="1px solid" borderColor="whiteAlpha.200" borderRadius="2xl" overflow="hidden">
+				<Flex data-home-stagger style={{ "--home-stagger-delay": "0ms" } as CSSProperties} flex="1" minH={{ base: "300px", md: "440px" }} direction="column" bg="whiteAlpha.100" border="1px solid" borderColor="whiteAlpha.200" borderRadius="2xl" overflow="hidden">
 					<Flex p={{ base: 5, md: 6 }} align="center" gap="3"><Box color="mainyellow"><MdLocationOn size={22} /></Box><Box><Heading fontSize="md">{lang.home.contact_area_title}</Heading><Text color="whiteAlpha.700" fontSize="sm" mt="1">{lang.home.contact_area_description}</Text></Box></Flex>
 					<Box flex="1" minH="250px">
 						<iframe
@@ -49,7 +49,7 @@ export const HomeContact = () => {
 						></iframe>
 					</Box>
 				</Flex>
-				<Box flex="1" bg={surface} color={textColor} border="1px solid" borderColor={fieldBorder} borderRadius="2xl" p={{ base: 6, md: 8 }}>
+				<Box data-home-stagger style={{ "--home-stagger-delay": "120ms" } as CSSProperties} flex="1" bg={surface} color={textColor} border="1px solid" borderColor={fieldBorder} borderRadius="2xl" p={{ base: 6, md: 8 }}>
 					<Flex align="center" gap="3"><Box color="mainred"><MdEmail size={22} /></Box><Heading fontSize="xl">{lang.home.msgus}</Heading></Flex>
 					<Text color={mutedColor} mt="3" mb="5" lineHeight="1.7">{lang.home.contact_form_description}</Text>
 					<form onSubmit={submitContact}>

@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { am } from "@locales/am";
 import { en } from "@locales/en";
 import { MdHandshake, MdLocationOn, MdOutlineVerifiedUser } from "react-icons/md";
+import type { CSSProperties } from "react";
 
 export const WhyChooseSection = () => {
 	const { locale } = useRouter();
@@ -28,17 +29,17 @@ export const WhyChooseSection = () => {
 					</Text>
 				</Flex>
 				<SimpleGrid templateColumns={{ base: "1fr", sm: "repeat(auto-fit, minmax(190px, 1fr))" }} spacing={{ base: 3, md: 5 }} mt={{ base: 7, md: 10 }}>
-					<WhyCard number="01" title={lang.home.benefit_local_title} icon={<MdLocationOn size={25} />} desc={lang.home.benefit_local_description} />
-					<WhyCard number="02" title={lang.home.benefit_clear_title} icon={<MdOutlineVerifiedUser size={25} />} desc={lang.home.benefit_clear_description} />
-					<WhyCard number="03" title={lang.home.benefit_direct_title} icon={<MdHandshake size={25} />} desc={lang.home.benefit_direct_description} />
+					<WhyCard motionDelay={0} number="01" title={lang.home.benefit_local_title} icon={<MdLocationOn size={25} />} desc={lang.home.benefit_local_description} />
+					<WhyCard motionDelay={90} number="02" title={lang.home.benefit_clear_title} icon={<MdOutlineVerifiedUser size={25} />} desc={lang.home.benefit_clear_description} />
+					<WhyCard motionDelay={180} number="03" title={lang.home.benefit_direct_title} icon={<MdHandshake size={25} />} desc={lang.home.benefit_direct_description} />
 				</SimpleGrid>
 			</Box>
 		</Box>
 	);
 };
 
-interface IWhyCard { number: string; title: string; icon: ReactNode; desc: string; }
-const WhyCard: FC<IWhyCard> = ({ number, title, icon, desc }) => {
+interface IWhyCard { number: string; title: string; icon: ReactNode; desc: string; motionDelay: number; }
+const WhyCard: FC<IWhyCard> = ({ number, title, icon, desc, motionDelay }) => {
 	const headingColor = useColorModeValue("#143A45", "#e7eff0");
 	const bodyColor = useColorModeValue("gray.600", "gray.300");
 	const iconSurface = useColorModeValue("#143A45", "rgba(233,183,92,.16)");
@@ -51,6 +52,8 @@ const WhyCard: FC<IWhyCard> = ({ number, title, icon, desc }) => {
 	return (
 		<Box
 			as="article"
+			data-home-stagger
+			style={{ "--home-stagger-delay": motionDelay + "ms" } as CSSProperties}
 			position="relative"
 			overflow="hidden"
 			minH={{ base: "auto", sm: "226px" }}

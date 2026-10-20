@@ -209,7 +209,7 @@ export const AddBusinessSpace = ({ user }: { user?: { id: string } }) => {
 					<ListingWizardProgress steps={steps} hints={hints} activeStep={step} stepLabel={text.wizard.step} ofLabel={text.wizard.of} />
 
 					{step === 0 && <Flex direction="column" gap="5">
-						<InputField formik={formik} label={text.title} name="title" placeholder={text.titleHint} required />
+						<InputField formik={formik} label={text.title} name="title" placeholder={text.titleHint} helperText={text.titleHelp} required />
 						<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
 							<SelectField formik={formik} name="spaceType" label={text.spaceType} options={SPACE_TYPES.map((value) => [value, text.spaceTypes[value]])} required />
 							<SelectField formik={formik} name="type" label={text.rentOrSale} options={[["RENT", text.rent], ["FORSALE", text.sale]]} required onChange={(value) => {

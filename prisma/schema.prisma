@@ -28,6 +28,8 @@ model User {
   RecentActions RecentActions[]
   Verification  Verification[]
   PasswordReset PasswordReset[]
+  ServiceRequestsAsCustomer ServiceRequest[] @relation("ServiceRequestCustomer")
+  ServiceRequestsAsProvider ServiceRequest[] @relation("ServiceRequestProvider")
 }
 
 model ContactInfo {
@@ -78,6 +80,7 @@ model Item {
   SavedItems      SavedItems[]
   RecentActions   RecentActions[]
   ListingPayments ListingPayment[]
+  ServiceRequests ServiceRequest[]
 
   @@index([status, createdAt])
   @@index([itemType, status])
@@ -197,6 +200,34 @@ model Service {
   @@index([category, region, city])
 }
 
+enum ServiceRequestStatus {
+  NEW
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  CANCELLED
+}
+
+model ServiceRequest {
+  id          String               @id @default(cuid())
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  itemId      String
+  item        Item                 @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    User                 @relation("ServiceRequestCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  providerId  String
+  provider    User                 @relation("ServiceRequestProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  preferredAt DateTime?
+  message     String
+  contactPhone String?
+  status      ServiceRequestStatus @default(NEW)
+
+  @@index([providerId, status, createdAt])
+  @@index([customerId, createdAt])
+  @@index([itemId, createdAt])
+}
+
 model SavedItems {
   id      String   @id @default(cuid())
   savedAt DateTime @default(now())
@@ -246,6 +277,7 @@ enum ItemStatus {
   APPROVED
   DECLINED
   SOLD
+  CLOSED
 }
 
 enum ListingPaymentStatus {

@@ -182,7 +182,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 					<ListingWizardProgress steps={steps} hints={hints} activeStep={step} stepLabel={common.wizard.step} ofLabel={common.wizard.of} />
 
 					{step === 0 && <Flex direction="column" gap="5">
-						<InputField formik={formik} label={common.title} name="title" placeholder={common.titleHint} required />
+						<InputField formik={formik} label={common.title} name="title" placeholder={text.titleHint} helperText={text.titleHelp} required />
 						<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
 							<SelectField formik={formik} name="category" label={text.category} options={CATEGORIES.map((value) => [value, text.categories[value]])} required />
 							<SelectField formik={formik} name="priceType" label={common.priceType} options={[["FIXED", common.fixed], ["NEGOTIABLE", common.negotiable]]} required />

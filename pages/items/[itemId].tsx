@@ -12,14 +12,24 @@ import {
 	Heading,
 	HStack,
 	IconButton,
+	Input,
+	FormControl,
+	FormLabel,
+	Modal,
+	ModalBody,
+	ModalCloseButton,
+	ModalContent,
+	ModalFooter,
+	ModalHeader,
+	ModalOverlay,
+	Textarea,
 	SimpleGrid,
 	Skeleton,
 	SkeletonText,
 	Spinner,
 	Text,
 	useToast,
-	Wrap,
-	WrapItem,
+	useDisclosure,
 	useColorModeValue,
 } from "@chakra-ui/react";
 import { ContactInfo } from "@components/ContactInfo";
@@ -33,18 +43,18 @@ import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useLang } from "@libs/hooks/useLang";
-import { useEffect, useState } from "react";
+import { PointerEvent as ReactPointerEvent, useEffect, useState } from "react";
+import { useReducedMotion } from "framer-motion";
 import { FaExclamationCircle, FaHeart, FaRegHeart } from "react-icons/fa";
-import { MdArrowBack, MdFullscreen } from "react-icons/md";
+import { MdArrowBack, MdChevronLeft, MdChevronRight, MdLocationOn, MdOpenInFull, MdShare } from "react-icons/md";
 import { generateNextSeo } from "next-seo/pages";
 import Head from "next/head";
 import { formatPrice } from "@libs/helpers/util.client";
 import { ListingImage } from "@components/shared/ListingImage";
 import { getMediaUrl } from "@libs/helpers/media";
-import { ColorModeToggle } from "@components/shared/ColorModeToggle";
-import { BrandLogo } from "@components/shared/BrandLogo";
+import { SiteNavbar } from "@components/shared/SiteNavbar";
 
-const SaveButton = ({ user }) => {
+const SaveButton = () => {
 	const toast = useToast();
 	const lang = useLang();
 	const { itemId } = useRouter().query;
@@ -70,14 +80,14 @@ const SaveButton = ({ user }) => {
 			.then((res) => {
 				setData({ saved: true });
 				toast({
-					title: "Item Saved",
+					title: lang.itemDetailPage.savedToast,
 					status: "success",
 				});
 			})
 			.catch((err) => {
 				toast({
-					title: "Error Saving item",
-					description: err?.response?.data?.err || "Please try again.",
+					title: lang.itemDetailPage.savedErrorTitle,
+					description: err?.response?.data?.err || lang.itemDetailPage.saveTryAgain,
 					status: "error",
 				});
 			});
@@ -93,14 +103,14 @@ const SaveButton = ({ user }) => {
 			.then((res) => {
 				setData({ saved: false });
 				toast({
-					title: "Item Unsaved",
+					title: lang.itemDetailPage.unsavedToast,
 					status: "success",
 				});
 			})
 			.catch((err) => {
 				toast({
-					title: "Error deleting saved item",
-					description: err?.response?.data?.err || "Please try again.",
+					title: lang.itemDetailPage.unsavedErrorTitle,
+					description: err?.response?.data?.err || lang.itemDetailPage.saveTryAgain,
 					status: "error",
 				});
 			});
@@ -119,6 +129,7 @@ const SaveButton = ({ user }) => {
 			onClick={toggleSaved}
 			disabled={loading}
 			aria-label={data?.saved ? lang.common.removeSavedListing : lang.common.saveListing}
+			aria-pressed={Boolean(data?.saved)}
 			minW={{ base: "10", sm: "auto" }}
 			px={{ base: 0, sm: 4 }}
 			colorScheme="whiteAlpha"
@@ -141,13 +152,14 @@ const ListingPaymentPanel = ({ item, fee, enabled, labels }) => {
 	const { startCheckout, isLoading: checkoutLoading } = useListingCheckout(item.id, labels);
 	const border = useColorModeValue("orange.200", "orange.900");
 	const surface = useColorModeValue("orange.50", "whiteAlpha.100");
+	const mutedText = useColorModeValue("gray.600", "gray.300");
 	const methodsLabel = labels.methods;
 
 	return (
 		<Flex direction="column" gap="3" p={{ base: 4, md: 5 }} mb="5" border="1px solid" borderColor={border} borderRadius="2xl" bg={surface}>
 			<Box>
 				<Heading size="sm">{labels.title}</Heading>
-				<Text mt="2" fontSize="sm" color="gray.600">{labels.description}</Text>
+				<Text mt="2" fontSize="sm" color={mutedText}>{labels.description}</Text>
 			</Box>
 			<Flex align="center" justify="space-between" gap="4" wrap="wrap">
 				<Text fontSize="sm" fontWeight="semibold">{labels.oneTime}</Text>
@@ -156,9 +168,84 @@ const ListingPaymentPanel = ({ item, fee, enabled, labels }) => {
 			<Button colorScheme="orange" onClick={startCheckout} isLoading={checkoutLoading} isDisabled={checkoutLoading || !enabled}>
 				{item.paymentStatus === "PROCESSING" ? labels.continueCheckout : labels.payButton}
 			</Button>
-			{enabled && <Text fontSize="xs" color="gray.600">{methodsLabel}</Text>}
-			{!enabled && <Text fontSize="xs" color="gray.600">{labels.notConfigured}</Text>}
+			{enabled && <Text fontSize="xs" color={mutedText}>{methodsLabel}</Text>}
+			{!enabled && <Text fontSize="xs" color={mutedText}>{labels.notConfigured}</Text>}
 		</Flex>
+	);
+};
+
+const InteractivePhotoGallery = ({ data, images, preview, categoryLabel, detailText, imageFallback, subtleBorder, onPreview, onSelectImage, onOpenGallery }) => {
+	const prefersReducedMotion = useReducedMotion();
+	const updatePose = (event: ReactPointerEvent<HTMLDivElement>) => {
+		if (prefersReducedMotion || event.pointerType !== "mouse") return;
+		const stage = event.currentTarget;
+		const bounds = stage.getBoundingClientRect();
+		if (!bounds.width || !bounds.height) return;
+		const pointerX = Math.min(1, Math.max(0, (event.clientX - bounds.left) / bounds.width));
+		const pointerY = Math.min(1, Math.max(0, (event.clientY - bounds.top) / bounds.height));
+		stage.style.setProperty("--gallery-rotate-x", `${((0.5 - pointerY) * 7).toFixed(2)}deg`);
+		stage.style.setProperty("--gallery-rotate-y", `${((pointerX - 0.5) * 7).toFixed(2)}deg`);
+		stage.style.setProperty("--gallery-light-x", `${Math.round(pointerX * 100)}%`);
+		stage.style.setProperty("--gallery-light-y", `${Math.round(pointerY * 100)}%`);
+	};
+	const resetPose = (event: ReactPointerEvent<HTMLDivElement>) => {
+		event.currentTarget.style.setProperty("--gallery-rotate-x", "0deg");
+		event.currentTarget.style.setProperty("--gallery-rotate-y", "0deg");
+		event.currentTarget.style.setProperty("--gallery-light-x", "50%");
+		event.currentTarget.style.setProperty("--gallery-light-y", "50%");
+	};
+	const gallerySurface = useColorModeValue("white", "#111111");
+	const photoCount = detailText.photoCount.replace("{current}", String(Math.max(0, images.indexOf(preview)) + 1)).replace("{total}", String(images.length));
+
+	return (
+		<>
+		<Box minW="0" bg={gallerySurface} border="1px solid" borderColor={subtleBorder} borderRadius={{ base: "2xl", md: "3xl" }} overflow="hidden" boxShadow="0 18px 48px rgba(18,32,36,.10)">
+			<Box position="relative" h={{ base: "min(74vw, 390px)", sm: "430px", xl: "560px" }} minH={{ base: "260px", md: "380px" }} bg={imageFallback} overflow="hidden" onPointerMove={updatePose} onPointerLeave={resetPose} style={{ perspective: "1400px", perspectiveOrigin: "var(--gallery-light-x, 50%) var(--gallery-light-y, 50%)", transformStyle: "preserve-3d" }}>
+				<Box className={prefersReducedMotion ? undefined : "listing-photo-depth"} position="absolute" top="-5%" right="-5%" bottom="-5%" left="-5%" pointerEvents="none" style={{ transform: prefersReducedMotion ? "translateZ(10px)" : undefined, transformStyle: "preserve-3d" }}>
+					<Box position="absolute" inset="0" pointerEvents="none" style={{ transform: prefersReducedMotion ? "none" : `rotateX(var(--gallery-rotate-x, 0deg)) rotateY(var(--gallery-rotate-y, 0deg)) scale(1.08)`, transformStyle: "preserve-3d", willChange: prefersReducedMotion ? "auto" : "transform" }}>
+						<ListingImage alt={data.title} src={preview} itemType={data.itemType} w="full" h="full" loading="eager" />
+					</Box>
+				</Box>
+				<Box className={prefersReducedMotion ? undefined : "listing-photo-sheen"} position="absolute" top="-20%" bottom="-20%" left="-40%" w="35%" pointerEvents="none" />
+				<Box position="absolute" inset="0" pointerEvents="none" bg={`radial-gradient(ellipse at var(--gallery-light-x, 50%) var(--gallery-light-y, 50%), rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 42%)`} style={{ mixBlendMode: "screen", transform: "translateZ(18px)" }} />
+				<Flex position="absolute" inset="0" align="flex-start" justify="space-between" p={{ base: 3, md: 5 }} pointerEvents="none" style={{ transform: "translateZ(30px)", transformStyle: "preserve-3d" }}>
+					<Flex gap="2" wrap="wrap">
+						<Badge bg="blackAlpha.700" color="white" backdropFilter="blur(12px)" borderRadius="full" px="3" py="1.5">{categoryLabel}</Badge>
+						{data.featured && <Badge bg="mainyellow" color="maingray" borderRadius="full" px="3" py="1.5">{detailText.featured}</Badge>}
+					</Flex>
+					<IconButton isDisabled={!images.length} pointerEvents="auto" aria-label={detailText.openGallery} title={detailText.openGallery} icon={<MdOpenInFull />} size="sm" color="white" bg="blackAlpha.700" borderRadius="full" _hover={{ bg: "blackAlpha.850" }} onClick={onOpenGallery} />
+					{images.length > 1 && <>
+						<IconButton pointerEvents="auto" aria-label={detailText.previousPhoto} icon={<MdChevronLeft />} position="absolute" left={{ base: 3, md: 5 }} top="50%" transform="translateY(-50%)" color="white" bg="blackAlpha.600" borderRadius="full" _hover={{ bg: "blackAlpha.800" }} onClick={() => onPreview(-1)} />
+						<IconButton pointerEvents="auto" aria-label={detailText.nextPhoto} icon={<MdChevronRight />} position="absolute" right={{ base: 3, md: 5 }} top="50%" transform="translateY(-50%)" color="white" bg="blackAlpha.600" borderRadius="full" _hover={{ bg: "blackAlpha.800" }} onClick={() => onPreview(1)} />
+					</>}
+					{images.length > 0 && <Badge position="absolute" bottom={{ base: 3, md: 5 }} right={{ base: 3, md: 5 }} bg="blackAlpha.700" color="white" backdropFilter="blur(12px)" borderRadius="full" px="3" py="1.5">{photoCount}</Badge>}
+				</Flex>
+			</Box>
+			{images.length > 1 && <SimpleGrid columns={{ base: 4, sm: 5, md: 6 }} gap={{ base: 2, md: 3 }} p={{ base: 3, md: 4 }}>
+				{images.map((image, index) => (
+					<Box key={image + "-" + index}>
+						<Box as="button" type="button" w="full" aria-label={detailText.viewPhoto.replace("{number}", String(index + 1))} aria-pressed={preview === image} onClick={() => onSelectImage(image)} position="relative" h={{ base: "64px", sm: "76px" }} border="2px solid" borderColor={preview === image ? "mainorange" : subtleBorder} borderRadius="xl" overflow="hidden" bg={imageFallback} boxShadow={preview === image ? "0 0 0 2px rgba(201,111,61,.18)" : "none"} _hover={{ filter: "brightness(1.06)" }} _focusVisible={{ outline: "3px solid", outlineColor: "orange.300", outlineOffset: "2px" }}>
+							<ListingImage alt={detailText.viewPhoto.replace("{number}", String(index + 1))} src={image} itemType={data.itemType} w="full" h="full" />
+						</Box>
+					</Box>
+				))}
+			</SimpleGrid>}
+		</Box>
+		<style jsx>{`
+			@keyframes listing-photo-depth-float {
+				0%, 100% { transform: translate3d(0, 0, 12px) rotateX(-2.4deg) rotateY(-2deg) scale(1.025); }
+				50% { transform: translate3d(0, -8px, 18px) rotateX(2.4deg) rotateY(2deg) scale(1.045); }
+			}
+			@keyframes listing-photo-light-sweep {
+				0%, 68% { transform: translateX(-140%) skewX(-16deg); opacity: 0; }
+				74% { opacity: 0.55; }
+				90%, 100% { transform: translateX(460%) skewX(-16deg); opacity: 0; }
+			}
+			.listing-photo-depth { animation: listing-photo-depth-float 8s ease-in-out infinite; }
+			.listing-photo-sheen { background: linear-gradient(90deg, transparent, rgba(255,255,255,.24), rgba(255,255,255,.06), transparent); animation: listing-photo-light-sweep 9s ease-in-out infinite; mix-blend-mode: screen; }
+			@media (prefers-reduced-motion: reduce) { .listing-photo-depth, .listing-photo-sheen { animation: none !important; } }
+		`}</style>
+		</>
 	);
 };
 
@@ -167,27 +254,122 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 	const lang = useLang();
 	const businessText = lang.businessListing;
 	const serviceText = lang.serviceListing;
+	const listingText = lang.listingManagementPage;
+	const detailText = lang.itemDetailPage;
 	const vehicleText = lang.vehicleListing;
 	const surface = useColorModeValue("white", "#111111");
 	const subtleBorder = useColorModeValue("gray.200", "whiteAlpha.200");
 	const mutedText = useColorModeValue("gray.600", "gray.300");
 	const headingText = useColorModeValue("maingray", "gray.100");
 	const canvas = useColorModeValue("#f5f5f1", "#000000");
-	const navBackground = useColorModeValue("maingray", "#000000");
 	const imageFallback = useColorModeValue("gray.100", "#101010");
 	const priceSurface = useColorModeValue("orange.50", "whiteAlpha.100");
 	const priceBorder = useColorModeValue("orange.100", "whiteAlpha.200");
 	const [preview, setPreview] = useState(item?.images?.[0]);
+	const [requestMessage, setRequestMessage] = useState("");
+	const [requestDate, setRequestDate] = useState("");
+	const [minimumRequestDate, setMinimumRequestDate] = useState("");
+	const [requestPhone, setRequestPhone] = useState("");
+	const [requesting, setRequesting] = useState(false);
+	const requestModal = useDisclosure();
+	const galleryModal = useDisclosure();
+	const toast = useToast();
+	const requestText = lang.serviceListing;
+	useEffect(() => {
+		const localDate = new Date();
+		localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset());
+		setMinimumRequestDate(localDate.toISOString().slice(0, 10));
+	}, []);
 	const data = item;
 	const images = Array.isArray(data?.images) ? data.images : [];
-	const activeImageNumber = Math.max(0, images.indexOf(preview)) + 1;
 	const detailRelation = data.itemType === "HOUSE" ? "House" : data.itemType === "CAR" ? "Car" : data.itemType === "BUSINESS_SPACE" ? "BusinessSpace" : "Service";
 	const relationData = data[detailRelation];
 	const listingDetails = Array.isArray(relationData) ? relationData[0] : relationData;
-	const priceTypeLabel = data.priceType === "NEGOTIABLE" ? "Negotiable" : "Fixed price";
+	const priceTypeLabel = data.priceType === "NEGOTIABLE" ? detailText.negotiable : detailText.fixedPrice;
 	const priceFrequency = ["BUSINESS_SPACE", "HOUSE"].includes(data.itemType) && listingDetails?.type === "RENT" && listingDetails?.priceFrequency
 		? businessText.frequencies[listingDetails.priceFrequency]
 		: null;
+	const currentImageIndex = Math.max(0, images.indexOf(preview));
+	const locationLabel = [listingDetails?.neighborhood, listingDetails?.subcity, listingDetails?.city, listingDetails?.region]
+		.filter((value) => typeof value === "string" && value.trim())
+		.filter((value, index, values) => values.indexOf(value) === index)
+		.join(", ");
+	const detailItems = Object.entries(listingDetails || {})
+		.filter(([key, value]) => !["id", "itemId", "item", "video", "createdAt", "updatedAt"].includes(key)
+			&& value !== null
+			&& value !== undefined
+			&& value !== ""
+			&& !(Array.isArray(value) && value.length === 0))
+		.map(([key, value]) => {
+			const labelSource = data.itemType === "CAR"
+				? vehicleText.detailLabels
+				: data.itemType === "SERVICE"
+					? serviceText.detailLabels
+					: businessText.detailLabels;
+			const label = labelSource?.[key] || key.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase());
+			let displayValue = Array.isArray(value) ? value.join(" · ") : String(value ?? "");
+			if (key === "category" && data.itemType === "SERVICE") displayValue = serviceText.categories[value as string] || displayValue;
+			else if (key === "spaceType") displayValue = businessText.spaceTypes[value as string] || displayValue;
+			else if (key === "type" && ["BUSINESS_SPACE", "HOUSE"].includes(data.itemType)) displayValue = value === "RENT" ? businessText.rent : businessText.sale;
+			else if (key === "priceFrequency") displayValue = businessText.frequencies[value as string] || displayValue;
+			else if (key === "propertyType") displayValue = businessText.propertyTypes[value as string] || displayValue;
+			else if (key === "furnishing") displayValue = businessText.furnishingTypes[value as string] || displayValue;
+			else if (key === "status" && data.itemType === "CAR") displayValue = value === "USED" ? vehicleText.used : value === "NEW" ? vehicleText.new : vehicleText.newInEthiopia;
+			else if (key === "bodyType" && data.itemType === "CAR") displayValue = vehicleText.bodyTypes[value as string] || displayValue;
+			else if (key === "fuelType" && data.itemType === "CAR") displayValue = vehicleText.fuelTypes[value as string] || displayValue;
+			else if (key === "driveType" && data.itemType === "CAR") displayValue = vehicleText.driveTypes[value as string] || displayValue;
+			else if (key === "transmition" && data.itemType === "CAR") displayValue = value === "AUTO" ? vehicleText.automatic : vehicleText.manual;
+			else if (key === "features" && data.itemType === "HOUSE") displayValue = (value as string[]).map((feature) => businessText.homeFeatures[feature] || feature).join(" · ");
+			else if (key === "features" && data.itemType === "CAR") displayValue = (value as string[]).map((feature) => vehicleText.vehicleFeatures[feature] || feature).join(" · ");
+			else if (key === "mileage" && data.itemType === "CAR") displayValue = String(Number(value).toLocaleString()) + " " + vehicleText.mileageUnit;
+			else if (key === "fuel" && data.itemType === "CAR") displayValue = String(value) + " " + vehicleText.fuelUnit;
+			else if (key === "cylinder" && data.itemType === "CAR") displayValue = String(value) + " L";
+			else if (typeof value === "boolean") displayValue = value ? businessText.yes : businessText.no;
+			else if (key === "area" && ["BUSINESS_SPACE", "HOUSE"].includes(data.itemType)) displayValue = String(value) + " m²";
+			return { key, label, value: displayValue };
+		});
+	const preferredFacts: Record<string, string[]> = {
+		HOUSE: ["bedrooms", "bathrooms", "area", "propertyType"],
+		CAR: ["manufacturer", "model", "year", "mileage"],
+		BUSINESS_SPACE: ["spaceType", "area", "type", "priceFrequency"],
+		SERVICE: ["category", "availability", "serviceArea", "duration"],
+	};
+	const preferredFactItems = (preferredFacts[data.itemType] || [])
+		.map((key) => detailItems.find((detail) => detail.key === key))
+		.filter(Boolean);
+	const highlightItems = (preferredFactItems.length ? preferredFactItems : detailItems).slice(0, 3);
+	const statusLabels: Record<string, string> = {
+		APPROVED: listingText.approved,
+		PENDING: listingText.pending,
+		DECLINED: listingText.declined,
+		SOLD: listingText.sold,
+		CLOSED: listingText.closed,
+	};
+	const categoryLabel = data.itemType === "SERVICE"
+		? lang.explore.card.service
+		: data.itemType === "HOUSE"
+			? lang.explore.card.home
+			: data.itemType === "CAR"
+				? lang.explore.card.vehicle
+				: lang.explore.card.businessSpace;
+	const updatePreview = (offset: number) => {
+		if (!images.length) return;
+		const nextIndex = (currentImageIndex + offset + images.length) % images.length;
+		setPreview(images[nextIndex]);
+	};
+	const shareListing = async () => {
+		const shareData = { title: data.title, text: data.description || data.title, url: window.location.href };
+		try {
+			if (navigator.share) {
+				await navigator.share(shareData);
+				return;
+			}
+			await navigator.clipboard.writeText(shareData.url);
+			toast({ title: detailText.linkCopied, status: "success", duration: 3000, isClosable: true });
+		} catch (error: any) {
+			if (error?.name !== "AbortError") toast({ title: detailText.shareFailed, status: "error", duration: 3500, isClosable: true });
+		}
+	};
 
 	// check if saved
 	return (
@@ -195,10 +377,10 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 			<Head>
 				{generateNextSeo({
 					title: `${data.title} - Habesha Brokers`,
-					description: data.description || "No Description - Habesha Brokers",
+					description: data.description || detailText.descriptionEmpty,
 					openGraph: {
 						title: data.title,
-						description: data.description || "No Description - Habesha Brokers",
+						description: data.description || detailText.descriptionEmpty,
 						images: (data.images || []).map((value: string) => ({
 							url: getMediaUrl(value, "items"),
 							alt: data.title,
@@ -206,237 +388,184 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled }) => {
 					},
 				})}
 			</Head>
-			<Flex direction="column" overflow="auto" minH="100dvh" bg={canvas}>
-				<Flex
-					px={{ base: 3, md: 8, xl: 12 }}
-					minH={MyTheme.size.navbarHeightCompact}
-					background={navBackground}
-					color="white"
-					alignItems={"center"}
-					boxShadow="0 8px 24px rgba(8,24,30,.12)"
-				>
-					<IconButton
-						colorScheme="whiteAlpha"
-						aria-label="Go back"
-						mr={{ base: 2, md: 4 }}
-						onClick={() => router.back()}
-					>
-						<MdArrowBack size="20px" />
-					</IconButton>
-					<BrandLogo compact />
-					<Box flex={1}></Box>
-					<HStack spacing={{ base: 1, md: 4 }} flexShrink={0}>
-						<ColorModeToggle />
-						{data && (
-							<HStack spacing={{ base: 1, md: 3 }} pl={{ base: 2, md: 4 }} borderLeft="1px solid" borderColor="whiteAlpha.300">
-								{user && data.userId === user.id && (
-									<Link legacyBehavior href={"/items/edit/" + itemId} passHref>
-										<Button as="a" display={{ base: "none", sm: "inline-flex" }} size="md" colorScheme="whiteAlpha" leftIcon={<EditIcon />}>Edit Item</Button>
-									</Link>
-								)}
-								{user && data.userId === user.id && <Link legacyBehavior href={"/items/edit/" + itemId} passHref><IconButton as="a" display={{ base: "inline-flex", sm: "none" }} aria-label="Edit item" title="Edit item" size="sm" colorScheme="whiteAlpha" icon={<EditIcon />} /></Link>}
-								{user && data.status === "APPROVED" && <SaveButton user={user} />}
-							</HStack>
-						)}
-					</HStack>
-				</Flex>
-				{data && (
-					<SimpleGrid
-						w="full"
-						maxW="1500px"
-						mx="auto"
-							templateColumns={{ base: "minmax(0, 1fr)", lg: "minmax(0, 1.08fr) minmax(390px, .92fr)" }}
-						px={{ base: 4, md: 8, xl: 12 }}
-						py={{ base: 6, md: 10 }}
-						spacing={{ base: 6, xl: 8 }}
-						alignItems="start"
-					>
-							<Flex minW="0" direction="column" gap="4">
-							<Flex minW="0" direction="column" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" overflow="hidden" boxShadow="0 12px 32px rgba(21,42,44,.08)">
-								<Box position="relative" w="full" h={{ base: "300px", md: "440px", xl: "520px" }} bg={imageFallback}>
-									<ListingImage alt={item.title} src={preview} itemType={item.itemType} w="full" h="full" />
-									{images.length > 0 && (
-										<Badge position="absolute" right="4" bottom="4" zIndex="1" color="white" bg="blackAlpha.700" borderRadius="full" px="3" py="1">
-											{activeImageNumber} / {images.length} photos
-										</Badge>
-									)}
-								</Box>
-							{images.length > 1 && (
-								<SimpleGrid columns={{ base: 3, sm: 4 }} spacing="3" p={{ base: 3, md: 4 }}>
-									{images.map((img, index) => (
-										<Box as="button" type="button" aria-label={"View photo " + (index + 1) + " for " + data.title} aria-pressed={preview === img} key={index + "-" + img} onClick={() => setPreview(img)} position="relative" border="2px solid" borderColor={preview === img ? "mainorange" : "transparent"} borderRadius="xl" overflow="hidden" transition="border-color .16s ease, transform .16s ease" _hover={{ transform: "translateY(-2px)" }} _focusVisible={{ outline: "3px solid", outlineColor: "orange.300" }}>
-											<Box
-												_hover={{
-													background: "#0008",
-												}}
-												position={"absolute"}
-												top="0"
-												left={"0"}
-												display={"block"}
-												width="100%"
-												height={"100%"}
-												background={preview === img ? "blackAlpha.300" : "transparent"}
-												borderRadius={"lg"}
-												transition="all .3s ease"
-											>
-												<Flex
-													width={"100%"}
-													height={"100%"}
-													alignItems={"center"}
-													justifyContent="center"
-												>
-													<MdFullscreen color="white" size="24px" />
-												</Flex>
-											</Box>
-											<ListingImage alt={data.title} src={img} itemType={data.itemType} w="full" h="100px" />
-										</Box>
-									))}
-								</SimpleGrid>
-							)}
-						</Flex>
-							{data.itemType === "HOUSE" && listingDetails?.video && <Box minW="0" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" p={{ base: 4, md: 5 }} boxShadow="0 12px 32px rgba(21,42,44,.08)">
-								<Heading color={headingText} size="sm" mb="3">{businessText.video}</Heading>
-								<video aria-label={businessText.videoPreview} controls preload="metadata" src={getMediaUrl(listingDetails.video, "items")} style={{ width: "100%", maxHeight: 440, borderRadius: 12, background: "#000000" }} />
-							</Box>}
+			<Flex direction="column" minH="100dvh" bg={canvas}>
+				<SiteNavbar mode="public" user={user} />
+				<Box as="main" flex="1">
+					<Flex direction="column" w="full" maxW="1480px" mx="auto" px={{ base: 4, md: 8, xl: 12 }} pt={{ base: 5, md: 8 }} pb={{ base: 10, md: 16 }}>
+						<Flex align="center" justify="space-between" gap="4" mb={{ base: 5, md: 7 }} wrap="wrap">
+							<Flex as="nav" aria-label="Breadcrumb" align="center" minW="0" gap={{ base: 2, md: 3 }} color={mutedText} fontSize="sm">
+								<Link legacyBehavior href="/" passHref><Button as="a" variant="link" color={mutedText} fontWeight="medium">{lang.nav.home}</Button></Link>
+								<Text aria-hidden="true">/</Text>
+								<Link legacyBehavior href="/explore" passHref><Button as="a" variant="link" color={mutedText} fontWeight="medium">{lang.nav.explore}</Button></Link>
+								<Text aria-hidden="true">/</Text>
+								<Text noOfLines={1} maxW={{ base: "32vw", sm: "50vw", lg: "400px" }} color={headingText} fontWeight="semibold">{data.title}</Text>
 							</Flex>
-							<Flex minW="0" direction="column" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" p={{ base: 5, md: 7 }} boxShadow="0 12px 32px rgba(21,42,44,.08)">
-								<Wrap mb="3">
-								<WrapItem>
-									<Badge
-										variant={"subtle"}
-										colorScheme={"green"}
-									>
-										{data.itemType === "SERVICE" ? lang.explore.card.service : data.itemType === "HOUSE" ? lang.explore.card.home : data.itemType === "CAR" ? lang.explore.card.vehicle : lang.explore.card.businessSpace}
-									</Badge>
-								</WrapItem>
-								<WrapItem>
-									{data.featured && (
-										<Badge
-											variant={"subtle"}
-											colorScheme={"blue"}
-										>
-											Featured
-										</Badge>
-									)}
-								</WrapItem>
-								<WrapItem>
-									{data.status && (
-										<Badge
-											variant={"subtle"}
-											colorScheme={data.status === "APPROVED" ? "green" : data.status === "DECLINED" ? "red" : data.status === "SOLD" ? "purple" : "orange"}
-										>
-											{data.status}
-										</Badge>
-									)}
-								</WrapItem>
-							</Wrap>
-							<Heading as="h1" mt="1" color={headingText} fontSize={{ base: "2xl", md: "3xl" }} lineHeight="1.2" letterSpacing="tight">
-								{data.title}
-							</Heading>
-							<Flex mt="5" p={{ base: 4, md: 5 }} align={{ base: "flex-start", sm: "center" }} justify="space-between" gap="4" direction={{ base: "column", sm: "row" }} bg={priceSurface} border="1px solid" borderColor={priceBorder} borderRadius="2xl">
+							<HStack spacing="2">
+								<Button display={{ base: "none", sm: "inline-flex" }} size="sm" variant="ghost" color={mutedText} leftIcon={<MdArrowBack />} onClick={() => router.back()}>{detailText.back}</Button>
+								<IconButton size="sm" aria-label={detailText.shareListing} title={detailText.shareListing} icon={<MdShare />} variant="outline" borderColor={subtleBorder} onClick={() => void shareListing()} />
+								{user && data.status === "APPROVED" && <SaveButton />}
+							</HStack>
+						</Flex>
+
+						<SimpleGrid
+							w="full"
+							templateColumns={{ base: "minmax(0, 1fr)", lg: "minmax(0, 1.18fr) minmax(360px, .82fr)" }}
+							spacing={{ base: 5, lg: 7 }}
+							alignItems="start"
+						>
+							<Flex minW="0" direction="column" gap={{ base: 5, md: 6 }}>
+								<InteractivePhotoGallery
+									data={data}
+									images={images}
+									preview={preview}
+									categoryLabel={categoryLabel}
+									detailText={detailText}
+									imageFallback={imageFallback}
+									subtleBorder={subtleBorder}
+									onPreview={updatePreview}
+									onSelectImage={setPreview}
+									onOpenGallery={galleryModal.onOpen}
+								/>
+
+								{data.itemType === "HOUSE" && listingDetails?.video && <Box>
+									<Box minW="0" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" p={{ base: 4, md: 5 }} boxShadow="0 10px 28px rgba(21,42,44,.06)">
+										<Flex align="center" justify="space-between" mb="3" gap="3"><Box><Heading color={headingText} size="sm">{detailText.videoTitle}</Heading><Text mt="1" fontSize="sm" color={mutedText}>{detailText.videoDescription}</Text></Box></Flex>
+										<video aria-label={businessText.videoPreview} controls preload="metadata" src={getMediaUrl(listingDetails.video, "items")} style={{ width: "100%", maxHeight: 440, borderRadius: 16, background: "#000000" }} />
+									</Box>
+								</Box>}
+
 								<Box>
-									<Text color={mutedText} fontSize="xs" fontWeight="bold" letterSpacing="wide" textTransform="uppercase">Asking price</Text>
-									<Flex align="baseline" gap="2" mt="1" wrap="wrap">
-										<Heading color="mainorange" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="tight">{formatPrice(data.price)}</Heading>
-										<Text color={mutedText} fontWeight="semibold">ETB</Text>
-										{priceFrequency && <Text color={mutedText} fontSize="sm">· {priceFrequency}</Text>}
+									<Box bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" p={{ base: 5, md: 7 }} boxShadow="0 10px 28px rgba(21,42,44,.055)">
+										<Flex align="flex-start" justify="space-between" gap="4">
+											<Box><Text color="mainorange" fontSize="xs" fontWeight="bold" letterSpacing=".13em" textTransform="uppercase">{detailText.descriptionEyebrow}</Text><Heading mt="2" color={headingText} as="h2" size="md">{detailText.descriptionTitle}</Heading></Box>
+											<Box display={{ base: "none", sm: "flex" }} alignItems="center" justifyContent="center" w="10" h="10" borderRadius="xl" bg={priceSurface} color="mainorange"><MdLocationOn size="20" /></Box>
+										</Flex>
+										<Text mt="4" color={mutedText} fontSize="md" lineHeight="1.85" whiteSpace="pre-wrap">{data.description || detailText.descriptionEmpty}</Text>
+									</Box>
+								</Box>
+
+								{detailItems.length > 0 && <Box>
+									<Box bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" p={{ base: 5, md: 7 }} boxShadow="0 10px 28px rgba(21,42,44,.055)">
+										<Flex align="flex-start" justify="space-between" gap="4" mb="5"><Box><Text color="mainorange" fontSize="xs" fontWeight="bold" letterSpacing=".13em" textTransform="uppercase">{detailText.detailsEyebrow}</Text><Heading mt="2" color={headingText} size="md" as="h2">{detailText.detailsTitle}</Heading><Text mt="2" color={mutedText} fontSize="sm">{detailText.detailsDescription}</Text></Box><Badge flexShrink={0} colorScheme="gray" borderRadius="full" px="3" py="1.5">{detailItems.length}</Badge></Flex>
+										<SimpleGrid columns={{ base: 1, sm: 2 }} spacing="3">
+											{detailItems.map(({ key, label, value }, index) => <Box key={key}>
+												<Flex minW="0" minH="76px" direction="column" justify="center" p="4" bg={canvas} border="1px solid" borderColor={subtleBorder} borderRadius="xl">
+													<Text color={mutedText} fontSize="xs" fontWeight="semibold" textTransform="capitalize">{label}</Text>
+													<Text mt="1.5" fontSize="sm" fontWeight="semibold" color={headingText} whiteSpace="normal" wordBreak="break-word">{value}</Text>
+												</Flex>
+											</Box>)}
+										</SimpleGrid>
+									</Box>
+								</Box>}
+							</Flex>
+
+							<Flex minW="0" direction="column" gap={{ base: 4, md: 5 }}>
+								<Box>
+									<Flex minW="0" direction="column" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" p={{ base: 5, md: 7 }} boxShadow="0 18px 48px rgba(18,32,36,.085)">
+										<Flex align="center" justify="space-between" gap="3" wrap="wrap">
+											<Badge colorScheme="teal" variant="subtle" borderRadius="full" px="3" py="1.5">{categoryLabel}</Badge>
+											{data.status && <Badge colorScheme={data.status === "APPROVED" ? "green" : data.status === "DECLINED" ? "red" : data.status === "SOLD" ? "purple" : data.status === "CLOSED" ? "gray" : "orange"} borderRadius="full" px="3" py="1.5">{statusLabels[data.status] || data.status}</Badge>}
+										</Flex>
+										{data.featured && <Flex mt="4" align="center" gap="2" color="mainorange" fontSize="sm" fontWeight="semibold"><Box w="2" h="2" borderRadius="full" bg="mainorange" />{detailText.featured} · {detailText.featuredDescription}</Flex>}
+										<Heading as="h1" mt="4" color={headingText} fontSize={{ base: "2xl", sm: "3xl", xl: "4xl" }} lineHeight="1.12" letterSpacing="-.045em" wordBreak="break-word">{data.title}</Heading>
+										<Flex align="center" gap="2" mt="4" color={mutedText} fontSize="sm"><MdLocationOn size="18" /><Text>{locationLabel || detailText.locationNotProvided}</Text></Flex>
+										<Flex align="center" gap="2" mt="2" color={mutedText} fontSize="xs"><Box as="span" w="1.5" h="1.5" borderRadius="full" bg="green.400" /><Text>{detailText.listedLabel} {dayjs(data?.createdAt).fromNow()}</Text></Flex>
+
+										<Flex mt="6" p={{ base: 4, md: 5 }} align={{ base: "flex-start", sm: "center" }} justify="space-between" gap="4" direction={{ base: "column", sm: "row" }} bg={priceSurface} border="1px solid" borderColor={priceBorder} borderRadius="2xl">
+											<Box><Text color={mutedText} fontSize="xs" fontWeight="bold" letterSpacing=".1em" textTransform="uppercase">{detailText.askingPrice}</Text><Flex align="baseline" gap="2" mt="1" wrap="wrap"><Heading color="mainorange" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="tight">{formatPrice(data.price)}</Heading><Text color={mutedText} fontWeight="semibold">ETB</Text>{priceFrequency && <Text color={mutedText} fontSize="sm">· {priceFrequency}</Text>}</Flex></Box>
+											<Badge colorScheme={data.priceType === "NEGOTIABLE" ? "teal" : "gray"} borderRadius="full" px="3" py="2" fontSize="xs">{priceTypeLabel}</Badge>
+										</Flex>
+
+										{highlightItems.length > 0 && <SimpleGrid columns={{ base: 1, sm: 2 }} spacing="2.5" mt="4">{highlightItems.map((fact) => <Box key={fact.key}><Flex minW="0" align="center" justify="space-between" gap="3" px="3.5" py="3" bg={canvas} border="1px solid" borderColor={subtleBorder} borderRadius="xl"><Text color={mutedText} fontSize="xs" noOfLines={1}>{fact.label}</Text><Text color={headingText} fontSize="sm" fontWeight="bold" noOfLines={1}>{fact.value}</Text></Flex></Box>)}</SimpleGrid>}
+
+										<Flex mt="5" direction={{ base: "column", sm: "row" }} gap="2.5">
+											<Button flex="1" as="a" href="#seller-contact" color="white" bg="mainorange" borderRadius="xl" h="12" _hover={{ bg: "#ad582a", transform: "translateY(-1px)" }} transition="none">{detailText.contactOwner}</Button>
+											{user?.id === data.userId && <Link legacyBehavior href={"/items/edit/" + itemId} passHref><Button as="a" flex="1" variant="outline" borderColor={subtleBorder} borderRadius="xl" h="12" leftIcon={<EditIcon />}>{detailText.editListing}</Button></Link>}
+										</Flex>
 									</Flex>
 								</Box>
-								<Badge colorScheme={data.priceType === "NEGOTIABLE" ? "teal" : "gray"} borderRadius="full" px="3" py="2" fontSize="xs">
-									{priceTypeLabel}
-								</Badge>
+
+								{data.status !== "APPROVED" && (user?.id === data.userId || user?.role === "ADMIN") && <Box>
+									<Alert status={data.status === "DECLINED" ? "error" : data.status === "CLOSED" || data.status === "SOLD" ? "info" : "warning"} borderRadius="xl" boxShadow="0 8px 24px rgba(21,42,44,.05)">
+										<AlertIcon />
+										<AlertDescription>
+											{data.status === "CLOSED" ? listingText.closedDescription
+												: data.status === "SOLD" ? listingText.soldDescription
+												: data.status === "DECLINED" ? detailText.declinedDescription
+													: data.paymentStatus === "DUE" || data.paymentStatus === "NOT_REQUIRED" ? lang.payments.paymentDue
+														: data.paymentStatus === "PROCESSING" ? lang.payments.processing
+															: data.paymentStatus === "PAID" ? lang.payments.paid
+																: detailText.pendingDescription}
+										</AlertDescription>
+									</Alert>
+								</Box>}
+								{user?.id === data.userId && data.paymentStatus !== "PAID" && data.status !== "APPROVED" && data.status !== "SOLD" && data.status !== "CLOSED" && <ListingPaymentPanel item={data} fee={paymentFee} enabled={paymentEnabled} labels={lang.payments} />}
+
+								<Box>
+									<Flex id="seller-contact" scrollMarginTop="100px" direction="column" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" p={{ base: 5, md: 6 }} boxShadow="0 10px 28px rgba(21,42,44,.055)">
+										<Flex align="center" gap="4" mb="5">
+											<Avatar size="lg" flexShrink={0} name={data.user.firstName + " " + data.user.lastName} src={getMediaUrl(data.user.profile_url, "profile")} />
+											<Box minW="0"><Text color="mainorange" fontSize="xs" fontWeight="bold" letterSpacing=".1em" textTransform="uppercase">{detailText.ownerLabel}</Text><Heading mt="1" fontSize="lg" color={headingText}>{data.user.firstName} {data.user.lastName}</Heading><Text mt="1" color={mutedText} fontSize="sm">{data.user.bio || detailText.ownerFallback}</Text></Box>
+										</Flex>
+										{data.itemType === "SERVICE" && data.status === "APPROVED" && data.userId !== user?.id && <Box mb="5" p="4" bg={priceSurface} border="1px solid" borderColor={priceBorder} borderRadius="xl"><Heading size="sm" color={headingText}>{requestText.requestTitle}</Heading><Text mt="2" color={mutedText} fontSize="sm" lineHeight="1.65">{requestText.requestDescription}</Text><Button mt="4" w="full" colorScheme="orange" borderRadius="lg" onClick={() => { if (!user) { void router.push("/auth/login", undefined, { locale: router.locale }); return; } if (!user.verfied) { void router.push("/dashboard/verify-account", undefined, { locale: router.locale }); return; } requestModal.onOpen(); }}>{requestText.requestButton}</Button></Box>}
+										<Box pt="4" borderTop="1px solid" borderColor={subtleBorder}><Heading color={headingText} size="sm">{detailText.contactTitle}</Heading><Text mt="1" color={mutedText} fontSize="sm">{detailText.contactDescription}</Text><Box mt="4"><ContactInfo userID={data.userId} size="sm" appearance="subtle" /></Box></Box>
+									</Flex>
+								</Box>
 							</Flex>
-							{data.status !== "APPROVED" && (user?.id === data.userId || user?.role === "ADMIN") && (
-								<Alert status={data.status === "DECLINED" ? "error" : "warning"} borderRadius="xl" mb="4">
-									<AlertIcon />
-									<AlertDescription>
-										{data.status === "DECLINED"
-											? "This listing was declined. Edit it and save to send it back for review."
-											: data.paymentStatus === "DUE" || data.paymentStatus === "NOT_REQUIRED"
-												? lang.payments.paymentDue
-												: data.paymentStatus === "PROCESSING"
-													? lang.payments.processing
-													: data.paymentStatus === "PAID"
-														? lang.payments.paid
-														: "This listing is waiting for admin review. It is not public or save-able until an admin approves it."}
-									</AlertDescription>
-								</Alert>
-							)}
-							{user?.id === data.userId && data.paymentStatus !== "PAID" && data.status !== "APPROVED" && data.status !== "SOLD" && (
-								<ListingPaymentPanel item={data} fee={paymentFee} enabled={paymentEnabled} labels={lang.payments} />
-							)}
-							<Flex align="center" mt="5" gap="2" color={mutedText} fontSize="sm">
-								<Text fontWeight="semibold">Listed</Text>
-								<Text>{dayjs(data?.createdAt).fromNow()}</Text>
-							</Flex>
-							<Box mt="5" p={{ base: 4, md: 5 }} bg={canvas} border="1px solid" borderColor={subtleBorder} borderRadius="xl">
-								<Heading color={headingText} as="h2" size="sm">Description</Heading>
-								<Text mt="3" color={mutedText} fontSize="md" lineHeight="1.8" whiteSpace="pre-wrap">
-									{data?.description || "No description has been added yet."}
-								</Text>
-							</Box>
-							<Box mt="6" p={{ base: 4, md: 5 }} border="1px solid" borderColor={subtleBorder} borderRadius="2xl">
-								<Heading color={headingText} size="md" as="h2">Listing details</Heading>
-								<Text mt="1" color={mutedText} fontSize="sm">Key information about this listing.</Text>
-								<SimpleGrid columns={{ base: 1, sm: 2 }} spacing="3" mt="5">
-									{Object.entries(listingDetails || {}).map(([key, value]) => {
-										if (["id", "itemId", "video"].includes(key)) return null;
-						if (value === null || value === undefined || value === "" || (Array.isArray(value) && value.length === 0)) return null;
-										const label = data.itemType === "BUSINESS_SPACE"
-											? businessText.detailLabels[key] || key
-							: data.itemType === "HOUSE"
-								? businessText.detailLabels[key] || key
-								: data.itemType === "CAR"
-									? vehicleText.detailLabels[key] || key
-											: data.itemType === "SERVICE"
-												? serviceText.detailLabels[key] || key
-												: key.replace(/([A-Z])/g, " $1");
-						let displayValue = Array.isArray(value) ? value.join(" · ") : String(value ?? "");
-										if (key === "category" && data.itemType === "SERVICE") displayValue = serviceText.categories[value as string] || displayValue;
-										else if (key === "spaceType") displayValue = businessText.spaceTypes[value as string] || displayValue;
-						else if (key === "type" && ["BUSINESS_SPACE", "HOUSE"].includes(data.itemType)) displayValue = value === "RENT" ? businessText.rent : businessText.sale;
-										else if (key === "priceFrequency") displayValue = businessText.frequencies[value as string] || displayValue;
-						else if (key === "propertyType") displayValue = businessText.propertyTypes[value as string] || displayValue;
-						else if (key === "furnishing") displayValue = businessText.furnishingTypes[value as string] || displayValue;
-						else if (key === "status" && data.itemType === "CAR") displayValue = value === "USED" ? vehicleText.used : value === "NEW" ? vehicleText.new : vehicleText.newInEthiopia;
-						else if (key === "bodyType" && data.itemType === "CAR") displayValue = vehicleText.bodyTypes[value as string] || displayValue;
-						else if (key === "fuelType" && data.itemType === "CAR") displayValue = vehicleText.fuelTypes[value as string] || displayValue;
-						else if (key === "driveType" && data.itemType === "CAR") displayValue = vehicleText.driveTypes[value as string] || displayValue;
-						else if (key === "transmition" && data.itemType === "CAR") displayValue = value === "AUTO" ? vehicleText.automatic : vehicleText.manual;
-						else if (key === "features" && data.itemType === "HOUSE") displayValue = (value as string[]).map((feature) => businessText.homeFeatures[feature] || feature).join(" · ");
-						else if (key === "features" && data.itemType === "CAR") displayValue = (value as string[]).map((feature) => vehicleText.vehicleFeatures[feature] || feature).join(" · ");
-						else if (key === "mileage" && data.itemType === "CAR") displayValue = `${Number(value).toLocaleString()} ${vehicleText.mileageUnit}`;
-						else if (key === "fuel" && data.itemType === "CAR") displayValue = `${value} ${vehicleText.fuelUnit}`;
-						else if (key === "cylinder" && data.itemType === "CAR") displayValue = `${value} L`;
-										else if (typeof value === "boolean") displayValue = value ? businessText.yes : businessText.no;
-						else if (key === "area" && ["BUSINESS_SPACE", "HOUSE"].includes(data.itemType)) displayValue = String(value) + " m²";
-										return (
-											<Box key={key} minW="0" p="4" bg={canvas} border="1px solid" borderColor={subtleBorder} borderRadius="xl">
-												<Text color={mutedText} fontSize="xs" fontWeight="semibold" textTransform="capitalize">{label}</Text>
-												<Text mt="1" fontSize="md" fontWeight="medium" color={headingText} whiteSpace="normal" wordBreak="break-word">{displayValue}</Text>
-											</Box>
-										);
-									})}
-								</SimpleGrid>
-							</Box>
-							<Box mt="6">
-								<Heading color={headingText} as="h2" size="md" mb="3">Seller</Heading>
-								<Flex align="center" gap="4" p={{ base: 4, md: 5 }} bg={canvas} border="1px solid" borderColor={subtleBorder} borderRadius="2xl">
-									<Avatar size="lg" flexShrink={0} name={data.user.firstName + " " + data.user.lastName} src={getMediaUrl(data.user.profile_url, "profile")} />
-									<Box minW="0">
-										<Heading fontSize="md" color={headingText}>{data.user.firstName} {data.user.lastName}</Heading>
-										<Text mt="1" color={mutedText} fontSize="sm">{data.user.bio || "Listing owner"}</Text>
-									</Box>
-								</Flex>
-								<Flex mt="4" p={{ base: 4, md: 5 }} direction="column" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl">
-									<Heading size="sm" color={headingText}>Contact information</Heading>
-									<Box mt="3"><ContactInfo userID={data.userId} /></Box>
-								</Flex>
-							</Box>
-						</Flex>
-					</SimpleGrid>
-				)}
+						</SimpleGrid>
+					</Flex>
+				</Box>
 			</Flex>
+
+			<Modal motionPreset="none" isOpen={galleryModal.isOpen} onClose={galleryModal.onClose} isCentered size="6xl">
+				<ModalOverlay bg="blackAlpha.800" backdropFilter="blur(8px)" />
+				<ModalContent mx="3" bg="#080808" color="white" border="1px solid" borderColor="whiteAlpha.200" borderRadius="2xl" overflow="hidden">
+					<ModalCloseButton zIndex="2" color="white" bg="blackAlpha.600" borderRadius="full" />
+					<ModalBody p={{ base: 2, md: 4 }}>
+						<Box position="relative" h={{ base: "70dvh", md: "78dvh" }} bg="black" borderRadius="xl" overflow="hidden">
+							<Box key={preview || "gallery"} position="absolute" inset="0"><ListingImage alt={data.title} src={preview} itemType={data.itemType} w="full" h="full" objectFit="contain" loading="eager" /></Box>
+							{images.length > 1 && <><IconButton aria-label={detailText.previousPhoto} icon={<MdChevronLeft />} position="absolute" left={{ base: 2, md: 5 }} top="50%" transform="translateY(-50%)" color="white" bg="blackAlpha.600" borderRadius="full" _hover={{ bg: "blackAlpha.800" }} onClick={() => updatePreview(-1)} /><IconButton aria-label={detailText.nextPhoto} icon={<MdChevronRight />} position="absolute" right={{ base: 2, md: 5 }} top="50%" transform="translateY(-50%)" color="white" bg="blackAlpha.600" borderRadius="full" _hover={{ bg: "blackAlpha.800" }} onClick={() => updatePreview(1)} /></>}
+							{images.length > 0 && <Badge position="absolute" left="50%" bottom="4" transform="translateX(-50%)" bg="blackAlpha.700" color="white" borderRadius="full" px="4" py="2">{detailText.photoCount.replace("{current}", String(currentImageIndex + 1)).replace("{total}", String(images.length))}</Badge>}
+						</Box>
+					</ModalBody>
+				</ModalContent>
+			</Modal>
+				<Modal motionPreset="none" isOpen={requestModal.isOpen} onClose={() => { if (!requesting) requestModal.onClose(); }} isCentered size="lg">
+					<ModalOverlay />
+					<ModalContent mx="4" bg={surface} color={headingText}>
+						<ModalHeader>{requestText.modalTitle}</ModalHeader>
+						<ModalCloseButton isDisabled={requesting} />
+						<ModalBody>
+							<Text mb="4" color={mutedText} fontSize="sm">{requestText.modalDescription}</Text>
+							<FormControl isRequired>
+								<FormLabel>{requestText.messageLabel}</FormLabel>
+								<Textarea value={requestMessage} onChange={(event) => setRequestMessage(event.target.value)} maxLength={2000} minH="140px" placeholder={requestText.messagePlaceholder} />
+							</FormControl>
+							<FormControl mt="4">
+								<FormLabel>{requestText.dateLabel}</FormLabel>
+								<Input type="date" min={minimumRequestDate} value={requestDate} onChange={(event) => setRequestDate(event.target.value)} />
+							</FormControl>
+							<FormControl mt="4">
+								<FormLabel>{requestText.phoneLabel}</FormLabel>
+								<Input type="tel" value={requestPhone} onChange={(event) => setRequestPhone(event.target.value)} maxLength={40} placeholder={requestText.phonePlaceholder} />
+							</FormControl>
+						</ModalBody>
+						<ModalFooter gap="3">
+							<Button variant="ghost" onClick={requestModal.onClose} isDisabled={requesting}>{requestText.cancel}</Button>
+							<Button colorScheme="orange" isLoading={requesting} isDisabled={requestMessage.trim().length < 10} onClick={async () => {
+								setRequesting(true);
+								try {
+									await axios.post("/api/serviceRequests", { itemId, message: requestMessage, preferredAt: requestDate || undefined, contactPhone: requestPhone });
+									requestModal.onClose();
+									setRequestMessage(""); setRequestDate(""); setRequestPhone("");
+									toast({ title: requestText.sentTitle, description: requestText.sentDescription, status: "success", duration: 5000, isClosable: true });
+								} catch (requestError: any) {
+									toast({ title: requestText.failedTitle, description: requestError?.response?.data?.err || requestText.failedDescription, status: "error", duration: 6000, isClosable: true });
+								} finally { setRequesting(false); }
+							}}>{requestText.submit}</Button>
+						</ModalFooter>
+					</ModalContent>
+				</Modal>
 		</>
 	);
 };

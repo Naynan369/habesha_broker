@@ -1,11 +1,9 @@
 import { CheckIcon, CloseIcon, Search2Icon } from "@chakra-ui/icons";
 import {
 	Text,
-	Avatar,
 	Box,
 	Flex,
 	Heading,
-	Spacer,
 	SimpleGrid,
 	Input,
 	FormControl,
@@ -31,7 +29,6 @@ import {
 	TableContainer,
 	Select,
 } from "@chakra-ui/react";
-import { MyTheme } from "@config/theme/MyTheme";
 import { useFetch } from "@libs/hooks/useFetch";
 import { useUser } from "@libs/store";
 import { ListingImage } from "@components/shared/ListingImage";
@@ -39,7 +36,6 @@ import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { FC, useEffect, useState } from "react";
-import { MdLogout } from "react-icons/md";
 import {
 	FaBuilding,
 	FaCarSide,
@@ -47,15 +43,14 @@ import {
 	FaClock,
 	FaCreditCard,
 	FaHome,
+	FaStar,
 	FaTools,
 	FaUsers,
 } from "react-icons/fa";
 import { dayjs } from "@config/dayjs";
 import { withSessionSsr } from "@config/cookie/cookie";
-import { getMediaUrl } from "@libs/helpers/media";
-import { ColorModeToggle } from "@components/shared/ColorModeToggle";
-import { BrandLogo } from "@components/shared/BrandLogo";
 import { useLang } from "@libs/hooks/useLang";
+import { SiteNavbar } from "@components/shared/SiteNavbar";
 
 export const getServerSideProps = withSessionSsr(
 	async function getServerSideProps({ req }) {
@@ -109,47 +104,7 @@ export default function AdminDashboard({ user }) {
 	return (
 		<>
 			<Flex direction={"column"} minH="100dvh" bg={pageBg}>
-				<Flex
-					alignItems={"center"}
-					px={{ base: 4, md: 8, xl: 12 }}
-					minH={MyTheme.size.navbarHeight}
-					bg={surface}
-					borderBottom="1px solid"
-					borderColor={border}
-					boxShadow="sm"
-				>
-					<Flex direction="column" py="3" gap="1">
-						<BrandLogo compact />
-						<Heading display={{ base: "none", sm: "block" }} fontSize="10px" color="mainorange" letterSpacing="0.18em" mt="1" fontWeight="bold">
-							ADMIN CONSOLE
-						</Heading>
-					</Flex>
-					<Spacer />
-					<Flex align="center" gap={{ base: 2, md: 4 }}>
-						<ColorModeToggle />
-						<Avatar size="sm" name={user.firstName + " " + user.lastName} src={getMediaUrl(user.profile_url, "profile")} />
-						<Flex
-							direction="column"
-							display={["none", "none", "flex"]}
-						>
-							<Text fontWeight="semibold" fontSize="sm" color={textColor}>
-								{`${user.firstName} ${user.lastName}`}
-							</Text>
-							<Text fontSize="xs" color={muted}>
-								Administrator · {user.email}
-							</Text>
-						</Flex>
-						<IconButton
-							onClick={handleLogout}
-							ml={{ base: 1, md: 2 }}
-							colorScheme="red"
-							variant="ghost"
-							borderRadius="xl"
-							aria-label="Log out"
-							icon={<MdLogout />}
-						/>
-					</Flex>
-				</Flex>
+				<SiteNavbar mode="admin" user={user} onLogout={handleLogout} />
 
 				<Flex
 					w="full"
@@ -204,7 +159,7 @@ export default function AdminDashboard({ user }) {
 							</FormControl>
 						</Flex>
 						<ButtonGroup spacing="2" my="5" flexWrap="wrap" role="group" aria-label="Filter listing reviews">
-							{[["PAYMENT", "Awaiting payment"], ["PENDING", "Pending review"], ["APPROVED", "Approved"], ["DECLINED", "Declined"]].map(([value, label]) => (
+							{[["PAYMENT", "Awaiting payment"], ["PENDING", "Pending review"], ["APPROVED", "Approved"], ["DECLINED", "Declined"], ["SOLD", "Sold"], ["CLOSED", "Closed"]].map(([value, label]) => (
 								<Button key={value} size="sm" px="4" h="9" borderRadius="full" colorScheme={statusFilter === value ? "orange" : "gray"} variant={statusFilter === value ? "solid" : "outline"} onClick={() => setStatusFilter(value)}>
 									{label}
 								</Button>
@@ -276,6 +231,7 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 	const surface = useColorModeValue("white", "#0c0c0c");
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const [working, setWorking] = useState(false);
+	const [featuredWorking, setFeaturedWorking] = useState(false);
 	const toast = useToast();
 	const { id, title, featured, createdAt, itemType, status, paymentStatus } = item;
 	const latestPayment = item.ListingPayments?.[0];
@@ -312,6 +268,20 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 		}
 	};
 
+	const handleFeatured = async () => {
+		if (featuredWorking || (!featured && status !== "APPROVED")) return;
+		setFeaturedWorking(true);
+		try {
+			await axios.post("/api/admin/setFeatured", { itemId: id, featured: !featured });
+			toast({ title: featured ? "Featured placement removed" : "Listing featured", description: featured ? "This listing will no longer appear in the featured section." : "This approved listing can now appear on the homepage.", status: "success", isClosable: true });
+			onModerated();
+		} catch (error: any) {
+			toast({ title: "Could not update featured placement", description: error?.response?.data?.err || "Refresh the listing and try again.", status: "error", isClosable: true });
+		} finally {
+			setFeaturedWorking(false);
+		}
+	};
+
 	return (
 		<Flex align={{ base: "flex-start", lg: "center" }} gap="4" p={{ base: 4, md: 5 }} mt="4" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" boxShadow="sm" transition="box-shadow .2s, border-color .2s" _hover={{ boxShadow: "md", borderColor: "orange.200" }} direction={{ base: "column", lg: "row" }}>
 			<Flex align="center" gap="4" minW="0" flex="1">
@@ -332,13 +302,18 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 				</Box>
 			</Flex>
 			<Flex align="center" gap="3" wrap="wrap" w={{ base: "full", lg: "auto" }} justify={{ base: "flex-end", lg: "flex-start" }}>
-				<Badge colorScheme={status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : "orange"} borderRadius="full" px="3" py="1">{status}</Badge>
+				<Badge colorScheme={status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : status === "CLOSED" ? "gray" : "orange"} borderRadius="full" px="3" py="1">{status}</Badge>
 				<Link legacyBehavior href={`/items/${id}`} passHref><Button as="a" size="sm" variant="outline">Review details</Button></Link>
 				{status === "PENDING" && paymentStatus === "PAID" && (
 					<ButtonGroup size="sm">
 						<Button colorScheme="green" onClick={() => handleItem("APPROVED")} isLoading={working} leftIcon={<CheckIcon />}>Approve</Button>
 						<Button colorScheme="red" variant="outline" onClick={() => handleItem("DECLINED")} isLoading={working} leftIcon={<CloseIcon />}>Decline</Button>
 					</ButtonGroup>
+				)}
+				{(status === "APPROVED" || featured) && (
+					<Button size="sm" colorScheme="orange" variant={featured ? "solid" : "outline"} leftIcon={<FaStar />} onClick={handleFeatured} isLoading={featuredWorking}>
+						{featured ? "Remove featured" : "Feature listing"}
+					</Button>
 				)}
 			</Flex>
 		</Flex>
