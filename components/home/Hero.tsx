@@ -34,11 +34,12 @@ export const HomeHero = () => {
 			minH={{ base: "1040px", sm: "980px", lg: "min(900px, 100dvh)" }}
 			color="white"
 			overflow="hidden"
-			bg="#071918"
+			bg="#16383c"
 		>
-			<Box aria-hidden="true" position="absolute" inset="0" bgGradient="linear(to-br, #0a2423 0%, #071918 48%, #102826 100%)" />
-			<Box aria-hidden="true" position="absolute" top="-30%" right="-10%" w="70vw" h="85%" bg="radial-gradient(ellipse, rgba(226,178,100,.13), transparent 65%)" />
-			<Box aria-hidden="true" position="absolute" bottom="-30%" left="-8%" w="55vw" h="70%" bg="radial-gradient(ellipse, rgba(73,127,119,.17), transparent 70%)" />
+			<Box aria-hidden="true" position="absolute" inset="0" bgGradient="linear(128deg, #1b4649 0%, #17363d 43%, #304653 100%)" />
+			<Box aria-hidden="true" position="absolute" top="-32%" right="-12%" w={{ base: "90%", md: "68%" }} h="95%" bg="radial-gradient(ellipse, rgba(239,190,105,.24), transparent 66%)" />
+			<Box aria-hidden="true" position="absolute" bottom="-45%" left="-12%" w="65%" h="85%" bg="radial-gradient(ellipse, rgba(91,177,173,.25), transparent 70%)" />
+			<Box aria-hidden="true" position="absolute" top="12%" left="46%" w="38%" h="75%" bg="radial-gradient(ellipse, rgba(111,122,177,.17), transparent 72%)" />
 			<Box position="absolute" inset="0" zIndex="1" aria-label="Illustrated apartment and car background">
 				<HeroThreeScene />
 			</Box>
@@ -86,7 +87,7 @@ export const HomeHero = () => {
 									<SearchIcon color="gray.400" />
 									<Input aria-label={lang.home.search_placeholder} variant="unstyled" px="3" py="3" color={searchText} placeholder={lang.home.search_placeholder} value={search} onChange={(event) => setSearch(event.target.value)} />
 								</Flex>
-								<Button type="submit" flexShrink={0} w={{ base: "full", sm: "auto" }} leftIcon={<SearchIcon />} bg="mainyellow" color="maingray" borderRadius="xl" px="6" h="52px" _hover={{ bg: "#f0c875", transform: "translateY(-1px)" }}>
+					<Button type="submit" flexShrink={0} w={{ base: "full", sm: "auto" }} leftIcon={<SearchIcon />} bg="#861657" color="white" borderRadius="xl" px="6" h="52px" boxShadow="0 10px 28px rgba(134,22,87,.34)" _hover={{ bg: "#9a1b66", boxShadow: "0 12px 32px rgba(154,27,102,.4)", transform: "translateY(-1px)" }} _active={{ bg: "#701246", transform: "translateY(1px)" }}>
 									{lang.home.search_btn}
 								</Button>
 							</Flex>

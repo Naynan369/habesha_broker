@@ -51,10 +51,15 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 	const muted = useColorModeValue("#637278", "#a5b1b4");
 	const imageFallback = useColorModeValue("#e7ecea", "#151b1c");
 	const divider = useColorModeValue("#e7ecea", "whiteAlpha.200");
-	const paymentSurface = useColorModeValue("#fbf4e7", "rgba(233,183,92,.08)");
+	const paymentSurface = useColorModeValue("#f7f5f0", "rgba(255,255,255,.035)");
+	const priceSurface = useColorModeValue("#f5f7f6", "rgba(255,255,255,.035)");
+	const priceBorder = useColorModeValue("#e4e9e7", "whiteAlpha.100");
+	const hoverBorder = useColorModeValue("#c8d4d1", "whiteAlpha.300");
+	const featuredTextColor = useColorModeValue("#f4e8ce", "#e4d2ad");
 	const inputBg = useColorModeValue("#ffffff", "#080b0c");
 	const accentText = useColorModeValue("mainorange", "#f0c978");
 	const statusColor = status === "CLOSED" ? "gray" : status === "SOLD" ? "purple" : paymentStatus === "DUE" || paymentStatus === "NOT_REQUIRED" ? "orange" : paymentStatus === "PROCESSING" ? "blue" : status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : "orange";
+	const prominentStatus = status === "SOLD" || (paymentStatus === "PROCESSING" && status !== "SOLD");
 	const statusLabel = status === "CLOSED" ? copy.closed : status === "SOLD" ? copy.sold : paymentStatus === "DUE" || paymentStatus === "NOT_REQUIRED" ? copy.paymentDue : paymentStatus === "PROCESSING" ? copy.paymentProcessing : paymentStatus === "PAID" && status === "PENDING" ? copy.paidPending : status === "APPROVED" ? copy.approved : status === "DECLINED" ? copy.declined : copy.pending;
 	const canMarkSold = itemType === "CAR" || (itemType === "HOUSE" || itemType === "BUSINESS_SPACE") && listingIntent === "FORSALE";
 	const itemTypeLabel = itemType === "SERVICE"
@@ -116,17 +121,17 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 	};
 
 	return (
-		<Flex className="dashboard-listing-card" direction="column" h="full" minW="0" bg={surface} border="1px solid" borderColor={border} borderRadius="3xl" overflow="hidden" boxShadow="0 16px 42px rgba(21,42,44,.10)" transition="transform 320ms cubic-bezier(.2,.8,.2,1), box-shadow 320ms ease, border-color 320ms ease" _hover={{ boxShadow: "0 32px 70px rgba(16,47,55,.24)", transform: "translateY(-8px) scale(1.012)", borderColor: "mainorange" }}>
+		<Flex className="dashboard-listing-card" direction="column" h="full" minW="0" bg={surface} border="1px solid" borderColor={border} borderRadius="3xl" overflow="hidden" boxShadow="0 10px 28px rgba(21,42,44,.07)" transition="transform 320ms cubic-bezier(.2,.8,.2,1), box-shadow 320ms ease, border-color 320ms ease" _hover={{ boxShadow: "0 18px 40px rgba(16,47,55,.13)", transform: "translateY(-8px) scale(1.012)", borderColor: hoverBorder }}>
 			<Link legacyBehavior href={"/items/" + id} passHref>
 				<Flex as="a" role="group" direction="column" flex="1" minW="0" cursor="pointer" textDecoration="none" _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "-3px" }}>
 					<Box className="dashboard-listing-image" position="relative" h={{ base: "210px", md: "250px" }} flexShrink={0} bg={imageFallback} overflow="hidden">
 						<ListingImage src={photoURL} alt={title} itemType={itemType} fill />
 						<Box position="absolute" inset="0" bgGradient="linear(to-b, rgba(7,23,27,.18), transparent 35%, rgba(7,23,27,.78))" pointerEvents="none" />
-						{featured && <Badge position="absolute" top="4" left="4" zIndex="3" color="#182d31" bg="#f0c978" borderRadius="full" px="3.5" py="1.5" boxShadow="0 7px 20px rgba(0,0,0,.24)" letterSpacing=".04em">✦ {copy.featured}</Badge>}
-						{status && <Badge position="absolute" top="4" right="4" zIndex="3" colorScheme={statusColor} variant="solid" borderRadius="full" px="3.5" py="1.5" boxShadow="0 7px 20px rgba(0,0,0,.24)">{statusLabel}</Badge>}
+						{featured && <Badge position="absolute" top="4" left="4" zIndex="3" color={featuredTextColor} bg="rgba(24,38,40,.82)" border="1px solid" borderColor="whiteAlpha.200" borderRadius="full" px="3.5" py="1.5" letterSpacing=".04em">✦ {copy.featured}</Badge>}
+						{status && <Badge position="absolute" top="4" right="4" zIndex="3" colorScheme={statusColor} variant={prominentStatus ? "solid" : "subtle"} fontWeight={prominentStatus ? "extrabold" : "semibold"} boxShadow={prominentStatus ? "0 4px 12px rgba(0,0,0,.2)" : "none"} borderRadius="full" px="3.5" py="1.5">{statusLabel}</Badge>}
 						<Flex position="absolute" left="5" right="5" bottom="4" align="center" justify="space-between" gap="3" color="white" zIndex="3">
-							<Flex align="center" gap="2.5" minW="0" px="3.5" py="2.5" border="1px solid" borderColor="whiteAlpha.400" borderRadius="full" bg="rgba(7,23,27,.56)" backdropFilter="blur(12px)">
-								<Box w="2" h="2" flexShrink={0} borderRadius="full" bg="#f0c978" boxShadow="0 0 0 5px rgba(240,201,120,.15)" />
+							<Flex align="center" gap="2.5" minW="0" px="3.5" py="2.5" border="1px solid" borderColor="whiteAlpha.300" borderRadius="full" bg="rgba(7,23,27,.46)" backdropFilter="blur(12px)">
+								<Box w="2" h="2" flexShrink={0} borderRadius="full" bg="#d6bd87" />
 								<Text noOfLines={1} fontSize="10px" fontWeight="bold" letterSpacing=".11em" textTransform="uppercase">{itemTypeLabel}</Text>
 							</Flex>
 							<Text fontSize="xs" color="whiteAlpha.800" fontWeight="semibold">{copy.posted} {dayjs(date).locale(locale === "am" ? "am" : "en").fromNow()}</Text>
@@ -138,18 +143,18 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 								<Heading size="md" color={headingColor} noOfLines={2} lineHeight="1.3" letterSpacing="-.035em">{title}</Heading>
 							</Box>
 						</Flex>
-						<Flex className="dashboard-listing-price" align="center" justify="space-between" gap="3" mt="5" p={{ base: 4, md: 4.5 }} border="1px solid" borderColor="rgba(240,201,120,.28)" borderRadius="2xl" bg="#102f37" boxShadow="inset 0 1px 0 rgba(255,255,255,.06), 0 12px 28px rgba(16,47,55,.18)">
+						<Flex className="dashboard-listing-price" align="center" justify="space-between" gap="3" mt="5" p={{ base: 4, md: 4.5 }} border="1px solid" borderColor={priceBorder} borderRadius="2xl" bg={priceSurface}>
 							<Box minW="0">
-								<Text color="#f0c978" fontSize="9px" fontWeight="bold" letterSpacing=".14em" textTransform="uppercase">{lang.itemDetailPage.askingPrice}</Text>
+								<Text color={muted} fontSize="9px" fontWeight="bold" letterSpacing=".14em" textTransform="uppercase">{lang.itemDetailPage.askingPrice}</Text>
 								<Flex align="baseline" gap="2" mt="1">
-									<Heading fontSize={{ base: "lg", md: "xl" }} color="white" letterSpacing="-.045em">{Intl.NumberFormat("en-US").format(Number(price) || 0)}</Heading>
-									<Text color="whiteAlpha.800" fontSize="xs" fontWeight="bold">ETB</Text>
+									<Heading fontSize={{ base: "lg", md: "xl" }} color={headingColor} letterSpacing="-.045em">{Intl.NumberFormat("en-US").format(Number(price) || 0)}</Heading>
+									<Text color={muted} fontSize="xs" fontWeight="bold">ETB</Text>
 								</Flex>
 							</Box>
-							{itemType === "BUSINESS_SPACE" && priceFrequency && <Text flexShrink={0} px="3" py="2" color="whiteAlpha.800" fontSize="xs" fontWeight="semibold" borderLeft="1px solid" borderColor="whiteAlpha.300">/ {lang.businessListing.frequencies[priceFrequency]}</Text>}
+							{itemType === "BUSINESS_SPACE" && priceFrequency && <Text flexShrink={0} px="3" py="2" color={muted} fontSize="xs" fontWeight="semibold" borderLeft="1px solid" borderColor={border}>/ {lang.businessListing.frequencies[priceFrequency]}</Text>}
 						</Flex>
 						<Flex mt="auto" pt="5" align="center" gap="3">
-							<Avatar size="sm" name={ownerName || "Habesha Brokers seller"} src={getMediaUrl(ownerPhoto, "profile")} border="2px solid" borderColor={surface} boxShadow="0 0 0 2px rgba(240,201,120,.4)" />
+							<Avatar size="sm" name={ownerName || "Habesha Brokers seller"} src={getMediaUrl(ownerPhoto, "profile")} border="2px solid" borderColor={surface} />
 							<Box minW="0"><Text fontSize="9px" color={muted} fontWeight="bold" letterSpacing=".08em" textTransform="uppercase">{copy.listedBy}</Text><Text noOfLines={1} fontSize="sm" fontWeight="semibold" color={headingColor}>{ownerName || copy.seller}</Text></Box>
 							<Box flex="1" />
 							<Flex aria-hidden="true" align="center" justify="center" flexShrink={0} w="10" h="10" borderRadius="full" bg={paymentSurface} color={accentText} transition="transform 240ms ease, background 240ms ease" _groupHover={{ transform: "translate(2px,-2px)", bg: "rgba(198,107,54,.16)" }}>

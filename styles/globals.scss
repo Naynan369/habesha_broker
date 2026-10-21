@@ -162,64 +162,124 @@ button, a { -webkit-tap-highlight-color: transparent; }
 #explore-listings .explore-listing-card,
 #explore-service-categories .explore-service-card {
 	transition:
-		opacity 680ms cubic-bezier(.2,.7,.2,1),
-		transform 520ms cubic-bezier(.2,.7,.2,1),
-		filter 680ms cubic-bezier(.2,.7,.2,1),
-		clip-path 900ms cubic-bezier(.2,.7,.2,1),
+		opacity 1000ms cubic-bezier(.22,1,.36,1),
+		transform 980ms cubic-bezier(.22,1,.36,1),
+		filter 1000ms cubic-bezier(.22,1,.36,1),
+		clip-path 1350ms cubic-bezier(.22,1,.36,1),
 		box-shadow 220ms ease;
 	transition-delay: var(--home-stagger-delay, 0ms);
 }
 
-html.home-motion-ready #explore-category-cards .explore-category-card:not(.home-motion-visible) {
-	clip-path: inset(100% 0 0 0);
-	filter: saturate(.78) brightness(.82);
+#explore-category-cards .explore-category-card.home-motion-visible {
+	transform-style: preserve-3d;
+	animation: explore-category-frame-enter 1050ms cubic-bezier(.22,1,.36,1) var(--home-stagger-delay, 0ms) both;
 }
 
-#explore-category-cards .explore-category-card.home-motion-visible {
-	clip-path: inset(0);
-	filter: saturate(1) brightness(1);
+@keyframes explore-category-frame-enter {
+	from { opacity: 0; filter: blur(7px); }
+	to { opacity: 1; filter: blur(0); }
+}
+
+#explore-category-cards .explore-category-media {
+	clip-path: inset(100% 0 0 0);
+	transform: scale(1.07);
+	filter: saturate(.76) brightness(.76);
+	animation: explore-category-image-reveal 1400ms cubic-bezier(.22,1,.36,1) calc(var(--home-stagger-delay, 0ms) + 110ms) both;
+}
+
+@keyframes explore-category-image-reveal {
+	from { clip-path: inset(100% 0 0 0); transform: scale(1.07); filter: saturate(.76) brightness(.76); }
+	to { clip-path: inset(0); transform: scale(1); filter: saturate(1) brightness(1); }
+}
+
+#explore-category-cards .explore-category-scrim {
+	opacity: .52;
+	animation: explore-category-scrim-enter 1050ms cubic-bezier(.22,1,.36,1) calc(var(--home-stagger-delay, 0ms) + 220ms) both;
+}
+
+@keyframes explore-category-scrim-enter {
+	to { opacity: 1; }
 }
 
 #explore-category-cards .explore-category-label,
-#explore-category-cards .explore-category-content {
-	transition:
-		opacity 540ms cubic-bezier(.2,.7,.2,1),
-		transform 640ms cubic-bezier(.2,.7,.2,1),
-		filter 540ms ease;
+#explore-category-cards .explore-category-arrow,
+#explore-category-cards .explore-category-title,
+#explore-category-cards .explore-category-description {
+	opacity: 0;
+	filter: blur(5px);
+	animation: explore-category-copy-enter 850ms cubic-bezier(.22,1,.36,1) both;
 }
 
-html.home-motion-ready #explore-category-cards .explore-category-card:not(.home-motion-visible) .explore-category-label,
-html.home-motion-ready #explore-category-cards .explore-category-card:not(.home-motion-visible) .explore-category-content {
-	opacity: 0;
-	transform: translate3d(0, 16px, 0);
-	filter: blur(5px);
+#explore-category-cards .explore-category-label,
+#explore-category-cards .explore-category-arrow {
+	animation-delay: calc(var(--home-stagger-delay, 0ms) + 360ms);
 }
 
 #explore-category-cards .explore-category-label {
-	transition-delay: calc(var(--home-stagger-delay, 0ms) + 260ms);
+	transform-origin: top left;
 }
 
-html.home-motion-ready #explore-category-cards .explore-category-card:not(.home-motion-visible) .explore-category-label {
-	transform: translate3d(0, -12px, 0);
+#explore-category-cards .explore-category-title {
+	animation-delay: calc(var(--home-stagger-delay, 0ms) + 510ms);
 }
 
-#explore-category-cards .explore-category-content {
-	transition-delay: calc(var(--home-stagger-delay, 0ms) + 390ms);
+#explore-category-cards .explore-category-description {
+	animation-delay: calc(var(--home-stagger-delay, 0ms) + 660ms);
 }
 
-#explore-category-cards .explore-category-card.home-motion-visible .explore-category-label,
-#explore-category-cards .explore-category-card.home-motion-visible .explore-category-content {
-	opacity: 1;
-	transform: translate3d(0, 0, 0);
-	filter: blur(0);
+@keyframes explore-category-copy-enter {
+	from { opacity: 0; transform: translate3d(0, 16px, 0); filter: blur(5px); }
+	to { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+}
+
+#explore-category-cards .explore-category-label {
+	animation-name: explore-category-label-enter;
+}
+
+#explore-category-cards .explore-category-arrow {
+	animation-name: explore-category-arrow-enter;
+}
+
+#explore-service-categories .explore-service-card.home-motion-visible {
+	animation: explore-service-card-enter 900ms cubic-bezier(.22,1,.36,1) var(--home-stagger-delay, 0ms) both;
+}
+
+@keyframes explore-service-card-enter {
+	from { opacity: 0; filter: blur(5px); }
+	to { opacity: 1; filter: blur(0); }
+}
+
+@keyframes explore-category-label-enter {
+	from { opacity: 0; transform: translate3d(0, -12px, 0) scale(.92); filter: blur(5px); }
+	to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+
+@keyframes explore-category-arrow-enter {
+	from { opacity: 0; transform: translate3d(0, -12px, 0) scale(.92); filter: blur(5px); }
+	to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+
+#explore-category-cards .explore-category-spotlight {
+	opacity: 0;
+	z-index: 1;
+	background: radial-gradient(420px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(255,255,255,.22), transparent 48%);
+	transition: opacity 180ms ease;
+}
+
+#explore-category-cards .explore-category-card.home-motion-visible:hover .explore-category-spotlight {
+	opacity: .82;
+}
+
+#explore-category-cards .explore-category-card.home-motion-visible {
+	transition: transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease;
 }
 
 #explore-listings .explore-listing-card .listing-card-media {
 	transition:
-		clip-path 900ms cubic-bezier(.2,.7,.2,1),
-		transform 1100ms cubic-bezier(.2,.7,.2,1),
-		filter 850ms ease;
-	transition-delay: calc(var(--home-stagger-delay, 0ms) + 70ms);
+		clip-path 1400ms cubic-bezier(.22,1,.36,1),
+		transform 1450ms cubic-bezier(.22,1,.36,1),
+		filter 1150ms cubic-bezier(.22,1,.36,1);
+	transition-delay: calc(var(--home-stagger-delay, 0ms) + 110ms);
 }
 
 html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-visible) .listing-card-media {
@@ -241,9 +301,9 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 #explore-listings .explore-listing-card .listing-card-price,
 #explore-listings .explore-listing-card .listing-card-owner {
 	transition:
-		opacity 520ms cubic-bezier(.2,.7,.2,1),
-		transform 620ms cubic-bezier(.2,.7,.2,1),
-		filter 520ms ease;
+		opacity 780ms cubic-bezier(.22,1,.36,1),
+		transform 850ms cubic-bezier(.22,1,.36,1),
+		filter 780ms cubic-bezier(.22,1,.36,1);
 }
 
 html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-visible) .listing-card-featured-badge,
@@ -258,7 +318,7 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 }
 
 #explore-listings .explore-listing-card .listing-card-featured-badge {
-	transition-delay: calc(var(--home-stagger-delay, 0ms) + 270ms);
+	transition-delay: calc(var(--home-stagger-delay, 0ms) + 360ms);
 }
 
 html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-visible) .listing-card-featured-badge {
@@ -267,16 +327,16 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 
 #explore-listings .explore-listing-card .listing-card-title,
 #explore-listings .explore-listing-card .listing-card-category {
-	transition-delay: calc(var(--home-stagger-delay, 0ms) + 360ms);
+	transition-delay: calc(var(--home-stagger-delay, 0ms) + 500ms);
 }
 
 #explore-listings .explore-listing-card .listing-card-date,
 #explore-listings .explore-listing-card .listing-card-price {
-	transition-delay: calc(var(--home-stagger-delay, 0ms) + 470ms);
+	transition-delay: calc(var(--home-stagger-delay, 0ms) + 630ms);
 }
 
 #explore-listings .explore-listing-card .listing-card-owner {
-	transition-delay: calc(var(--home-stagger-delay, 0ms) + 580ms);
+	transition-delay: calc(var(--home-stagger-delay, 0ms) + 760ms);
 }
 
 #explore-listings .explore-listing-card.home-motion-visible .listing-card-featured-badge,
@@ -290,19 +350,15 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 	filter: blur(0);
 }
 
-#explore-category-cards .explore-category-card:nth-child(1) { --home-stagger-delay: 0ms; }
-#explore-category-cards .explore-category-card:nth-child(2) { --home-stagger-delay: 110ms; }
-#explore-category-cards .explore-category-card:nth-child(3) { --home-stagger-delay: 220ms; }
-#explore-category-cards .explore-category-card:nth-child(4) { --home-stagger-delay: 330ms; }
-
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
 	#explore-category-cards .explore-category-card.home-motion-visible:hover,
 	#explore-service-categories .explore-service-card.home-motion-visible:hover {
-		transform: translateY(-4px);
+		transform: perspective(900px) rotateX(var(--card-tilt-x, 0deg)) rotateY(var(--card-tilt-y, 0deg)) translateY(-4px);
 	}
 
 	#explore-listings .explore-listing-card.home-motion-visible:hover {
 		transform: translateY(-3px);
+		transition-duration: 260ms;
 	}
 }
 
@@ -339,8 +395,13 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 	}
 
 	#explore-category-cards .explore-category-card,
+	#explore-category-cards .explore-category-media,
+	#explore-category-cards .explore-category-scrim,
+	#explore-category-cards .explore-category-spotlight,
 	#explore-category-cards .explore-category-label,
-	#explore-category-cards .explore-category-content,
+	#explore-category-cards .explore-category-arrow,
+	#explore-category-cards .explore-category-title,
+	#explore-category-cards .explore-category-description,
 	#explore-listings .explore-listing-card,
 	#explore-listings .explore-listing-card .listing-card-media,
 	#explore-listings .explore-listing-card .listing-card-featured-badge,
@@ -355,6 +416,7 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 		transform: none !important;
 		filter: none !important;
 		transition: none !important;
+		animation: none !important;
 	}
 
 	#categories .home-card-image,
