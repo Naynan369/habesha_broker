@@ -7,6 +7,8 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 
 const serviceCategoryImage = "https://images.unsplash.com/photo-1741388222137-c0d3007ec173?auto=format&fit=crop&crop=faces&w=1200&h=800&q=80";
 const businessSpacesImage = "/assets/images/apartment-showcase.jpg";
+// Keep the homepage Services category tile available for a future relaunch.
+const SHOW_SERVICE_CATEGORY_CARD = false;
 
 export const CategoriesSection = () => {
 	const { locale } = useRouter();
@@ -39,11 +41,11 @@ export const CategoriesSection = () => {
 					</Flex>
 				</Flex>
 
-				<SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={{ base: 4, md: 5 }} mt={{ base: 8, md: 10 }}>
+				<SimpleGrid columns={{ base: 1, sm: 2, xl: SHOW_SERVICE_CATEGORY_CARD ? 4 : 3 }} spacing={{ base: 4, md: 5 }} mt={{ base: 8, md: 10 }}>
 					<Category motionDelay={0} title={lang.home.homes_title} categoryLabel={lang.home.category_labels.homes} image="/assets/images/apartment-interior-showcase.jpg" description={lang.home.homes_description} action={lang.home.browse_homes} href="/explore?itemType=HOUSE" />
 					<Category motionDelay={260} title={lang.home.vehicles_title} categoryLabel={lang.home.category_labels.vehicles} image="/assets/images/supercar-showcase.jpg" description={lang.home.vehicles_description} action={lang.home.browse_vehicles} href="/explore?itemType=CAR" />
 					<Category motionDelay={520} title={lang.home.business_spaces_title} categoryLabel={lang.home.category_labels.businessSpaces} image={businessSpacesImage} description={lang.home.business_spaces_description} action={lang.home.browse_business_spaces} href="/explore?itemType=BUSINESS_SPACE" />
-					<Category motionDelay={780} title={lang.home.services_txt} categoryLabel={lang.home.category_labels.services} image={serviceCategoryImage} description={lang.home.services_category_description} action={lang.home.browse_services} href="/explore?itemType=SERVICE" />
+					{SHOW_SERVICE_CATEGORY_CARD && <Category motionDelay={780} title={lang.home.services_txt} categoryLabel={lang.home.category_labels.services} image={serviceCategoryImage} description={lang.home.services_category_description} action={lang.home.browse_services} href="/explore?itemType=SERVICE" />}
 				</SimpleGrid>
 			</Box>
 		</Box>

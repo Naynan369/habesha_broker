@@ -18,6 +18,8 @@ import { ItemCard, ItemLoader } from "@components/explore/ItemCard";
 import { withSessionSsr } from "@config/cookie/cookie";
 
 const SERVICE_CATEGORIES = ["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"] as const;
+// Keep the Explore category card ready for a later relaunch; enable it here when needed.
+const SHOW_LOCAL_HELP_CARD = false;
 
 export const getServerSideProps = withSessionSsr(async ({ req, params }) => {
 	const user = req.user;
@@ -199,7 +201,7 @@ export default function ExplorePage({ user, keyword }) {
 							</Box>
 							<Text color={bodyColor} maxW="430px" fontSize="sm" lineHeight="1.7">{lang.explore.categoryDescription}</Text>
 						</Flex>
-						<SimpleGrid id="explore-category-cards" columns={{ base: 1, md: 2, xl: 4 }} spacing={{ base: 4, md: 6 }}>
+						<SimpleGrid id="explore-category-cards" columns={{ base: 1, md: 2, xl: SHOW_LOCAL_HELP_CARD ? 4 : 3 }} spacing={{ base: 4, md: 6 }}>
 							<Box
 								as="button"
 								type="button"
@@ -254,26 +256,28 @@ export default function ExplorePage({ user, keyword }) {
 									<Flex className="explore-category-content" w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.businessCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.businessCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
 								</Flex>
 							</Box>
-										<Box
-											as="button"
-											type="button"
-											textAlign="left"
-											aria-pressed={filter.itemType === "SERVICE"}
+						{SHOW_LOCAL_HELP_CARD && (
+							<Box
+								as="button"
+								type="button"
+								textAlign="left"
+								aria-pressed={filter.itemType === "SERVICE"}
 								className="explore-category-card" data-home-stagger
-											onClick={() => selectCategory("SERVICE")}
-											position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-											bgImage="linear-gradient(90deg, rgba(14,34,38,.84), rgba(14,34,38,.20)), url('https://images.unsplash.com/photo-1741388222137-c0d3007ec173?auto=format&fit=crop&crop=faces&w=1200&h=800&q=80')"
-									bgSize="cover"
-									bgPosition="center 52%"
-											boxShadow={filter.itemType === "SERVICE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
-											transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
-										>
-											<Flex position="absolute" inset="0" align="center" justify="center" color="whiteAlpha.200"><MdMiscellaneousServices size="150" /></Flex>
-											<Flex position="relative" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
-												<Text className="explore-category-label" color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.home.services_txt}</Text>
-												<Flex className="explore-category-content" w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.servicesCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.servicesCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
-											</Flex>
-										</Box>
+								onClick={() => selectCategory("SERVICE")}
+								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
+								bgImage="linear-gradient(90deg, rgba(14,34,38,.84), rgba(14,34,38,.20)), url('https://images.unsplash.com/photo-1741388222137-c0d3007ec173?auto=format&fit=crop&crop=faces&w=1200&h=800&q=80')"
+								bgSize="cover"
+								bgPosition="center 52%"
+								boxShadow={filter.itemType === "SERVICE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
+								transition="transform 180ms ease, box-shadow 180ms ease" _hover={{ transform: "translateY(-3px)", boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
+							>
+								<Flex position="absolute" inset="0" align="center" justify="center" color="whiteAlpha.200"><MdMiscellaneousServices size="150" /></Flex>
+								<Flex position="relative" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
+									<Text className="explore-category-label" color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.home.services_txt}</Text>
+									<Flex className="explore-category-content" w="full" align="end" justify="space-between" gap="3" mt="2"><Box><Heading color="white" fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.035em">{lang.explore.servicesCardTitle}</Heading><Text color="whiteAlpha.900" fontSize="sm" mt="1">{lang.explore.servicesCardDescription}</Text></Box><MdArrowForward color="white" size="24" /></Flex>
+								</Flex>
+							</Box>
+						)}
 						</SimpleGrid>
 					</Box>
 
