@@ -28,7 +28,8 @@ export function ColorModeToggle() {
 				borderRadius="full"
 				size="sm"
 				_focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }}
-				_hover={{ transform: "translateY(-2px)", boxShadow: "0 12px 28px rgba(8, 24, 30, .24)" }}
+				_hover={{ bg: background, color: foreground, transform: "translateY(-2px)", boxShadow: "0 12px 28px rgba(8, 24, 30, .24)" }}
+				_active={{ bg: background, color: foreground, transform: "scale(.96)" }}
 				transition="all 160ms ease"
 			/>
 		</Tooltip>

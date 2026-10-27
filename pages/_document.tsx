@@ -1,5 +1,6 @@
 import Document, { Html, Head, Main, NextScript } from "next/document";
 import { ColorModeScript } from "@chakra-ui/react";
+import { theme } from "@config/theme";
 
 class MyDocument extends Document {
 	render() {
@@ -12,15 +13,9 @@ class MyDocument extends Document {
 					<link rel="icon" href="/favicon.ico" />
 					<link rel="manifest" href="/site.webmanifest" />
 					<meta name="theme-color" content="#0b2535" />
-					<link rel="preconnect" href="https://fonts.googleapis.com" />
-					<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-					<link
-						href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;500;600;700;800;900&display=swap"
-						rel="stylesheet"
-					/>
 				</Head>
 				<body>
-					<ColorModeScript initialColorMode="light" />
+					<ColorModeScript initialColorMode={theme.config.initialColorMode} />
 					<Main />
 					<NextScript />
 				</body>

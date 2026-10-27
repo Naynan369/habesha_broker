@@ -206,6 +206,8 @@ function FilterButton({ filters, setFilters, value, text }) {
 	const selected = filters.indexOf(value) !== -1;
 	const unselectedText = useColorModeValue("#52656a", "#bbc5c6");
 	const unselectedBorder = useColorModeValue("#d7dfdd", "whiteAlpha.300");
+	const unselectedHoverText = useColorModeValue("#7c351a", "#f2bd96");
+	const unselectedHoverBg = useColorModeValue("rgba(198,107,54,.08)", "rgba(198,107,54,.18)");
 	const handleToggle = () => {
 		if (filters.indexOf(value) !== -1) {
 			setFilters(filters.filter((val: string) => val != value));
@@ -228,7 +230,7 @@ function FilterButton({ filters, setFilters, value, text }) {
 			variant="ghost"
 			onClick={handleToggle}
 			transition="all 180ms ease"
-			_hover={{ bg: selected ? "#1c4a53" : "rgba(198,107,54,.08)", borderColor: selected ? "#1c4a53" : "mainorange", color: selected ? "white" : "mainorange", transform: "translateY(-1px)" }}
+			_hover={{ bg: selected ? "#1c4a53" : unselectedHoverBg, borderColor: selected ? "#1c4a53" : "mainorange", color: selected ? "white" : unselectedHoverText, transform: "translateY(-1px)" }}
 			_active={{ transform: "scale(.97)" }}
 			_focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }}
 		>

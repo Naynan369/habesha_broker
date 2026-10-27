@@ -28,13 +28,15 @@ export interface IItem {
 	priceFrequency?: string;
 	serviceCategory?: string;
 	listingIntent?: string;
+	sellerType?: string;
 }
 
-export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, paymentStatus, paymentFee, paymentEnabled, listingPayment, priceFrequency, serviceCategory, listingIntent }) => {
+export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, paymentStatus, paymentFee, paymentEnabled, listingPayment, priceFrequency, serviceCategory, listingIntent, sellerType }) => {
 	const router = useRouter();
 	const { locale } = router;
 	const lang = useLang();
 	const copy = lang.listingManagementPage;
+	const sellerTypeText = lang.sellerType;
 	const paymentLabels = lang.payments;
 	const { startCheckout, isLoading } = useListingCheckout(id, paymentLabels);
 	const { isOpen, onOpen, onClose } = useDisclosure();
@@ -141,6 +143,7 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 						<Flex align="flex-start" justify="space-between" gap="3">
 							<Box minW="0">
 								<Heading size="md" color={headingColor} noOfLines={2} lineHeight="1.3" letterSpacing="-.035em">{title}</Heading>
+								{sellerType && sellerTypeText.options[sellerType] && <Badge mt="2" colorScheme="purple" variant="subtle" borderRadius="full" px="3">{lang.itemDetailPage.sellerTypeLabel}: {sellerTypeText.options[sellerType]}</Badge>}
 							</Box>
 						</Flex>
 						<Flex className="dashboard-listing-price" align="center" justify="space-between" gap="3" mt="5" p={{ base: 4, md: 4.5 }} border="1px solid" borderColor={priceBorder} borderRadius="2xl" bg={priceSurface}>

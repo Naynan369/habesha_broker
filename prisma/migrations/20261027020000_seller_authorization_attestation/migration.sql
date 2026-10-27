@@ -1,0 +1,2 @@
+ALTER TABLE "Item"
+ADD COLUMN "sellerAttested" BOOLEAN NOT NULL DEFAULT false;

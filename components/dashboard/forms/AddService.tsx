@@ -25,6 +25,7 @@ import {
 import { InputField } from "@components/dashboard/forms/InputField";
 import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizardProgress";
 import { SellerContactStep, useSellerContact } from "@components/dashboard/forms/SellerContactStep";
+import { SellerTypeField } from "@components/dashboard/forms/SellerTypeField";
 import { useLang } from "@libs/hooks/useLang";
 import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import axios from "axios";
@@ -45,6 +46,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 	const lang = useLang();
 	const text = lang.serviceListing;
 	const common = lang.businessListing;
+	const sellerTypeText = lang.sellerType;
 	const uploadButtonBg = useColorModeValue("orange.50", "whiteAlpha.100");
 	const uploadButtonText = useColorModeValue("orange.800", "orange.100");
 	const muted = useColorModeValue("gray.600", "gray.400");
@@ -59,12 +61,15 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 
 	const schema = yup.object().shape({
 		title: yup.string().trim().min(5, "Use at least 5 characters").max(300, "Keep the title under 300 characters").required("A listing title is required"),
+		sellerType: yup.string().oneOf(["SERVICE_PROVIDER", "SERVICE_COMPANY"]).required("Choose your role for this listing"),
+		sellerAttested: yup.boolean().oneOf([true], "Confirm that you are authorized to post this listing"),
 		category: yup.string().oneOf(CATEGORIES).required("Choose a service category"),
 		price: yup.number().typeError("Enter a valid price").min(0, "Price cannot be negative").required("A price is required"),
 		priceType: yup.string().oneOf(["FIXED", "NEGOTIABLE"]).required("Choose a price type"),
 		region: yup.string().trim().max(100).required("Region is required"),
 		city: yup.string().trim().max(100).required("City is required"),
 		serviceArea: yup.string().max(240),
+		availability: yup.string().max(240),
 		description: yup.string().max(10000, "Keep the description under 10,000 characters"),
 		files: yup.array().of(yup.mixed()).min(1, common.photosRequired).max(MAX_PHOTOS, common.wizard.maxPhotos)
 			.test("photo-size", common.photoSizeError, (files: File[]) => !files || files.every((file) => file.size <= MAX_PHOTO_SIZE))
@@ -74,7 +79,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 	const steps = common.wizard.steps as string[];
 	const hints = common.wizard.hints as string[];
 	const fieldsByStep = [
-		["title", "category", "price", "priceType"],
+		["title", "sellerType", "sellerAttested", "category", "price", "priceType"],
 		["serviceArea", "description"],
 		["region", "city"],
 		["files"],
@@ -151,6 +156,8 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 		<Formik
 			initialValues={{
 				title: "",
+				sellerType: "",
+				sellerAttested: false,
 				category: "BROKER_SUPPORT",
 				price: 0,
 				priceType: "NEGOTIABLE",
@@ -158,6 +165,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 				region: "",
 				city: "",
 				serviceArea: "",
+				availability: "",
 				description: "",
 				files: [],
 			}}
@@ -183,6 +191,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 
 					{step === 0 && <Flex direction="column" gap="5">
 						<InputField formik={formik} label={common.title} name="title" placeholder={text.titleHint} helperText={text.titleHelp} required />
+						<SellerTypeField formik={formik} itemType="SERVICE" />
 						<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
 							<SelectField formik={formik} name="category" label={text.category} options={CATEGORIES.map((value) => [value, text.categories[value]])} required />
 							<SelectField formik={formik} name="priceType" label={common.priceType} options={[["FIXED", common.fixed], ["NEGOTIABLE", common.negotiable]]} required />
@@ -192,6 +201,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 
 					{step === 1 && <Flex direction="column" gap="5">
 						<InputField formik={formik} label={text.serviceArea} name="serviceArea" placeholder={text.serviceAreaHint} helperText={text.serviceAreaHint} />
+						<InputField formik={formik} label={text.availability} name="availability" placeholder={text.availabilityHint} helperText={text.availabilityHint} />
 						<FormControl isInvalid={Boolean(formik.touched.description && formik.errors.description)}>
 							<FormLabel htmlFor="description">{text.description}</FormLabel>
 							<Textarea id="description" name="description" value={formik.values.description} onChange={formik.handleChange} onBlur={formik.handleBlur} placeholder={text.description} variant="filled" maxLength={10000} />
@@ -211,10 +221,12 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 					{step === 3 && <Flex direction="column" gap="5">
 						<SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
 							<ReviewCard label={common.title} value={formik.values.title || "—"} />
+							<ReviewCard label={sellerTypeText.label} value={sellerTypeText.options[formik.values.sellerType] || "—"} />
 							<ReviewCard label={text.category} value={text.categories[formik.values.category] || "—"} />
 							<ReviewCard label={common.price} value={"ETB " + Number(formik.values.price || 0).toLocaleString("en-US")} />
 							<ReviewCard label={text.city} value={[formik.values.city, formik.values.region].filter(Boolean).join(", ") || "—"} />
 							<ReviewCard label={text.serviceArea} value={formik.values.serviceArea || "—"} />
+							<ReviewCard label={text.availability} value={formik.values.availability || "—"} />
 						</SimpleGrid>
 						<FormControl isRequired isInvalid={Boolean(formik.touched.files && formik.errors.files)}>
 							<Flex align="center" justify="space-between" gap="3" wrap="wrap">

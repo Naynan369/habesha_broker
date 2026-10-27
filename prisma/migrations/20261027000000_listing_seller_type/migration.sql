@@ -1,0 +1,15 @@
+CREATE TYPE "ListingSellerType" AS ENUM (
+  'OWNER',
+  'AUTHORIZED_AGENT',
+  'BROKER',
+  'DEALER_RETAILER',
+  'SERVICE_PROVIDER',
+  'SERVICE_COMPANY'
+);
+
+ALTER TABLE "Item"
+ADD COLUMN "sellerType" "ListingSellerType" NOT NULL DEFAULT 'OWNER';
+
+UPDATE "Item"
+SET "sellerType" = 'SERVICE_PROVIDER'
+WHERE "itemType" = 'SERVICE';

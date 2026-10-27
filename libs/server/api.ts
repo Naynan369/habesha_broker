@@ -331,16 +331,21 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		}
 		const exists = await prisma.user.findUnique({ where: { email }, select: { id: true } });
 		if (exists) return error(res, 409, "An account with that email already exists");
-		const user = await prisma.user.create({
-			data: {
-				firstName: firstName.slice(0, 100),
-				lastName: lastName.slice(0, 100),
-				email,
-				password: await bcrypt.hash(password, 12),
-			},
-			select: publicUserSelect,
-		});
-		return res.status(201).json({ user });
+		try {
+			const user = await prisma.user.create({
+				data: {
+					firstName: firstName.slice(0, 100),
+					lastName: lastName.slice(0, 100),
+					email,
+					password: await bcrypt.hash(password, 12),
+				},
+				select: publicUserSelect,
+			});
+			return res.status(201).json({ user });
+		} catch (caught) {
+			if ((caught as any)?.code === "P2002") return error(res, 409, "An account with that email already exists");
+			throw caught;
+		}
 	}
 
 	if (route === "login" && req.method === "POST") {
@@ -538,7 +543,7 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		if (!infos.length) return error(res, 400, "Add at least one contact method");
 		const allowed = ["TELEGRAM", "WHATSAPP", "FACEBOOK", "INSTAGRAM", "PHONE_NUMBER", "ADDRESS", "EMAIL"];
 		for (const info of infos) {
-			if (!allowed.includes(info.contactType) || typeof info.value !== "string" || !info.value.trim()) {
+			if (!info || typeof info !== "object" || Array.isArray(info) || !allowed.includes(info.contactType) || typeof info.value !== "string" || !info.value.trim()) {
 				return error(res, 400, "Contact information is invalid");
 			}
 			const value = info.value.trim();
@@ -551,7 +556,7 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				if (!/^[A-Za-z0-9_]{5,32}$/.test(username)) return error(res, 400, "Enter a Telegram username or t.me link");
 			}
 		}
-		const created = await Promise.all(infos.map((info: any) => prisma.contactInfo.create({
+		const created = await prisma.$transaction(infos.map((info: any) => prisma.contactInfo.create({
 			data: { userId: user.id, contactType: info.contactType, value: info.value.trim().slice(0, 500) },
 			select: { id: true, contactType: true, value: true },
 		})));
@@ -562,9 +567,9 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		const user = await requireUser(req, res);
 		if (!user) return;
 		if (typeof body.id !== "string") return error(res, 400, "Contact method ID is required");
-		const contact = await prisma.contactInfo.findUnique({ where: { id: body.id }, select: { id: true, userId: true } });
+		const contact = await prisma.contactInfo.findUnique({ where: { id: body.id }, select: { id: true, userId: true, contactType: true } });
 		if (!contact || contact.userId !== user.id) return error(res, 404, "Contact method not found");
-		if (await prisma.contactInfo.count({ where: { userId: user.id, contactType: { in: [...sellerContactTypes] }, id: { not: contact.id } } }) === 0 && await prisma.item.count({ where: { userId: user.id, status: "APPROVED" } }) > 0) {
+		if (sellerContactTypes.includes(contact.contactType as (typeof sellerContactTypes)[number]) && await prisma.contactInfo.count({ where: { userId: user.id, contactType: { in: [...sellerContactTypes] }, id: { not: contact.id } } }) === 0 && await prisma.item.count({ where: { userId: user.id, status: "APPROVED" } }) > 0) {
 			return error(res, 409, "Add another phone, WhatsApp, or Telegram contact before removing your last contact from published listings");
 		}
 		await prisma.contactInfo.delete({ where: { id: contact.id } });
@@ -594,6 +599,7 @@ async function serviceRequestRoutes(req: SessionRequest, res: NextApiResponse, s
 					item: { select: { id: true, title: true, images: true, itemType: true, status: true, price: true, priceType: true } },
 					customer: { select: { id: true, firstName: true, lastName: true, email: true } },
 					provider: { select: { id: true, firstName: true, lastName: true } },
+					review: { select: { id: true, rating: true, comment: true, createdAt: true } },
 				},
 				orderBy: { createdAt: "desc" },
 				skip: page * 20,
@@ -623,53 +629,123 @@ async function serviceRequestRoutes(req: SessionRequest, res: NextApiResponse, s
 			const latest = new Date(today); latest.setUTCDate(latest.getUTCDate() + 180); latest.setUTCHours(23, 59, 59, 999);
 			if (preferredAt < today || preferredAt > latest) return error(res, 400, "Choose a date within the next 180 days");
 		}
-		const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true, userId: true, itemType: true, status: true } });
-		if (!item || item.itemType !== "SERVICE" || item.status !== "APPROVED") return error(res, 404, "Published service not found");
-		if (item.userId === verifiedUser.id) return error(res, 409, "You cannot request your own service");
-		const openRequest = await prisma.serviceRequest.findFirst({
-			where: { itemId: item.id, customerId: verifiedUser.id, status: { in: ["NEW", "ACCEPTED"] } },
-			select: { id: true },
-		});
-		if (openRequest) return error(res, 409, "You already have an open request for this service");
-		const request = await prisma.serviceRequest.create({
-			data: {
-				itemId: item.id,
-				customerId: verifiedUser.id,
-				providerId: item.userId,
-				message,
-				preferredAt,
-				contactPhone: phone || null,
-			},
-			select: { id: true, status: true, createdAt: true },
-		});
-		return res.status(201).json({ request });
+		try {
+			const outcome = await prisma.$transaction(async (tx) => {
+				const item = await tx.item.findUnique({ where: { id: itemId }, select: { id: true, userId: true, itemType: true, status: true } });
+				if (!item || item.itemType !== "SERVICE" || item.status !== "APPROVED") return { kind: "NOT_FOUND" as const };
+				if (item.userId === verifiedUser.id) return { kind: "OWN_SERVICE" as const };
+				const openRequest = await tx.serviceRequest.findFirst({
+					where: { itemId: item.id, customerId: verifiedUser.id, status: { in: ["NEW", "QUOTED", "ACCEPTED", "SCHEDULED"] } },
+					select: { id: true },
+				});
+				if (openRequest) return { kind: "ALREADY_OPEN" as const };
+				const request = await tx.serviceRequest.create({
+					data: {
+						itemId: item.id,
+						customerId: verifiedUser.id,
+						providerId: item.userId,
+						message,
+						preferredAt,
+						contactPhone: phone || null,
+					},
+					select: { id: true, status: true, createdAt: true },
+				});
+				return { kind: "CREATED" as const, request };
+			}, { isolationLevel: "Serializable" });
+			if (outcome.kind === "NOT_FOUND") return error(res, 404, "Published service not found");
+			if (outcome.kind === "OWN_SERVICE") return error(res, 409, "You cannot request your own service");
+			if (outcome.kind === "ALREADY_OPEN") return error(res, 409, "You already have an open request for this service");
+			return res.status(201).json({ request: outcome.request });
+		} catch (caught) {
+			if ((caught as any)?.code === "P2034") return error(res, 409, "A request for this service was just submitted. Refresh your requests to see it.");
+			throw caught;
+		}
 	}
 
 	if (slug[1] === "update" && req.method === "POST") {
 		const requestId = String(body.requestId || "");
 		const action = String(body.action || "");
 		if (!isValidRecordId(requestId)) return error(res, 400, "Service request is invalid");
-		const existing = await prisma.serviceRequest.findUnique({ where: { id: requestId }, select: { id: true, customerId: true, providerId: true, status: true } });
+		const existing = await prisma.serviceRequest.findUnique({ where: { id: requestId }, select: { id: true, itemId: true, customerId: true, providerId: true, status: true } });
 		if (!existing) return error(res, 404, "Service request not found");
-		let where: any;
-		let status: "ACCEPTED" | "DECLINED" | "COMPLETED" | "CANCELLED";
+		if (action === "quote") {
+			if (existing.providerId !== user.id) return error(res, 403, "Only this service provider can quote this request");
+			if (!["NEW", "ACCEPTED"].includes(existing.status)) return error(res, 409, "This request is no longer open for a quote");
+			const amount = Number(body.quoteAmount);
+			const note = typeof body.quoteNote === "string" ? body.quoteNote.trim().slice(0, 1000) : "";
+			if (!Number.isFinite(amount) || amount <= 0 || amount > 1_000_000_000) return error(res, 400, "Enter a valid quote amount in ETB");
+			let appointmentAt: Date | null = null;
+			if (body.appointmentAt) {
+				appointmentAt = new Date(String(body.appointmentAt));
+				const latest = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
+				if (!Number.isFinite(appointmentAt.getTime()) || appointmentAt <= new Date() || appointmentAt > latest) return error(res, 400, "Choose a proposed appointment within the next 180 days");
+			}
+			const changed = await prisma.serviceRequest.updateMany({
+				where: { id: existing.id, providerId: user.id, status: existing.status },
+				data: { status: "QUOTED", quoteAmount: amount, quoteNote: note || null, appointmentAt },
+			});
+			if (!changed.count) return error(res, 409, "This request has already changed. Refresh and try again.");
+			return res.status(200).json({ ok: true, status: "QUOTED" });
+		}
+		if (action === "acceptQuote" || action === "declineQuote") {
+			if (existing.customerId !== user.id) return error(res, 403, "Only the customer can respond to this quote");
+			if (existing.status !== "QUOTED") return error(res, 409, "There is no current quote to respond to");
+			const status = action === "acceptQuote" ? "ACCEPTED" : "DECLINED";
+			const changed = await prisma.serviceRequest.updateMany({ where: { id: existing.id, customerId: user.id, status: "QUOTED" }, data: { status } });
+			if (!changed.count) return error(res, 409, "This request has already changed. Refresh and try again.");
+			return res.status(200).json({ ok: true, status });
+		}
+		if (action === "schedule") {
+			if (existing.providerId !== user.id) return error(res, 403, "Only this service provider can schedule this request");
+			if (existing.status !== "ACCEPTED") return error(res, 409, "The customer must accept the quote before scheduling");
+			const appointmentAt = new Date(String(body.appointmentAt || ""));
+			const latest = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
+			if (!Number.isFinite(appointmentAt.getTime()) || appointmentAt <= new Date() || appointmentAt > latest) return error(res, 400, "Choose an appointment within the next 180 days");
+			const changed = await prisma.serviceRequest.updateMany({ where: { id: existing.id, providerId: user.id, status: "ACCEPTED" }, data: { appointmentAt, status: "SCHEDULED" } });
+			if (!changed.count) return error(res, 409, "This request has already changed. Refresh and try again.");
+			return res.status(200).json({ ok: true, status: "SCHEDULED" });
+		}
 		if (action === "cancel") {
 			if (existing.customerId !== user.id) return error(res, 403, "Only the customer can cancel this request");
-			where = { id: existing.id, customerId: user.id, status: "NEW" };
-			status = "CANCELLED";
-		} else {
-			if (existing.providerId !== user.id) return error(res, 403, "Only this service provider can update the request");
-			if (action === "accept" || action === "decline") {
-				where = { id: existing.id, providerId: user.id, status: "NEW" };
-				status = action === "accept" ? "ACCEPTED" : "DECLINED";
-			} else if (action === "complete") {
-				where = { id: existing.id, providerId: user.id, status: "ACCEPTED" };
-				status = "COMPLETED";
-			} else return error(res, 400, "Action is invalid");
+			const changed = await prisma.serviceRequest.updateMany({ where: { id: existing.id, customerId: user.id, status: { in: ["NEW", "QUOTED"] } }, data: { status: "CANCELLED" } });
+			if (!changed.count) return error(res, 409, "This request has already changed. Refresh and try again.");
+			return res.status(200).json({ ok: true, status: "CANCELLED" });
 		}
-		const changed = await prisma.serviceRequest.updateMany({ where, data: { status } });
-		if (!changed.count) return error(res, 409, "This request has already changed. Refresh and try again.");
-		return res.status(200).json({ ok: true, status });
+		if (existing.providerId !== user.id) return error(res, 403, "Only this service provider can update the request");
+		if (action === "accept" || action === "decline") {
+			const status = action === "accept" ? "ACCEPTED" : "DECLINED";
+			const changed = await prisma.serviceRequest.updateMany({ where: { id: existing.id, providerId: user.id, status: "NEW" }, data: { status } });
+			if (!changed.count) return error(res, 409, "This request has already changed. Refresh and try again.");
+			return res.status(200).json({ ok: true, status });
+		}
+		if (action === "complete") {
+			const changed = await prisma.serviceRequest.updateMany({ where: { id: existing.id, providerId: user.id, status: { in: ["ACCEPTED", "SCHEDULED"] } }, data: { status: "COMPLETED" } });
+			if (!changed.count) return error(res, 409, "Only an accepted request can be completed");
+			return res.status(200).json({ ok: true, status: "COMPLETED" });
+		}
+		if (action === "review") {
+			return error(res, 403, "Only the customer can review a completed service");
+		}
+		return error(res, 400, "Action is invalid");
+	}
+
+	if (slug[1] === "review" && req.method === "POST") {
+		const requestId = String(body.requestId || "");
+		const rating = Number(body.rating);
+		const comment = typeof body.comment === "string" ? body.comment.trim().slice(0, 1000) : "";
+		if (!isValidRecordId(requestId)) return error(res, 400, "Service request is invalid");
+		if (!Number.isInteger(rating) || rating < 1 || rating > 5) return error(res, 400, "Choose a rating from 1 to 5");
+		const request = await prisma.serviceRequest.findUnique({ where: { id: requestId }, select: { id: true, itemId: true, customerId: true, providerId: true, status: true, review: { select: { id: true } } } });
+		if (!request || request.customerId !== user.id) return error(res, 404, "Completed service request not found");
+		if (request.status !== "COMPLETED") return error(res, 409, "A review is available after the provider marks the service completed");
+		if (request.review) return error(res, 409, "You have already reviewed this service");
+		try {
+			const review = await prisma.serviceReview.create({ data: { requestId: request.id, itemId: request.itemId, reviewerId: user.id, providerId: request.providerId, rating, comment: comment || null } });
+			return res.status(201).json({ review: { id: review.id, rating: review.rating, comment: review.comment, createdAt: review.createdAt } });
+		} catch (caught) {
+			if ((caught as any)?.code === "P2002") return error(res, 409, "You have already reviewed this service");
+			throw caught;
+		}
 	}
 
 	return error(res, 404, "Route not found");
@@ -771,7 +847,31 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		if (!isValidRecordId(body.itemId)) return error(res, 400, "Listing ID is invalid");
 		const item = await prisma.item.findUnique({ where: { id: body.itemId }, select: { id: true, userId: true, itemType: true, paymentStatus: true } });
 		if (!item || item.userId !== user.id) return error(res, 404, "Listing not found");
+		if (body.sellerType !== undefined) {
+			const sellerTypesByItemType: Record<string, string[]> = {
+				HOUSE: ["OWNER", "AUTHORIZED_AGENT", "BROKER"],
+				CAR: ["OWNER", "DEALER_RETAILER", "BROKER"],
+				BUSINESS_SPACE: ["OWNER", "AUTHORIZED_AGENT", "BROKER"],
+				SERVICE: ["SERVICE_PROVIDER", "SERVICE_COMPANY"],
+			};
+			if (!sellerTypesByItemType[item.itemType]?.includes(body.sellerType)) {
+				return error(res, 400, "Choose a valid seller role for this listing");
+			}
+		}
+		if (body.sellerAttested !== true) return error(res, 400, "Confirm that you are authorized to post this listing");
+		let sellerPhoneToSave: string | undefined;
+		if (body.sellerPhone !== undefined) {
+			if (typeof body.sellerPhone !== "string") return error(res, 400, "Phone number is invalid");
+			const phone = body.sellerPhone.trim();
+			if (phone) {
+				const digits = phone.replace(/\D/g, "");
+				if (!/^\+\d{7,15}$/.test(phone) || digits.length < 7 || digits.length > 15) return error(res, 400, "Enter a valid phone number with its country code");
+				sellerPhoneToSave = phone;
+			}
+		}
 		const data: any = {};
+		if (body.sellerType !== undefined) data.sellerType = body.sellerType;
+		data.sellerAttested = true;
 		for (const key of ["title", "description", "price", "priceType"]) {
 			if (body[key] === undefined) continue;
 			if (key === "price") {
@@ -797,7 +897,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 				HOUSE: ["area", "room", "type", "propertyType", "priceFrequency", "bedrooms", "bathrooms", "floor", "totalFloors", "furnishing", "region", "city", "subcity", "woreda", "neighborhood", "landmark", "features"],
 				CAR: ["model", "status", "manufacturer", "year", "transmition", "color", "cylinder", "fuel", "fuelType", "bodyType", "driveType", "mileage", "seats", "doors", "region", "city", "subcity", "neighborhood", "landmark", "features"],
 				BUSINESS_SPACE: ["spaceType", "type", "priceFrequency", "area", "region", "city", "subcity", "woreda", "neighborhood", "landmark", "electricity", "water", "roadAccess", "parking"],
-				SERVICE: ["category", "region", "city", "serviceArea"],
+				SERVICE: ["category", "region", "city", "serviceArea", "availability"],
 			};
 			const allowed = allowedByType[item.itemType] || [];
 			for (const key of allowed) {
@@ -898,7 +998,7 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 			}
 		}
 		const hasSpecificChanges = Object.keys(specific).length > 0;
-		if (!Object.keys(data).length && !hasSpecificChanges) return error(res, 400, "No listing changes were provided");
+		if (!Object.keys(data).length && !hasSpecificChanges && !sellerPhoneToSave) return error(res, 400, "No listing changes were provided");
 		data.status = "PENDING";
 		data.approvedId = null;
 		if (item.paymentStatus === "NOT_REQUIRED") data.paymentStatus = "DUE";
@@ -906,7 +1006,20 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 			const relation = item.itemType === "HOUSE" ? "House" : item.itemType === "CAR" ? "Car" : item.itemType === "BUSINESS_SPACE" ? "BusinessSpace" : "Service";
 			data[relation] = { update: specific };
 		}
-		await prisma.item.update({ where: { id: item.id }, data });
+		await prisma.$transaction(async (tx) => {
+			await tx.item.update({ where: { id: item.id }, data });
+			if (sellerPhoneToSave) {
+				const existingPhone = await tx.contactInfo.findFirst({
+					where: { userId: user.id, contactType: "PHONE_NUMBER" },
+					select: { id: true },
+				});
+				if (existingPhone) {
+					await tx.contactInfo.update({ where: { id: existingPhone.id }, data: { value: sellerPhoneToSave } });
+				} else {
+					await tx.contactInfo.create({ data: { userId: user.id, contactType: "PHONE_NUMBER", value: sellerPhoneToSave } });
+				}
+			}
+		});
 		return res.status(200).json({ ok: true });
 	}
 
@@ -1227,12 +1340,15 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 		if (!itemId || !["APPROVED", "DECLINED"].includes(status)) return error(res, 400, "Listing ID or status is invalid");
 		const item = await prisma.item.findUnique({
 			where: { id: itemId },
-			select: { id: true, userId: true, status: true, itemType: true, paymentStatus: true },
+			select: { id: true, userId: true, status: true, itemType: true, paymentStatus: true, sellerAttested: true },
 		});
 		if (!item) return error(res, 404, "Listing not found");
 		if (item.status !== "PENDING") return error(res, 409, "Only pending listings can be moderated");
 		if (status === "APPROVED" && item.paymentStatus !== "PAID") {
 			return error(res, 409, "The listing fee must be confirmed before this listing can be published");
+		}
+		if (status === "APPROVED" && !item.sellerAttested) {
+			return error(res, 409, "The seller must confirm their role and authority before this listing can be published");
 		}
 		if (status === "APPROVED") {
 			const sellerContact = await prisma.contactInfo.findFirst({

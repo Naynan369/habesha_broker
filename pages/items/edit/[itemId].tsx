@@ -9,6 +9,7 @@ import {
 	CheckboxGroup,
 	Divider,
 	Flex,
+	FormControl,
 	Heading,
 	SimpleGrid,
 	Text,
@@ -16,6 +17,7 @@ import {
 	useToast,
 } from "@chakra-ui/react";
 import { EditInputField } from "@components/dashboard/forms/EditInputField";
+import { getSellerTypeOptions } from "@components/dashboard/forms/SellerTypeField";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 import { ListingImage } from "@components/shared/ListingImage";
 import { withSessionSsr } from "@config/cookie/cookie";
@@ -23,6 +25,7 @@ import { MyTheme } from "@config/theme/MyTheme";
 import { prisma } from "@config/prisma";
 import { useLang } from "@libs/hooks/useLang";
 import { getMediaUrl } from "@libs/helpers/media";
+import { sellerPhoneCountries } from "@libs/helpers/phoneCountries";
 import axios from "axios";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -46,17 +49,23 @@ export const getServerSideProps = withSessionSsr(async ({ req, params, locale })
 			price: true,
 			priceType: true,
 			itemType: true,
+			sellerType: true,
+			sellerAttested: true,
 			status: true,
 			images: true,
 			House: { select: { area: true, room: true, type: true, propertyType: true, priceFrequency: true, bedrooms: true, bathrooms: true, floor: true, totalFloors: true, furnishing: true, video: true, region: true, city: true, subcity: true, woreda: true, neighborhood: true, landmark: true, features: true } },
 			Car: { select: { model: true, status: true, manufacturer: true, year: true, transmition: true, color: true, cylinder: true, fuel: true, fuelType: true, bodyType: true, driveType: true, mileage: true, seats: true, doors: true, region: true, city: true, subcity: true, neighborhood: true, landmark: true, features: true } },
-			Service: { select: { category: true, region: true, city: true, serviceArea: true } },
+			Service: { select: { category: true, region: true, city: true, serviceArea: true, availability: true } },
 			BusinessSpace: { select: { spaceType: true, type: true, priceFrequency: true, area: true, region: true, city: true, subcity: true, woreda: true, neighborhood: true, landmark: true, electricity: true, water: true, roadAccess: true, parking: true } },
 		},
 	});
 	if (!item || item.userId !== user.id) return { notFound: true };
+	const sellerPhone = await prisma.contactInfo.findFirst({
+		where: { userId: user.id, contactType: "PHONE_NUMBER" },
+		select: { value: true },
+	});
 
-	return { props: { item } };
+	return { props: { item, sellerPhone: sellerPhone?.value || "" } };
 });
 
 function editValuesForItem(item: any) {
@@ -69,11 +78,27 @@ function editValuesForItem(item: any) {
 		description: item.description || "",
 		price: String(item.price ?? ""),
 		priceType: item.priceType || "FIXED",
+		sellerType: item.sellerType || "",
+		sellerAttested: item.sellerAttested === true,
 		specificProps,
 	};
 }
 
-export default function EditItemPage({ item }) {
+function splitSellerPhone(value: string) {
+	const match = sellerPhoneCountries
+		.slice()
+		.sort((first, second) => second[1].length - first[1].length)
+		.find(([, code]) => value.startsWith(code));
+	if (!match) return { countryCode: "+251", number: value };
+	return { countryCode: match[1], number: value.slice(match[1].length).replace(/^0+/, "") };
+}
+
+function normalizeSellerPhone(countryCode: string, number: string) {
+	const digits = number.replace(/\D/g, "").replace(/^0+/, "");
+	return digits ? `${countryCode}${digits}` : "";
+}
+
+export default function EditItemPage({ item, sellerPhone = "" }) {
 	const pageBg = useColorModeValue("#f5f5f1", "#000000");
 	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
@@ -81,6 +106,8 @@ export default function EditItemPage({ item }) {
 	const router = useRouter();
 	const toast = useToast();
 	const lang = useLang();
+	const sellerTypeText = lang.sellerType;
+	const sellerContactText = lang.sellerContact;
 	const serviceText = lang.serviceListing;
 	const homeText = lang.businessListing;
 	const carText = lang.vehicleListing;
@@ -88,10 +115,16 @@ export default function EditItemPage({ item }) {
 	const panelBg = useColorModeValue("gray.50", "whiteAlpha.50");
 	const [initialValues] = useState(() => editValuesForItem(item));
 	const [values, setValues] = useState(initialValues);
+	const initialPhoneParts = splitSellerPhone(sellerPhone);
+	const [phoneCountryCode, setPhoneCountryCode] = useState<string>(initialPhoneParts.countryCode);
+	const [phoneNumber, setPhoneNumber] = useState<string>(initialPhoneParts.number);
 	const [saving, setSaving] = useState(false);
-	const isDirty = JSON.stringify(values) !== JSON.stringify(initialValues);
+	const normalizedSellerPhone = normalizeSellerPhone(phoneCountryCode, phoneNumber);
+	const initialNormalizedSellerPhone = normalizeSellerPhone(initialPhoneParts.countryCode, initialPhoneParts.number);
+	const sellerPhoneChanged = Boolean(phoneNumber.trim()) && normalizedSellerPhone !== initialNormalizedSellerPhone;
+	const isDirty = JSON.stringify(values) !== JSON.stringify(initialValues) || sellerPhoneChanged;
 
-	const updateValue = (name: string, value: string) => {
+	const updateValue = (name: string, value: string | boolean) => {
 		setValues((current) => ({ ...current, [name]: value }));
 	};
 	const updateSpecific = (name: string, value: string | string[]) => {
@@ -106,14 +139,18 @@ export default function EditItemPage({ item }) {
 		if (!isDirty || saving) return;
 		setSaving(true);
 		try {
-			await axios.post("/api/items/edit", {
+			const payload: Record<string, any> = {
 				itemId: item.id,
 				title: values.title,
 				description: values.description,
 				price: values.price,
 				priceType: values.priceType,
+				sellerType: values.sellerType,
+				sellerAttested: values.sellerAttested,
 				specificProps: values.specificProps,
-			});
+			};
+			if (sellerPhoneChanged) payload.sellerPhone = normalizedSellerPhone;
+			await axios.post("/api/items/edit", payload);
 			toast({
 				title: "Listing updated",
 				description: "Your changes were saved. The listing is now waiting for admin approval.",
@@ -159,14 +196,44 @@ export default function EditItemPage({ item }) {
 			{options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
 		</EditInputField>
 	);
+	const sellerContactFields = (
+		<Box mt="5" p={{ base: 4, md: 5 }} border="1px solid" borderColor={panelBorder} borderRadius="xl" bg={panelBg}>
+			<Heading size="sm" mb="2">{sellerContactText.stepTitle}</Heading>
+			<Text mb="5" fontSize="sm" color={muted}>{sellerContactText.publicDescription}</Text>
+			<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5" alignItems="start">
+				<EditInputField
+					title={sellerContactText.countryCodeLabel}
+					name="sellerPhoneCountryCode"
+					value={phoneCountryCode}
+					onChange={setPhoneCountryCode}
+					isSelect
+				>
+					{sellerPhoneCountries.map(([country, code]) => <option key={`${country}-${code}`} value={code}>{country} ({code})</option>)}
+				</EditInputField>
+				<EditInputField
+					title={sellerContactText.phoneNumberLabel}
+					name="sellerPhoneNumber"
+					value={phoneNumber}
+					onChange={setPhoneNumber}
+					type="tel"
+					placeholder={sellerContactText.phonePlaceholder}
+					helpText={sellerContactText.phoneHint}
+				/>
+			</SimpleGrid>
+		</Box>
+	);
 
 	const detailFields = item.itemType === "SERVICE" ? (
-		<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
-			{select(serviceText.category, "category", Object.entries(serviceText.categories) as Array<[string, string]>) }
-			{field(serviceText.region, "region")}
-			{field(serviceText.city, "city")}
-			{field(serviceText.serviceArea, "serviceArea")}
-		</SimpleGrid>
+		<>
+			<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
+				{select(serviceText.category, "category", Object.entries(serviceText.categories) as Array<[string, string]>) }
+				{field(serviceText.region, "region")}
+				{field(serviceText.city, "city")}
+				{field(serviceText.serviceArea, "serviceArea")}
+				{field(serviceText.availability, "availability")}
+			</SimpleGrid>
+			{sellerContactFields}
+		</>
 	) : item.itemType === "HOUSE" ? (
 		<>
 			<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
@@ -182,6 +249,7 @@ export default function EditItemPage({ item }) {
 				{select(homeText.furnishing, "furnishing", [["", "Not specified"], ...Object.entries(homeText.furnishingTypes)] as Array<[string, string]>, false) }
 				{[["region", homeText.region], ["city", homeText.city], ["subcity", homeText.subcity], ["woreda", homeText.woreda], ["neighborhood", homeText.neighborhood], ["landmark", homeText.landmark]].map(([name, label]) => field(label, name))}
 			</SimpleGrid>
+			{sellerContactFields}
 			<Box mt="5" p="4" border="1px solid" borderColor={panelBorder} borderRadius="xl" bg={panelBg}>
 				<Text mb="3" fontWeight="semibold">{homeText.features}</Text>
 				<CheckboxGroup colorScheme="orange" value={Array.isArray(values.specificProps.features) ? values.specificProps.features : []} onChange={(selected) => updateSpecific("features", selected as string[])}>
@@ -210,6 +278,7 @@ export default function EditItemPage({ item }) {
 				{field(carText.doors, "doors", "number")}
 				{[["region", carText.region], ["city", carText.city], ["subcity", carText.subcity], ["neighborhood", carText.neighborhood], ["landmark", carText.landmark]].map(([name, label]) => field(label, name))}
 			</SimpleGrid>
+			{sellerContactFields}
 			<Box mt="5" p="4" border="1px solid" borderColor={panelBorder} borderRadius="xl" bg={panelBg}>
 				<Text mb="3" fontWeight="semibold">{carText.features}</Text>
 				<CheckboxGroup colorScheme="orange" value={Array.isArray(values.specificProps.features) ? values.specificProps.features : []} onChange={(selected) => updateSpecific("features", selected as string[])}>
@@ -220,14 +289,19 @@ export default function EditItemPage({ item }) {
 			</Box>
 		</>
 	) : (
+		<>
 		<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
 			{select("Space type", "spaceType", [["SHOP", "Shop"], ["OFFICE", "Office"], ["WAREHOUSE", "Warehouse"], ["MARKET_STALL", "Market stall"], ["WORKSHOP", "Workshop"], ["LAND", "Commercial land"]])}
 			{select("Availability", "type", [["RENT", "For rent"], ["FORSALE", "For sale"]])}
 			{values.specificProps.type === "RENT" && select("Rent frequency", "priceFrequency", [["DAILY", "Daily"], ["WEEKLY", "Weekly"], ["MONTHLY", "Monthly"], ["YEARLY", "Yearly"]])}
 			{field("Floor area (m²)", "area", "number", undefined, "e.g. 80")}
 			{[["region", "Region"], ["city", "City"], ["subcity", "Subcity"], ["woreda", "Woreda"], ["neighborhood", "Neighborhood"], ["landmark", "Nearby landmark"]].map(([name, label]) => field(label, name))}
+		</SimpleGrid>
+		{sellerContactFields}
+		<SimpleGrid mt="5" columns={{ base: 1, md: 2 }} spacing="5">
 			{[["electricity", "Electricity"], ["water", "Water"], ["roadAccess", "Road access"], ["parking", "Parking"]].map(([name, label]) => select(label, name, [["true", "Yes"], ["false", "No"]]))}
 		</SimpleGrid>
+		</>
 	);
 
 	const statusTone = item.status === "DECLINED" ? "error" : item.status === "APPROVED" ? "success" : "warning";
@@ -294,6 +368,14 @@ export default function EditItemPage({ item }) {
 									<option value="FIXED">Fixed</option>
 									<option value="NEGOTIABLE">Negotiable</option>
 								</EditInputField>
+								<EditInputField title={sellerTypeText.label} name="sellerType" value={values.sellerType} onChange={(value) => updateValue("sellerType", value)} isSelect required>
+									<option value="" disabled>{sellerTypeText.choose}</option>
+									{getSellerTypeOptions(item.itemType, sellerTypeText.options).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+								</EditInputField>
+								<FormControl gridColumn={{ base: "auto", md: "1 / -1" }}>
+									<Checkbox isChecked={values.sellerAttested} onChange={(event) => updateValue("sellerAttested", event.target.checked)} colorScheme="orange">{sellerTypeText.attestation}</Checkbox>
+									<Text mt="2" color={muted} fontSize="sm">{sellerTypeText.attestationHint}</Text>
+								</FormControl>
 							</SimpleGrid>
 							<Box mt="6">
 								<EditInputField title="Description" name="description" value={values.description} onChange={(value) => updateValue("description", value)} placeholder="Condition, features, location, and important terms" isTextarea />

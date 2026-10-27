@@ -27,6 +27,7 @@ import {
 import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizardProgress";
 import { InputField } from "@components/dashboard/forms/InputField";
 import { SellerContactStep, useSellerContact } from "@components/dashboard/forms/SellerContactStep";
+import { SellerTypeField } from "@components/dashboard/forms/SellerTypeField";
 import { useLang } from "@libs/hooks/useLang";
 import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import axios from "axios";
@@ -49,6 +50,8 @@ const optionalNumber = () => yup.number()
 
 const CarSchema = yup.object().shape({
 	title: yup.string().trim().min(5, "Use at least 5 characters").max(300, "Keep the title under 300 characters").required("A listing title is required"),
+	sellerType: yup.string().oneOf(["OWNER", "DEALER_RETAILER", "BROKER"]).required("Choose your role for this listing"),
+	sellerAttested: yup.boolean().oneOf([true], "Confirm that you are authorized to post this listing"),
 	description: yup.string().max(10000, "Keep the description under 10,000 characters"),
 	price: yup.number().typeError("Enter a valid price").min(1, "Price must be greater than zero").required("A price is required"),
 	priceType: yup.string().oneOf(["FIXED", "NEGOTIABLE"]).required("Choose a price type"),
@@ -81,6 +84,7 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 	const lang = useLang();
 	const common = lang.businessListing;
 	const text = lang.vehicleListing;
+	const sellerTypeText = lang.sellerType;
 	const uploadButtonBg = useColorModeValue("orange.50", "whiteAlpha.100");
 	const uploadButtonText = useColorModeValue("orange.800", "orange.100");
 	const muted = useColorModeValue("gray.600", "gray.400");
@@ -97,7 +101,7 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 	const steps = common.wizard.steps as string[];
 	const hints = common.wizard.hints as string[];
 	const fieldsByStep = [
-		["title", "price", "priceType", "status", "manufacturer", "model", "year"],
+		["title", "sellerType", "sellerAttested", "price", "priceType", "status", "manufacturer", "model", "year"],
 		["bodyType", "transmition", "fuelType", "driveType", "color", "cylinder", "fuel", "mileage", "seats", "doors", "features"],
 		["region", "city", "subcity", "neighborhood", "landmark", "description"],
 		["files"],
@@ -164,7 +168,7 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 
 	return (
 		<Formik initialValues={{
-			title: "", description: "", price: "", priceType: "FIXED", itemType: "CAR", files: [],
+			title: "", sellerType: "", sellerAttested: false, description: "", price: "", priceType: "FIXED", itemType: "CAR", files: [],
 			model: "", status: "USED", manufacturer: "", year: "", transmition: "AUTO", color: "",
 			cylinder: "", fuel: "", fuelType: "", bodyType: "", driveType: "", mileage: "", seats: "", doors: "",
 			region: "", city: "", subcity: "", neighborhood: "", landmark: "", features: [],
@@ -185,6 +189,7 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 
 					{step === 0 && <Flex direction="column" gap="5">
 						<InputField formik={formik} label={common.title} name="title" placeholder={text.titleHint} helperText={text.titleHelp} required />
+						<SellerTypeField formik={formik} itemType="CAR" />
 						<SimpleGrid columns={{ base: 1, md: 3 }} spacing="5">
 							<InputField formik={formik} label={common.price} name="price" type="number" suffix={<Text>ETB</Text>} required />
 							<SelectField formik={formik} name="priceType" label={common.priceType} options={[["FIXED", common.fixed], ["NEGOTIABLE", common.negotiable]]} required />
@@ -242,6 +247,7 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 					{step === 3 && <Flex direction="column" gap="5">
 						<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
 							<ReviewCard label={common.title} value={formik.values.title || "—"} />
+							<ReviewCard label={sellerTypeText.label} value={sellerTypeText.options[formik.values.sellerType] || "—"} />
 							<ReviewCard label={common.wizard.priceLabel} value={formik.values.price ? `ETB ${Number(formik.values.price).toLocaleString("en-US")}` : "—"} />
 							<ReviewCard label={text.manufacturer} value={[formik.values.manufacturer, formik.values.model].filter(Boolean).join(" ") || "—"} />
 							<ReviewCard label={text.year} value={formik.values.year || "—"} />

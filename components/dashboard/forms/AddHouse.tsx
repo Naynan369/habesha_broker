@@ -27,6 +27,7 @@ import {
 import { InputField } from "@components/dashboard/forms/InputField";
 import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizardProgress";
 import { SellerContactStep, useSellerContact } from "@components/dashboard/forms/SellerContactStep";
+import { SellerTypeField } from "@components/dashboard/forms/SellerTypeField";
 import { useLang } from "@libs/hooks/useLang";
 import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import axios from "axios";
@@ -51,6 +52,8 @@ const optionalNumber = () => yup.number()
 
 const HouseSchema = yup.object().shape({
 	title: yup.string().trim().min(5, "Use at least 5 characters").max(300, "Keep the title under 300 characters").required("A listing title is required"),
+	sellerType: yup.string().oneOf(["OWNER", "AUTHORIZED_AGENT", "BROKER"]).required("Choose your role for this listing"),
+	sellerAttested: yup.boolean().oneOf([true], "Confirm that you are authorized to post this listing"),
 	description: yup.string().max(10000, "Keep the description under 10,000 characters"),
 	price: yup.number().typeError("Enter a valid price").min(1, "Price must be greater than zero").required("A price is required"),
 	priceType: yup.string().oneOf(["FIXED", "NEGOTIABLE"]).required("Choose a price type"),
@@ -84,7 +87,9 @@ const HouseSchema = yup.object().shape({
 export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 	const router = useRouter();
 	const toast = useToast();
-	const common = useLang().businessListing;
+	const lang = useLang();
+	const common = lang.businessListing;
+	const sellerTypeText = lang.sellerType;
 	const uploadButtonBg = useColorModeValue("orange.50", "whiteAlpha.100");
 	const uploadButtonText = useColorModeValue("orange.800", "orange.100");
 	const muted = useColorModeValue("gray.600", "gray.400");
@@ -110,7 +115,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 	const steps = common.wizard.steps as string[];
 	const hints = common.wizard.hints as string[];
 	const fieldsByStep = [
-		["title", "price", "priceType", "type", "priceFrequency"],
+		["title", "sellerType", "sellerAttested", "price", "priceType", "type", "priceFrequency"],
 		["propertyType", "area", "room", "bedrooms", "bathrooms", "floor", "totalFloors", "furnishing", "features"],
 		["region", "city", "subcity", "woreda", "neighborhood", "landmark", "description"],
 		["files"],
@@ -216,7 +221,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 
 	return (
 		<Formik initialValues={{
-			title: "", description: "", price: "", priceType: "FIXED", itemType: "HOUSE", files: [],
+			title: "", sellerType: "", sellerAttested: false, description: "", price: "", priceType: "FIXED", itemType: "HOUSE", files: [],
 			type: "FORSALE", priceFrequency: "", propertyType: "", area: "", room: "", bedrooms: "", bathrooms: "",
 			floor: "", totalFloors: "", furnishing: "", region: "", city: "", subcity: "", woreda: "", neighborhood: "", landmark: "", features: [], video: null,
 		}} validationSchema={HouseSchema} onSubmit={onSubmit} validateOnBlur>
@@ -236,6 +241,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 
 					{step === 0 && <Flex direction="column" gap="5">
 						<InputField formik={formik} label={common.title} name="title" placeholder={common.titleHint} helperText={common.titleHelp} required />
+						<SellerTypeField formik={formik} itemType="HOUSE" />
 						<SimpleGrid columns={{ base: 1, md: 3 }} spacing="5">
 							<InputField formik={formik} label={common.price} name="price" type="number" placeholder={common.priceHint} suffix={<Text>ETB</Text>} required />
 							<SelectField formik={formik} name="priceType" label={common.priceType} options={[["FIXED", common.fixed], ["NEGOTIABLE", common.negotiable]]} required />
@@ -290,6 +296,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 					{step === 3 && <Flex direction="column" gap="5">
 						<SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
 							<ReviewCard label={common.title} value={formik.values.title || "—"} />
+							<ReviewCard label={sellerTypeText.label} value={sellerTypeText.options[formik.values.sellerType] || "—"} />
 							<ReviewCard label={common.wizard.priceLabel} value={formik.values.price ? `ETB ${Number(formik.values.price).toLocaleString("en-US")}` : "—"} />
 							<ReviewCard label={common.propertyType} value={(common.propertyTypes as Record<string, string>)[formik.values.propertyType] || "—"} />
 							<ReviewCard label={common.rentOrSale} value={formik.values.type === "RENT" ? common.rent : common.sale} />

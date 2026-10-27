@@ -1,4 +1,4 @@
-import { Alert, AlertDescription, AlertIcon, AlertTitle, Avatar, Badge, Box, Button, Container, Flex, Heading, Image, Skeleton, SimpleGrid, Stack, Text, useColorModeValue, useToast } from "@chakra-ui/react";
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Avatar, Badge, Box, Button, Container, Flex, FormControl, FormLabel, Heading, Image, Input, Select, Skeleton, SimpleGrid, Stack, Text, Textarea, useColorModeValue, useToast } from "@chakra-ui/react";
 import { BrandLogo } from "@components/shared/BrandLogo";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 import { ListingImage } from "@components/shared/ListingImage";
@@ -29,14 +29,22 @@ export default function ServiceRequestsPage({ user }: { user: { id: string } }) 
 	const [loading, setLoading] = useState(true);
 	const [loadError, setLoadError] = useState(false);
 	const [busyId, setBusyId] = useState("");
+	const [quoteAmounts, setQuoteAmounts] = useState<Record<string, string>>({});
+	const [quoteNotes, setQuoteNotes] = useState<Record<string, string>>({});
+	const [appointmentDrafts, setAppointmentDrafts] = useState<Record<string, string>>({});
+	const [reviewingId, setReviewingId] = useState("");
+	const [reviewRatings, setReviewRatings] = useState<Record<string, string>>({});
+	const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
 	const [page, setPage] = useState(0);
 	const [total, setTotal] = useState(0);
 	const pageBg = useColorModeValue("#f5f5f1", "#000000");
 	const surface = useColorModeValue("white", "#0c0c0c");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const muted = useColorModeValue("gray.600", "gray.400");
+	const linkHoverColor = useColorModeValue("#8d421e", "#f0b783");
 	const navBg = useColorModeValue("maingray", "#050505");
 	const emptyIconBg = useColorModeValue("orange.50", "whiteAlpha.100");
+	const quoteSurface = useColorModeValue("orange.50", "whiteAlpha.100");
 	const load = useCallback(async () => {
 		setLoading(true); setLoadError(false);
 		try {
@@ -56,18 +64,47 @@ export default function ServiceRequestsPage({ user }: { user: { id: string } }) 
 	}, [view, page, user.id]);
 	useEffect(() => { void load(); }, [load]);
 
-	const updateRequest = async (requestId: string, action: string) => {
+	const updateRequest = async (requestId: string, action: string, extra: Record<string, unknown> = {}) => {
 		setBusyId(requestId);
 		try {
-			await axios.post("/api/serviceRequests/update", { requestId, action });
+			await axios.post("/api/serviceRequests/update", { requestId, action, ...extra });
 			toast({ title: text.updated, status: "success", duration: 3500, isClosable: true });
 			await load();
 		} catch (error: any) {
 			toast({ title: text.updateFailed, description: error?.response?.data?.err || text.tryAgain, status: "error", duration: 5000, isClosable: true });
 		} finally { setBusyId(""); }
 	};
-	const statusColor: Record<string, string> = { NEW: "blue", ACCEPTED: "green", DECLINED: "red", COMPLETED: "purple", CANCELLED: "gray" };
-	const statusLabel: Record<string, string> = { NEW: text.statusNew, ACCEPTED: text.statusAccepted, DECLINED: text.statusDeclined, COMPLETED: text.statusCompleted, CANCELLED: text.statusCancelled };
+	const sendQuote = async (requestId: string) => {
+		const amount = Number(quoteAmounts[requestId]);
+		if (!Number.isFinite(amount) || amount <= 0) {
+			toast({ title: text.quoteRequired, status: "warning", duration: 3500, isClosable: true });
+			return;
+		}
+		const localAppointment = appointmentDrafts[requestId];
+		await updateRequest(requestId, "quote", {
+			quoteAmount: amount,
+			quoteNote: quoteNotes[requestId] || "",
+			appointmentAt: localAppointment ? new Date(localAppointment).toISOString() : undefined,
+		});
+	};
+	const scheduleAppointment = async (requestId: string) => {
+		const localAppointment = appointmentDrafts[requestId];
+		if (!localAppointment) return;
+		await updateRequest(requestId, "schedule", { appointmentAt: new Date(localAppointment).toISOString() });
+	};
+	const submitReview = async (requestId: string) => {
+		setBusyId(requestId);
+		try {
+			await axios.post("/api/serviceRequests/review", { requestId, rating: Number(reviewRatings[requestId] || 5), comment: reviewComments[requestId] || "" });
+			setReviewingId("");
+			toast({ title: text.reviewed, status: "success", duration: 3500, isClosable: true });
+			await load();
+		} catch (error: any) {
+			toast({ title: text.reviewFailed, description: error?.response?.data?.err || text.tryAgain, status: "error", duration: 5000, isClosable: true });
+		} finally { setBusyId(""); }
+	};
+	const statusColor: Record<string, string> = { NEW: "blue", QUOTED: "orange", ACCEPTED: "green", SCHEDULED: "teal", DECLINED: "red", COMPLETED: "purple", CANCELLED: "gray" };
+	const statusLabel: Record<string, string> = { NEW: text.statusNew, QUOTED: text.statusQuoted, ACCEPTED: text.statusAccepted, SCHEDULED: text.statusScheduled, DECLINED: text.statusDeclined, COMPLETED: text.statusCompleted, CANCELLED: text.statusCancelled };
 	const listingStatus: Record<string, { label: string; color: string }> = {
 		PENDING: { label: listingText.pending, color: "yellow" },
 		APPROVED: { label: listingText.approved, color: "green" },
@@ -82,7 +119,7 @@ export default function ServiceRequestsPage({ user }: { user: { id: string } }) 
 		<Head><title>{text.pageTitle}</title></Head>
 		<Flex minH="100dvh" direction="column" bg={pageBg}>
 			<Flex align="center" minH="72px" px={{ base: 4, md: 8 }} bg={navBg} color="white" gap="4">
-				<Button variant="ghost" color="white" leftIcon={<MdArrowBack />} onClick={() => router.push("/dashboard")}>{text.back}</Button>
+				<Button variant="ghost" color="white" leftIcon={<MdArrowBack />} _hover={{ bg: "whiteAlpha.200", color: "white" }} _active={{ bg: "whiteAlpha.300", color: "white" }} onClick={() => router.push("/dashboard")}>{text.back}</Button>
 				<Box flex="1"><BrandLogo compact /></Box><ColorModeToggle />
 			</Flex>
 			<Container maxW="6xl" py={{ base: 8, md: 12 }} px={{ base: 4, md: 8 }} flex="1">
@@ -109,6 +146,7 @@ export default function ServiceRequestsPage({ user }: { user: { id: string } }) 
 								<Stack p={{ base: 4, md: 5 }} spacing="3"><Box><Text color="mainorange" fontSize="xs" fontWeight="bold" letterSpacing=".08em" textTransform="uppercase">{category}</Text><Heading mt="1" size="sm" noOfLines={2}>{listing.title}</Heading></Box>
 									{location && <Text color={muted} fontSize="sm">{location}</Text>}
 									{service?.serviceArea && <Text color={muted} fontSize="sm" noOfLines={2}>{text.areasServed}: {service.serviceArea}</Text>}
+									{service?.availability && <Text color={muted} fontSize="sm" noOfLines={2}>{serviceText.availability}: {service.availability}</Text>}
 									{listing.status === "PENDING" && listing.paymentStatus !== "PAID" && <Badge alignSelf="flex-start" colorScheme="orange">{listing.paymentStatus === "PROCESSING" ? listingText.paymentProcessing : listingText.paymentDue}</Badge>}
 									<Flex gap="3" wrap="wrap" pt="1"><Button as={Link} href={`/items/edit/${listing.id}`} size="sm" variant="outline" borderRadius="lg">{text.editService}</Button>{listing.status === "APPROVED" && <Button as={Link} href={`/items/${listing.id}`} size="sm" colorScheme="orange" borderRadius="lg">{text.viewService}</Button>}</Flex>
 								</Stack>
@@ -118,17 +156,26 @@ export default function ServiceRequestsPage({ user }: { user: { id: string } }) 
 							return <Box key={request.id} p={{ base: 4, md: 5 }} bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 8px 28px rgba(10,20,30,.05)">
 								<Flex align="flex-start" gap="4">
 									{request.item.images?.[0] ? <Image src={request.item.images[0]} alt={request.item.title} boxSize="76px" objectFit="cover" borderRadius="xl" flexShrink={0} /> : <Avatar name={request.item.title} size="lg" borderRadius="xl" />}
-									<Box minW="0" flex="1"><Link legacyBehavior href={`/items/${request.item.id}`} passHref><Heading as="a" size="sm" noOfLines={2} _hover={{ color: "mainorange" }}>{request.item.title}</Heading></Link><Text mt="1" fontSize="sm" color={muted}>{view === "received" ? text.from : text.providerLabel} {person.firstName} {person.lastName}</Text><Badge mt="2" colorScheme={statusColor[request.status]}>{statusLabel[request.status] || request.status}</Badge></Box>
+									<Box minW="0" flex="1"><Link legacyBehavior href={`/items/${request.item.id}`} passHref><Heading as="a" size="sm" noOfLines={2} _hover={{ color: linkHoverColor }}>{request.item.title}</Heading></Link><Text mt="1" fontSize="sm" color={muted}>{view === "received" ? text.from : text.providerLabel} {person.firstName} {person.lastName}</Text><Badge mt="2" colorScheme={statusColor[request.status]}>{statusLabel[request.status] || request.status}</Badge></Box>
 								</Flex>
 								<Text mt="4" whiteSpace="pre-wrap" wordBreak="break-word">{request.message}</Text>
 								{request.preferredAt && <Text mt="3" fontSize="sm" color={muted}><strong>{text.preferredDate}:</strong> {new Date(request.preferredAt).toLocaleDateString(router.locale === "am" ? "am-ET" : "en-ET", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })}</Text>}
+								{request.quoteAmount != null && <Box mt="4" p="4" bg={quoteSurface} border="1px solid" borderColor={border} borderRadius="xl"><Text fontWeight="bold">{text.quoteAmount}: ETB {Number(request.quoteAmount).toLocaleString(router.locale === "am" ? "am-ET" : "en-ET")}</Text>{request.quoteNote && <Text mt="2" whiteSpace="pre-wrap" color={muted}>{request.quoteNote}</Text>}<Text mt="2" fontSize="xs" color={muted}>{text.quoteDisclosure}</Text></Box>}
+								{request.appointmentAt && <Text mt="3" fontSize="sm" color={muted}><strong>{text.appointment}:</strong> {new Date(request.appointmentAt).toLocaleString(router.locale === "am" ? "am-ET" : "en-ET", { dateStyle: "medium", timeStyle: "short" })}</Text>}
 								{view === "received" && <Stack mt="3" spacing="1" fontSize="sm" color={muted}><Text>{person.email}</Text>{request.contactPhone && <Text>{text.customerPhone}: {request.contactPhone}</Text>}</Stack>}
 								<Text mt="3" fontSize="xs" color={muted}>{text.requestedOn} {new Date(request.createdAt).toLocaleDateString(router.locale === "am" ? "am-ET" : "en-ET", { year: "numeric", month: "short", day: "numeric" })}</Text>
-								{view === "received" && <Flex mt="5" gap="3" wrap="wrap">
-									{request.status === "NEW" && <><Button size="sm" colorScheme="green" isLoading={busyId === request.id} isDisabled={Boolean(busyId && busyId !== request.id)} onClick={() => void updateRequest(request.id, "accept")}>{text.accept}</Button><Button size="sm" variant="outline" colorScheme="red" isDisabled={Boolean(busyId)} onClick={() => void updateRequest(request.id, "decline")}>{text.decline}</Button></>}
-									{request.status === "ACCEPTED" && <Button size="sm" colorScheme="purple" isLoading={busyId === request.id} onClick={() => void updateRequest(request.id, "complete")}>{text.markCompleted}</Button>}
-								</Flex>}
+								{view === "received" && request.status === "NEW" && <Stack mt="5" p="4" bg={pageBg} border="1px solid" borderColor={border} borderRadius="xl" spacing="3">
+									<Text fontSize="sm" color={muted}>{text.quoteDisclosure}</Text>
+									<FormControl><FormLabel>{text.quoteAmount}</FormLabel><Input type="number" min="1" value={quoteAmounts[request.id] || ""} onChange={(event) => setQuoteAmounts((current) => ({ ...current, [request.id]: event.target.value }))} placeholder="ETB" /></FormControl>
+									<FormControl><FormLabel>{text.quoteNote}</FormLabel><Textarea value={quoteNotes[request.id] || ""} onChange={(event) => setQuoteNotes((current) => ({ ...current, [request.id]: event.target.value }))} maxLength={1000} placeholder={text.quoteNotePlaceholder} /></FormControl>
+									<FormControl><FormLabel>{text.proposedAppointment}</FormLabel><Input type="datetime-local" min={new Date().toISOString().slice(0, 16)} value={appointmentDrafts[request.id] || ""} onChange={(event) => setAppointmentDrafts((current) => ({ ...current, [request.id]: event.target.value }))} /></FormControl>
+									<Flex gap="3" wrap="wrap"><Button size="sm" colorScheme="orange" isLoading={busyId === request.id} isDisabled={Boolean(busyId)} onClick={() => void sendQuote(request.id)}>{text.sendQuote}</Button><Button size="sm" colorScheme="green" isDisabled={Boolean(busyId)} onClick={() => void updateRequest(request.id, "accept")}>{text.accept}</Button><Button size="sm" variant="outline" colorScheme="red" isDisabled={Boolean(busyId)} onClick={() => void updateRequest(request.id, "decline")}>{text.decline}</Button></Flex>
+								</Stack>}
+								{view === "received" && request.status === "ACCEPTED" && <Stack mt="5" p="4" bg={pageBg} border="1px solid" borderColor={border} borderRadius="xl"><FormControl><FormLabel>{text.appointment}</FormLabel><Input type="datetime-local" min={new Date().toISOString().slice(0, 16)} value={appointmentDrafts[request.id] || ""} onChange={(event) => setAppointmentDrafts((current) => ({ ...current, [request.id]: event.target.value }))} /></FormControl><Flex gap="3" wrap="wrap"><Button size="sm" colorScheme="teal" isDisabled={!appointmentDrafts[request.id] || Boolean(busyId)} isLoading={busyId === request.id} onClick={() => void scheduleAppointment(request.id)}>{text.scheduleAppointment}</Button><Button size="sm" colorScheme="purple" isDisabled={Boolean(busyId)} onClick={() => void updateRequest(request.id, "complete")}>{text.markCompleted}</Button></Flex></Stack>}
+								{view === "received" && request.status === "SCHEDULED" && <Button mt="5" size="sm" colorScheme="purple" isLoading={busyId === request.id} isDisabled={Boolean(busyId)} onClick={() => void updateRequest(request.id, "complete")}>{text.markCompleted}</Button>}
+								{view === "sent" && request.status === "QUOTED" && <Flex mt="5" gap="3" wrap="wrap"><Button size="sm" colorScheme="green" isLoading={busyId === request.id} isDisabled={Boolean(busyId)} onClick={() => void updateRequest(request.id, "acceptQuote")}>{text.acceptQuote}</Button><Button size="sm" variant="outline" colorScheme="red" isDisabled={Boolean(busyId)} onClick={() => void updateRequest(request.id, "declineQuote")}>{text.declineQuote}</Button></Flex>}
 								{view === "sent" && request.status === "NEW" && <Button mt="5" size="sm" variant="outline" isLoading={busyId === request.id} onClick={() => void updateRequest(request.id, "cancel")}>{text.cancelRequest}</Button>}
+								{view === "sent" && request.status === "COMPLETED" && (request.review ? <Text mt="5" color="green.500" fontWeight="semibold">{text.reviewed} · {request.review.rating}/5</Text> : <Stack mt="5" p="4" bg={pageBg} border="1px solid" borderColor={border} borderRadius="xl"><Text fontWeight="semibold">{text.reviewProvider}</Text><Text fontSize="xs" color={muted}>{text.completedOnly}</Text><Select value={reviewRatings[request.id] || "5"} onChange={(event) => setReviewRatings((current) => ({ ...current, [request.id]: event.target.value }))}><option value="5">5 / 5</option><option value="4">4 / 5</option><option value="3">3 / 5</option><option value="2">2 / 5</option><option value="1">1 / 5</option></Select><Textarea value={reviewComments[request.id] || ""} onChange={(event) => setReviewComments((current) => ({ ...current, [request.id]: event.target.value }))} maxLength={1000} placeholder={text.reviewPlaceholder} /><Button size="sm" alignSelf="flex-start" colorScheme="orange" isLoading={busyId === request.id} isDisabled={Boolean(busyId)} onClick={() => void submitReview(request.id)}>{text.submitReview}</Button></Stack>)}
 							</Box>;
 						})}
 					</SimpleGrid>

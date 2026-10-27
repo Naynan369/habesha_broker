@@ -73,6 +73,8 @@ export const getServerSideProps = withSessionSsr(
 export default function AdminDashboard({ user }) {
 	const { logout } = useUser();
 	const router = useRouter();
+	const copy = useLang().adminPage;
+	const pageLanguage = router.locale === "am" || /^\/am(?:\/|$)/.test(router.asPath) ? "am" : "en";
 	const [searchInput, setSearchInput] = useState("");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [statusFilter, setStatusFilter] = useState("PENDING");
@@ -84,13 +86,20 @@ export default function AdminDashboard({ user }) {
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const textColor = useColorModeValue("maingray", "gray.100");
 	const muted = useColorModeValue("gray.600", "gray.400");
-	const sectionTitle = { OVERVIEW: "Dashboard overview", LISTINGS: "Listing management", PAYMENTS: "Payment records", USERS: "User accounts" }[activeSection] || "Administration";
+	const sectionTitle = {
+		OVERVIEW: copy.titles.overview,
+		LISTINGS: copy.titles.listings,
+		PAYMENTS: copy.titles.payments,
+		USERS: copy.titles.users,
+		REPORTS: copy.titles.reports,
+	}[activeSection] || copy.titles.fallback;
 	const sectionDescription = {
-		OVERVIEW: "A clear snapshot of marketplace activity and listing publication fees.",
-		LISTINGS: "Review listing details and publish only after the required fee is confirmed.",
-		PAYMENTS: "Search and review the recorded payments for listing publication.",
-		USERS: "Find marketplace accounts and manage administrator access.",
-	}[activeSection] || "Manage Habesha Brokers marketplace operations.";
+		OVERVIEW: copy.descriptions.overview,
+		LISTINGS: copy.descriptions.listings,
+		PAYMENTS: copy.descriptions.payments,
+		USERS: copy.descriptions.users,
+		REPORTS: copy.descriptions.reports,
+	}[activeSection] || copy.descriptions.fallback;
 	const navHoverBg = useColorModeValue("blackAlpha.50", "whiteAlpha.100");
 
 	const openListingQueue = () => {
@@ -115,7 +124,7 @@ export default function AdminDashboard({ user }) {
 
 	return (
 		<>
-			<Flex className="admin-dashboard-shell" direction="column" minH="100dvh" bg={pageBg}>
+			<Flex className="admin-dashboard-shell" lang={pageLanguage} direction="column" minH="100dvh" bg={pageBg}>
 				<SiteNavbar mode="admin" user={user} onLogout={handleLogout} />
 
 				<Flex
@@ -129,16 +138,16 @@ export default function AdminDashboard({ user }) {
 				>
 					<Flex className="admin-console-hero" align={{ base: "flex-start", md: "flex-end" }} justify="space-between" gap="4" mb={{ base: 5, md: 8 }} p={{ base: 4, sm: 5, md: 7 }} border="1px solid" borderColor={border} borderRadius={{ base: "2xl", md: "3xl" }} bgGradient={useColorModeValue("linear(to-br, white, #f7f1e9)", "linear(to-br, #111111, #050505)")} boxShadow="0 20px 48px rgba(20,32,38,.08)" direction={{ base: "column", sm: "row" }}>
 						<Box>
-							<Text fontSize="xs" fontWeight="bold" letterSpacing="0.16em" color="mainorange" textTransform="uppercase">Marketplace operations</Text>
+							<Text fontSize="xs" fontWeight="bold" letterSpacing="0.16em" color="mainorange" textTransform="uppercase">{copy.kicker}</Text>
 							<Heading mt="2" fontSize={{ base: "2xl", md: "3xl" }} color={textColor} letterSpacing="tight" fontWeight="bold">{sectionTitle}</Heading>
 							<Text mt="2" color={muted} maxW="2xl" fontSize="sm" lineHeight="1.7">{sectionDescription}</Text>
 						</Box>
-						<Badge alignSelf={{ base: "flex-start", sm: "flex-end" }} colorScheme="purple" borderRadius="full" px="3" py="1.5" fontSize="xs" textTransform="uppercase" letterSpacing="wide">Administrator access</Badge>
+						<Badge alignSelf={{ base: "flex-start", sm: "flex-end" }} colorScheme="purple" borderRadius="full" px="3" py="1.5" fontSize="xs" textTransform="uppercase" letterSpacing="wide">{copy.access}</Badge>
 					</Flex>
-					<SimpleGrid className="admin-section-nav" columns={{ base: 2, sm: 4 }} spacing="2" p="1" mb={{ base: 5, md: 7 }} bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" role="tablist" aria-label="Administration sections">
-						{[["OVERVIEW", "Overview"], ["LISTINGS", "Listings"], ["PAYMENTS", "Payments"], ["USERS", "Users"]].map(([value, label]) => {
+					<SimpleGrid className="admin-section-nav" columns={{ base: 2, sm: 3, xl: 5 }} spacing="2" p="1" mb={{ base: 5, md: 7 }} bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" role="tablist" aria-label={copy.sectionsLabel}>
+						{[["OVERVIEW", copy.tabs.overview], ["LISTINGS", copy.tabs.listings], ["PAYMENTS", copy.tabs.payments], ["USERS", copy.tabs.users], ["REPORTS", copy.tabs.reports]].map(([value, label]) => {
 							const selected = activeSection === value;
-							return <Button key={value} role="tab" aria-selected={selected} minW="0" minH="11" w="full" px={{ base: 2, sm: 3 }} whiteSpace="normal" onClick={() => setActiveSection(value)} color={selected ? "white" : muted} bg={selected ? "mainorange" : "transparent"} borderRadius="xl" fontSize={{ base: "xs", sm: "sm" }} fontWeight={selected ? "bold" : "medium"} boxShadow={selected ? "0 5px 14px rgba(198,107,54,.22)" : "none"} _hover={{ bg: selected ? "mainorange" : navHoverBg, color: selected ? "white" : textColor }}>{label}</Button>;
+							return <Button key={value} role="tab" aria-selected={selected} minW="0" minH="11" w="full" px={{ base: 2, sm: 3 }} whiteSpace="normal" onClick={() => value === "REPORTS" ? void router.push("/admin/reports") : setActiveSection(value)} color={selected ? "white" : muted} bg={selected ? "mainorange" : "transparent"} borderRadius="xl" fontSize={{ base: "xs", sm: "sm" }} fontWeight={selected ? "bold" : "medium"} boxShadow={selected ? "0 5px 14px rgba(198,107,54,.22)" : "none"} _hover={{ bg: selected ? "mainorange" : navHoverBg, color: selected ? "white" : textColor }}>{label}</Button>;
 						})}
 					</SimpleGrid>
 					{activeSection === "OVERVIEW" && <Box key={`overview-${refreshKey}`} className="admin-section-enter">
@@ -148,32 +157,30 @@ export default function AdminDashboard({ user }) {
 					{activeSection === "LISTINGS" && <Flex className="admin-section-enter admin-data-panel" direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }}>
 						<Flex direction={{ base: "column", lg: "row" }} align={{ base: "stretch", lg: "center" }} gap="5" mb="3">
 							<Box>
-								<Heading size="md" color={textColor}>Listing review</Heading>
-								<Text mt="2" color={muted} fontSize="sm" maxW="3xl" lineHeight="1.7">
-									Confirm payment and review listing details before publishing. Only paid listings can be approved.
-								</Text>
+								<Heading size="md" color={textColor}>{copy.listing.title}</Heading>
+								<Text mt="2" color={muted} fontSize="sm" maxW="3xl" lineHeight="1.7">{copy.listing.description}</Text>
 							</Box>
 							<Flex flex="1" />
 							<FormControl maxW={{ lg: "sm" }}>
 								<InputGroup size="md">
-								<Input
-									value={searchInput}
-									onChange={(event) => setSearchInput(event.target.value)}
-									onKeyDown={(event) => { if (event.key === "Enter") setSearchQuery(searchInput.trim()); }}
-									placeholder="Search by listing ID"
-									variant="outline"
-									borderRadius="xl"
-									bg={pageBg}
-									pr="12"
-								/>
-								<InputRightElement h="full">
-									<IconButton onClick={() => setSearchQuery(searchInput.trim())} aria-label="Search listings" colorScheme="orange" variant="ghost" borderRadius="lg" icon={<Search2Icon />} />
-								</InputRightElement>
+									<Input
+										value={searchInput}
+										onChange={(event) => setSearchInput(event.target.value)}
+										onKeyDown={(event) => { if (event.key === "Enter") setSearchQuery(searchInput.trim()); }}
+										placeholder={copy.listing.searchPlaceholder}
+										variant="outline"
+										borderRadius="xl"
+										bg={pageBg}
+										pr="12"
+									/>
+									<InputRightElement h="full">
+										<IconButton onClick={() => setSearchQuery(searchInput.trim())} aria-label={copy.listing.searchAria} colorScheme="orange" variant="ghost" borderRadius="lg" icon={<Search2Icon />} />
+									</InputRightElement>
 								</InputGroup>
 							</FormControl>
 						</Flex>
-						<SimpleGrid columns={{ base: 2, sm: 3, xl: 6 }} spacing="2" my="5" role="group" aria-label="Filter listing reviews">
-							{[["PAYMENT", "Awaiting payment"], ["PENDING", "Pending review"], ["APPROVED", "Approved"], ["DECLINED", "Declined"], ["SOLD", "Sold"], ["CLOSED", "Closed"]].map(([value, label]) => (
+						<SimpleGrid columns={{ base: 2, sm: 3, xl: 6 }} spacing="2" my="5" role="group" aria-label={copy.listing.filterAria}>
+							{[["PAYMENT", copy.listing.filters.payment], ["PENDING", copy.listing.filters.pending], ["APPROVED", copy.listing.filters.approved], ["DECLINED", copy.listing.filters.declined], ["SOLD", copy.listing.filters.sold], ["CLOSED", copy.listing.filters.closed]].map(([value, label]) => (
 								<Button key={value} size="sm" w="full" minW="0" px={{ base: 2, sm: 3 }} h="9" borderRadius="full" fontSize={{ base: "xs", sm: "sm" }} colorScheme={statusFilter === value ? "orange" : "gray"} variant={statusFilter === value ? "solid" : "outline"} onClick={() => setStatusFilter(value)}>
 									{label}
 								</Button>
@@ -206,6 +213,7 @@ interface IItemList {
 const ItemsList: FC<IItemList> = ({ searchQuery, statusFilter, refreshKey, onModerated }) => {
 	const [page, setPage] = useState(0);
 	const pageText = useLang().explore;
+	const copy = useLang().adminPage.listing;
 	useEffect(() => setPage(0), [searchQuery, statusFilter]);
 	const [data, loading, error] = useFetch({
 		fetchFunction: () => axios.post(`/api/items?page=${page}`, {
@@ -220,10 +228,10 @@ const ItemsList: FC<IItemList> = ({ searchQuery, statusFilter, refreshKey, onMod
 		return <Flex p="10" alignItems="center" justifyContent="center"><Spinner /></Flex>;
 	}
 	if (error) {
-		return <Alert status="error" borderRadius="lg"><AlertIcon /><AlertTitle>Could not load listings</AlertTitle></Alert>;
+		return <Alert status="error" borderRadius="lg"><AlertIcon /><AlertTitle>{copy.loadError}</AlertTitle></Alert>;
 	}
 	if (!data?.items?.length) {
-		return <Text py="10" textAlign="center" color={muted}>{searchQuery ? "No listing matches that ID in this status." : `There are no ${statusFilter.toLowerCase()} listings.`}</Text>;
+		return <Text py="10" textAlign="center" color={muted}>{searchQuery ? copy.noMatch : copy.noListings}</Text>;
 	}
 	return <>
 		{data.items.map((item) => <ItemCard key={item.id} item={item} onModerated={onModerated} />)}
@@ -241,6 +249,11 @@ interface ICard {
 }
 
 const ItemCard: FC<ICard> = ({ item, onModerated }) => {
+	const lang = useLang();
+	const adminCopy = lang.adminPage;
+	const sellerTypeText = lang.sellerType;
+	const copy = adminCopy.listing;
+	const { locale } = useRouter();
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const surface = useColorModeValue("white", "#0c0c0c");
 	const muted = useColorModeValue("gray.600", "gray.400");
@@ -250,30 +263,40 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 	const { id, title, featured, createdAt, itemType, status, paymentStatus } = item;
 	const latestPayment = item.ListingPayments?.[0];
 	const car = item.Car;
+	const itemTypeLabels: Record<string, string> = {
+		HOUSE: adminCopy.stats.homes,
+		CAR: adminCopy.stats.vehicles,
+		BUSINESS_SPACE: adminCopy.stats.businessSpaces,
+		SERVICE: adminCopy.stats.services,
+	};
 	const subtitle = itemType === "CAR" && car
 		? [car.manufacturer, car.model, car.year].filter(Boolean).join(" · ")
-		: itemType.replace(/_/g, " ");
+		: itemTypeLabels[itemType] || itemType.replace(/_/g, " ");
 
 	const handleItem = async (newStatus: "APPROVED" | "DECLINED") => {
 		if (working || status !== "PENDING") return;
 		if (newStatus === "APPROVED" && paymentStatus !== "PAID") {
-			toast({ title: "Payment must be confirmed first", description: "A listing enters review after its payment is confirmed.", status: "warning" });
+			toast({ title: copy.paymentRequired, description: copy.paymentRequiredHelp, status: "warning" });
+			return;
+		}
+		if (newStatus === "APPROVED" && !item.sellerAttested) {
+			toast({ title: copy.attestationRequired, description: sellerTypeText.attestationHint, status: "warning" });
 			return;
 		}
 		setWorking(true);
 		try {
 			await axios.post("/api/admin/changeItemStatus", { itemId: id, status: newStatus });
 			toast({
-				title: newStatus === "APPROVED" ? "Listing approved" : "Listing declined",
-				description: newStatus === "APPROVED" ? "It is now published in public search." : "The owner can edit it and resubmit it for review.",
+				title: newStatus === "APPROVED" ? copy.approvedToast : copy.declinedToast,
+				description: newStatus === "APPROVED" ? copy.published : copy.resubmit,
 				status: newStatus === "APPROVED" ? "success" : "info",
 				isClosable: true,
 			});
 			onModerated();
 		} catch (error: any) {
 			toast({
-				title: "Could not update listing",
-				description: error?.response?.data?.err || "Refresh the review queue and try again.",
+				title: copy.updateFailed,
+				description: error?.response?.data?.err || copy.reviewRetry,
 				status: "error",
 				isClosable: true,
 			});
@@ -287,10 +310,10 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 		setFeaturedWorking(true);
 		try {
 			await axios.post("/api/admin/setFeatured", { itemId: id, featured: !featured });
-			toast({ title: featured ? "Featured placement removed" : "Listing featured", description: featured ? "This listing will no longer appear in the featured section." : "This approved listing can now appear on the homepage.", status: "success", isClosable: true });
+			toast({ title: featured ? copy.featuredRemoved : copy.featuredAdded, description: featured ? copy.featuredRemovedHelp : copy.featuredAddedHelp, status: "success", isClosable: true });
 			onModerated();
 		} catch (error: any) {
-			toast({ title: "Could not update featured placement", description: error?.response?.data?.err || "Refresh the listing and try again.", status: "error", isClosable: true });
+			toast({ title: copy.featuredUpdateFailed, description: error?.response?.data?.err || copy.listingRetry, status: "error", isClosable: true });
 		} finally {
 			setFeaturedWorking(false);
 		}
@@ -303,30 +326,31 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 				<Box minW="0">
 					<Flex align="center" gap="2" wrap="wrap">
 						<Heading size="sm" noOfLines={2}>{title}</Heading>
-						{featured && <Badge colorScheme="orange">Featured</Badge>}
+						{featured && <Badge colorScheme="orange">{copy.featured}</Badge>}
 					</Flex>
 					<Text mt="1" fontSize="sm" color={muted}>{subtitle}</Text>
-					<Text mt="1" fontSize="xs" color={muted}>Posted {dayjs(createdAt).fromNow()} · ID {id}</Text>
+					{item.sellerType && sellerTypeText.options[item.sellerType] && <Flex mt="2" align="center" gap="2" wrap="wrap"><Badge colorScheme="purple" variant="subtle">{copy.sellerRole}: {sellerTypeText.options[item.sellerType]}</Badge><Text fontSize="xs" color={muted} title={sellerTypeText.selfDeclared}>{sellerTypeText.selfDeclaredShort}</Text><Badge colorScheme={item.sellerAttested ? "green" : "orange"} variant="subtle">{item.sellerAttested ? sellerTypeText.attested : copy.attestationRequired}</Badge></Flex>}
+					<Text mt="1" fontSize="xs" color={muted}>{copy.posted} {dayjs(createdAt).locale(locale === "am" ? "am" : "en").fromNow()} · ID {id}</Text>
 					<Flex mt="2" direction="column" align="flex-start" gap="1">
 						<Badge colorScheme={paymentStatus === "PAID" ? "green" : paymentStatus === "PROCESSING" ? "blue" : paymentStatus === "DUE" ? "orange" : "gray"}>
-							{paymentStatus === "PAID" ? "Payment verified" : paymentStatus === "PROCESSING" ? "Payment in progress" : paymentStatus === "DUE" ? "Payment due" : "No fee required"}
+							{paymentStatus === "PAID" ? copy.paymentVerified : paymentStatus === "PROCESSING" ? copy.paymentInProgress : paymentStatus === "DUE" ? copy.paymentDue : copy.noFee}
 						</Badge>
-						{latestPayment && <Text fontSize="xs" color={muted} noOfLines={1}>{latestPayment.status} · {latestPayment.currency || "EUR"} {Number(latestPayment.amount).toLocaleString("en-US")} · {latestPayment.paymentMethod || "Payment method unavailable"} · Ref {latestPayment.txRef}</Text>}
+						{latestPayment && <Text fontSize="xs" color={muted} noOfLines={1}>{adminCopy.payments.states[latestPayment.status] || latestPayment.status} · {latestPayment.currency || "EUR"} {Number(latestPayment.amount).toLocaleString(locale === "am" ? "am-ET" : "en-US")} · {latestPayment.paymentMethod || copy.paymentMethodUnavailable} · {copy.reference} {latestPayment.txRef}</Text>}
 					</Flex>
 				</Box>
 			</Flex>
 			<Flex align="center" gap="3" wrap="wrap" w={{ base: "full", lg: "auto" }} justify={{ base: "flex-end", lg: "flex-start" }}>
-				<Badge colorScheme={status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : status === "CLOSED" ? "gray" : "orange"} borderRadius="full" px="3" py="1">{status}</Badge>
-				<Link legacyBehavior href={`/items/${id}`} passHref><Button as="a" size="sm" variant="outline">Review details</Button></Link>
+				<Badge colorScheme={status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : status === "CLOSED" ? "gray" : "orange"} borderRadius="full" px="3" py="1">{copy.status[status] || status}</Badge>
+				<Link legacyBehavior href={`/items/${id}`} passHref><Button as="a" size="sm" variant="outline">{copy.reviewDetails}</Button></Link>
 				{status === "PENDING" && paymentStatus === "PAID" && (
 					<ButtonGroup size="sm">
-						<Button colorScheme="green" onClick={() => handleItem("APPROVED")} isLoading={working} leftIcon={<CheckIcon />}>Approve</Button>
-						<Button colorScheme="red" variant="outline" onClick={() => handleItem("DECLINED")} isLoading={working} leftIcon={<CloseIcon />}>Decline</Button>
+						<Button colorScheme="green" onClick={() => handleItem("APPROVED")} isLoading={working} leftIcon={<CheckIcon />}>{copy.approve}</Button>
+						<Button colorScheme="red" variant="outline" onClick={() => handleItem("DECLINED")} isLoading={working} leftIcon={<CloseIcon />}>{copy.decline}</Button>
 					</ButtonGroup>
 				)}
 				{(status === "APPROVED" || featured) && (
 					<Button size="sm" colorScheme="orange" variant={featured ? "solid" : "outline"} leftIcon={<FaStar />} onClick={handleFeatured} isLoading={featuredWorking}>
-						{featured ? "Remove featured" : "Feature listing"}
+						{featured ? copy.removeFeatured : copy.featureListing}
 					</Button>
 				)}
 			</Flex>
@@ -334,15 +358,26 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 	);
 };
 
-function formatMoney(amount: number, currency: string) {
+function formatMoney(amount: number, currency: string, locale = "en-US") {
 	try {
-		return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+		return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
 	} catch {
-		return `${amount.toLocaleString("en-US")} ${currency}`;
+		return `${amount.toLocaleString(locale)} ${currency}`;
 	}
 }
 
 function PaymentsPanel({ compact = false, refreshKey = 0, initialStatus = "ALL" }: { compact?: boolean; refreshKey?: number; initialStatus?: string }) {
+	const adminCopy = useLang().adminPage;
+	const copy = adminCopy.payments;
+	const listingTypeLabels: Record<string, string> = {
+		HOUSE: adminCopy.stats.homes,
+		CAR: adminCopy.stats.vehicles,
+		BUSINESS_SPACE: adminCopy.stats.businessSpaces,
+		SERVICE: adminCopy.stats.services,
+	};
+	const { locale } = useRouter();
+	const dateLocale = locale === "am" ? "am" : "en";
+	const numberLocale = locale === "am" ? "am-ET" : "en-US";
 	const [page, setPage] = useState(0);
 	const [status, setStatus] = useState(initialStatus);
 	const [searchInput, setSearchInput] = useState("");
@@ -362,32 +397,32 @@ function PaymentsPanel({ compact = false, refreshKey = 0, initialStatus = "ALL" 
 	const mobileCardBg = useColorModeValue("gray.50", "whiteAlpha.50");
 	const toast = useToast();
 	const visiblePayments = compact ? data?.payments?.slice(0, 6) || [] : data?.payments || [];
+	const paymentStatusLabel = (value: string) => value === "INITIATED" ? copy.inProgress : copy.states[value] || value;
+	const pageLabel = (total: number, pageSize: number) => copy.page.replace("{page}", String(page + 1)).replace("{pages}", String(Math.ceil(total / pageSize)));
 	useEffect(() => setPage(0), [status, query]);
 	useEffect(() => setStatus(initialStatus), [initialStatus]);
 
 	const handleRefund = async (payment: any) => {
-		const amount = formatMoney(Number(payment.amount) || 0, payment.currency || "EUR");
+		const amount = formatMoney(Number(payment.amount) || 0, payment.currency || "EUR", numberLocale);
+		const title = payment.item?.title || copy.listingRemoved;
 		const checking = payment.refundStatus === "PROCESSING";
 		const requested = payment.refundRequestStatus === "PENDING";
-		const confirmed = window.confirm(checking
-			? `Check or safely resume the pending refund of ${amount} for “${payment.item?.title || "this listing"}”?`
-			: requested
-				? `Approve this refund request and issue a full refund of ${amount} for “${payment.item?.title || "this listing"}”? If the listing is currently published, it will be unpublished.`
-				: `Issue a full refund of ${amount} for “${payment.item?.title || "this listing"}”? If the listing is currently published, it will be unpublished.`);
+		const prompt = checking ? copy.confirmCheck : requested ? copy.confirmApprove : copy.confirmRefund;
+		const confirmed = window.confirm(prompt.replace("{amount}", amount).replace("{title}", title));
 		if (!confirmed) return;
 		setRefundingId(payment.id);
 		try {
 			const response = await axios.post("/api/admin/refundPayment", { paymentId: payment.id });
 			const pending = response.data?.status === "PROCESSING";
 			toast({
-				title: pending ? "Refund is still processing" : "Full refund completed",
-				description: pending ? "Stripe has not confirmed completion yet. The payment will remain marked as processing." : `${amount} was refunded. The listing fee is due again before it can be published.`,
+				title: pending ? copy.processingTitle : copy.completedTitle,
+				description: pending ? copy.processingDescription : copy.completedDescription.replace("{amount}", amount),
 				status: pending ? "warning" : "success",
 				isClosable: true,
 			});
 			setListRefresh((value) => value + 1);
 		} catch (requestError: any) {
-			toast({ title: "Refund could not be completed", description: requestError?.response?.data?.err || "Review the payment in Stripe before retrying.", status: "error", isClosable: true });
+			toast({ title: copy.refundFailed, description: requestError?.response?.data?.err || copy.refundRetry, status: "error", isClosable: true });
 			setListRefresh((value) => value + 1);
 		} finally {
 			setRefundingId("");
@@ -395,15 +430,15 @@ function PaymentsPanel({ compact = false, refreshKey = 0, initialStatus = "ALL" 
 	};
 
 	const handleDeclineRefundRequest = async (payment: any) => {
-		const confirmed = window.confirm(`Decline the refund request for “${payment.item?.title || "this listing"}”?`);
+		const confirmed = window.confirm(copy.confirmDecline.replace("{title}", payment.item?.title || copy.listingRemoved));
 		if (!confirmed) return;
 		setDecliningId(payment.id);
 		try {
 			await axios.post("/api/admin/declineRefundRequest", { paymentId: payment.id });
-			toast({ title: "Refund request declined", status: "info", isClosable: true });
+			toast({ title: copy.requestDeclined, status: "info", isClosable: true });
 			setListRefresh((value) => value + 1);
 		} catch (requestError: any) {
-			toast({ title: "Could not update request", description: requestError?.response?.data?.err || "Review the payment and try again.", status: "error", isClosable: true });
+			toast({ title: copy.updateRequestFailed, description: requestError?.response?.data?.err || copy.paymentRetry, status: "error", isClosable: true });
 			setListRefresh((value) => value + 1);
 		} finally {
 			setDecliningId("");
@@ -413,60 +448,61 @@ function PaymentsPanel({ compact = false, refreshKey = 0, initialStatus = "ALL" 
 	return <Flex className="admin-data-panel" direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }} mt={compact ? { base: 5, md: 7 } : 0}>
 		<Flex direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "center" }} gap="4" mb="5">
 			<Box flex="1">
-				<Heading size="md">{compact ? "Recent listing-fee payments" : "Listing-fee payments"}</Heading>
-				<Text mt="1" fontSize="sm" color={muted}>{compact ? "Platform fees recorded for listing publication." : "Review the payment records received for listing publication."}</Text>
+				<Heading size="md">{compact ? copy.recentTitle : copy.title}</Heading>
+				<Text mt="1" fontSize="sm" color={muted}>{compact ? copy.compactDescription : copy.description}</Text>
 			</Box>
 			{!compact && <Flex gap="3" direction={{ base: "column", sm: "row" }}>
 				<InputGroup maxW={{ sm: "sm" }}>
-					<Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") setQuery(searchInput.trim()); }} placeholder="Search reference, listing, or email" borderRadius="xl" />
-					<InputRightElement><IconButton aria-label="Search payments" variant="ghost" icon={<Search2Icon />} onClick={() => setQuery(searchInput.trim())} /></InputRightElement>
+					<Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") setQuery(searchInput.trim()); }} placeholder={copy.searchPlaceholder} borderRadius="xl" />
+					<InputRightElement><IconButton aria-label={copy.searchAria} variant="ghost" icon={<Search2Icon />} onClick={() => setQuery(searchInput.trim())} /></InputRightElement>
 				</InputGroup>
-				<Select value={status} onChange={(event) => setStatus(event.target.value)} maxW={{ sm: "48" }} borderRadius="xl" aria-label="Filter payments by status">
-					<option value="ALL">All payment states</option><option value="REFUND_REQUESTED">Refund requests</option><option value="PAID">Paid</option><option value="INITIATED">In progress</option><option value="FAILED">Failed</option>
+				<Select value={status} onChange={(event) => setStatus(event.target.value)} maxW={{ sm: "48" }} borderRadius="xl" aria-label={copy.filterAria}>
+					<option value="ALL">{copy.states.ALL}</option><option value="REFUND_REQUESTED">{copy.states.REFUND_REQUESTED}</option><option value="PAID">{copy.states.PAID}</option><option value="INITIATED">{copy.states.INITIATED}</option><option value="FAILED">{copy.states.FAILED}</option>
 				</Select>
 			</Flex>}
 		</Flex>
-		{loading ? <Flex py="10" justify="center"><Spinner /></Flex> : error ? <Alert status="error" borderRadius="lg"><AlertIcon /><AlertTitle>Could not load payment records</AlertTitle></Alert> : !data?.payments?.length ? <Text py="8" textAlign="center" color={muted}>No listing-fee payment records found.</Text> : <>
+		{loading ? <Flex py="10" justify="center"><Spinner /></Flex> : error ? <Alert status="error" borderRadius="lg"><AlertIcon /><AlertTitle>{copy.loadError}</AlertTitle></Alert> : !data?.payments?.length ? <Text py="8" textAlign="center" color={muted}>{copy.empty}</Text> : <>
 				<Flex display={{ base: "flex", lg: "none" }} direction="column" gap="3">
 				{visiblePayments.map((payment) => <Box key={payment.id} className="admin-mobile-record" p="4" border="1px solid" borderColor={border} borderRadius="xl" bg={mobileCardBg}>
 					<Flex align="flex-start" justify="space-between" gap="3">
-						<Box minW="0"><Text fontSize="xs" color={muted} fontWeight="bold" textTransform="uppercase" letterSpacing=".08em">{payment.paymentMethod || "Payment"}</Text><Text mt="1" fontWeight="bold" noOfLines={2}>{payment.item?.title || "Listing removed"}</Text><Text mt="1" fontSize="xs" color={muted} noOfLines={1}>{payment.item?.user?.email || "Account unavailable"}</Text></Box>
-						<Text flexShrink="0" fontWeight="bold" fontSize="sm">{formatMoney(Number(payment.amount) || 0, payment.currency || "EUR")}</Text>
+						<Box minW="0"><Text fontSize="xs" color={muted} fontWeight="bold" textTransform="uppercase" letterSpacing=".08em">{payment.paymentMethod || copy.payment}</Text><Text mt="1" fontWeight="bold" noOfLines={2}>{payment.item?.title || copy.listingRemoved}</Text><Text mt="1" fontSize="xs" color={muted} noOfLines={1}>{payment.item?.user?.email || copy.accountUnavailable}</Text></Box>
+						<Text flexShrink="0" fontWeight="bold" fontSize="sm">{formatMoney(Number(payment.amount) || 0, payment.currency || "EUR", numberLocale)}</Text>
 					</Flex>
-					<Flex mt="3" wrap="wrap" gap="2" align="center"><Badge borderRadius="full" colorScheme={payment.status === "PAID" ? "green" : payment.status === "FAILED" ? "red" : "orange"}>{payment.status === "INITIATED" ? "IN PROGRESS" : payment.status}</Badge>{payment.refundRequestStatus === "PENDING" && <Badge borderRadius="full" colorScheme="orange">REFUND REQUEST</Badge>}{payment.refundRequestStatus === "APPROVED" && <Badge borderRadius="full" colorScheme="green">REQUEST APPROVED</Badge>}{payment.refundRequestStatus === "DECLINED" && <Badge borderRadius="full" colorScheme="red">REQUEST DECLINED</Badge>}{payment.refundStatus === "PROCESSING" && <Badge borderRadius="full" colorScheme="orange">REFUND PROCESSING</Badge>}{payment.refundStatus === "REFUNDED" && <Badge borderRadius="full" colorScheme="purple">REFUNDED</Badge>}</Flex>
-					<Text mt="3" fontSize="xs" color={muted} wordBreak="break-all">Ref: {payment.txRef}</Text>
-					<Text mt="1" fontSize="xs" color={muted}>{dayjs(payment.verifiedAt || payment.createdAt).format("MMM D, YYYY · HH:mm")}</Text>
-					{payment.refundRequestReason && <Text mt="2" fontSize="sm" color={muted}>Request note: {payment.refundRequestReason}</Text>}
+					<Flex mt="3" wrap="wrap" gap="2" align="center"><Badge borderRadius="full" colorScheme={payment.status === "PAID" ? "green" : payment.status === "FAILED" ? "red" : "orange"}>{paymentStatusLabel(payment.status)}</Badge>{payment.refundRequestStatus === "PENDING" && <Badge borderRadius="full" colorScheme="orange">{copy.refundRequest}</Badge>}{payment.refundRequestStatus === "APPROVED" && <Badge borderRadius="full" colorScheme="green">{copy.requestApproved}</Badge>}{payment.refundRequestStatus === "DECLINED" && <Badge borderRadius="full" colorScheme="red">{copy.requestDeclined}</Badge>}{payment.refundStatus === "PROCESSING" && <Badge borderRadius="full" colorScheme="orange">{copy.refundProcessing}</Badge>}{payment.refundStatus === "REFUNDED" && <Badge borderRadius="full" colorScheme="purple">{copy.refunded}</Badge>}</Flex>
+					<Text mt="3" fontSize="xs" color={muted} wordBreak="break-all">{copy.reference}: {payment.txRef}</Text>
+					<Text mt="1" fontSize="xs" color={muted}>{dayjs(payment.verifiedAt || payment.createdAt).locale(dateLocale).format("MMM D, YYYY · HH:mm")}</Text>
+					{payment.refundRequestReason && <Text mt="2" fontSize="sm" color={muted}>{copy.refundRequest}: {payment.refundRequestReason}</Text>}
 					{!compact && <Flex mt="3" gap="2" wrap="wrap">
-						{payment.refundRequestStatus === "PENDING" && payment.refundStatus === "NOT_REFUNDED" && <Button size="sm" variant="outline" isLoading={decliningId === payment.id} isDisabled={Boolean((decliningId && decliningId !== payment.id) || (refundingId && refundingId !== payment.id))} onClick={() => handleDeclineRefundRequest(payment)}>Decline request</Button>}
-						{payment.status === "PAID" && payment.refundStatus !== "REFUNDED" && payment.txRef?.startsWith("HB-STRIPE-") && payment.providerRef?.startsWith("cs_test_") ? <Button size="sm" colorScheme="red" variant="outline" isLoading={refundingId === payment.id} isDisabled={Boolean((refundingId && refundingId !== payment.id) || (decliningId && decliningId !== payment.id)) || (payment.refundStatus === "PROCESSING" && payment.refundStartedAt && dayjs(payment.refundStartedAt).isAfter(dayjs().subtract(2, "minute")))} onClick={() => handleRefund(payment)}>{payment.refundStatus === "PROCESSING" ? "Check refund" : payment.refundRequestStatus === "PENDING" ? "Approve & refund" : "Full refund"}</Button> : payment.refundStatus === "REFUNDED" ? <Text alignSelf="center" fontSize="xs" color={muted}>Completed</Text> : <Text alignSelf="center" fontSize="xs" color={muted}>Unavailable</Text>}
+						{payment.refundRequestStatus === "PENDING" && payment.refundStatus === "NOT_REFUNDED" && <Button size="sm" variant="outline" isLoading={decliningId === payment.id} isDisabled={Boolean((decliningId && decliningId !== payment.id) || (refundingId && refundingId !== payment.id))} onClick={() => handleDeclineRefundRequest(payment)}>{copy.declineRequest}</Button>}
+						{payment.status === "PAID" && payment.refundStatus !== "REFUNDED" && payment.txRef?.startsWith("HB-STRIPE-") && payment.providerRef?.startsWith("cs_test_") ? <Button size="sm" colorScheme="red" variant="outline" isLoading={refundingId === payment.id} isDisabled={Boolean((refundingId && refundingId !== payment.id) || (decliningId && decliningId !== payment.id)) || (payment.refundStatus === "PROCESSING" && payment.refundStartedAt && dayjs(payment.refundStartedAt).isAfter(dayjs().subtract(2, "minute")))} onClick={() => handleRefund(payment)}>{payment.refundStatus === "PROCESSING" ? copy.checkRefund : payment.refundRequestStatus === "PENDING" ? copy.approveRefund : copy.fullRefund}</Button> : payment.refundStatus === "REFUNDED" ? <Text alignSelf="center" fontSize="xs" color={muted}>{copy.completed}</Text> : <Text alignSelf="center" fontSize="xs" color={muted}>{copy.unavailable}</Text>}
 					</Flex>}
 				</Box>)}
 			</Flex>
 			<TableContainer display={{ base: "none", lg: "block" }} border="1px solid" borderColor={border} borderRadius="xl">
 				<Table size="sm" variant="simple" minW={compact ? "760px" : "900px"} sx={{ "th": { bg: tableHead, color: muted, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", borderColor: border, py: 3 }, "td": { borderColor: border, py: 3 } }}>
-					<Thead><Tr><Th>Payment</Th><Th>Listing</Th><Th display={{ base: "none", md: "table-cell" }}>Account</Th><Th>Amount</Th><Th>Status</Th><Th display={{ base: "none", lg: "table-cell" }}>Recorded</Th>{!compact && <Th>Action</Th>}</Tr></Thead>
+					<Thead><Tr><Th>{copy.payment}</Th><Th>{copy.listing}</Th><Th display={{ base: "none", md: "table-cell" }}>{copy.account}</Th><Th>{copy.amount}</Th><Th>{copy.status}</Th><Th display={{ base: "none", lg: "table-cell" }}>{copy.recorded}</Th>{!compact && <Th>{copy.action}</Th>}</Tr></Thead>
 					<Tbody>{visiblePayments.map((payment) => <Tr key={payment.id} _hover={{ bg: rowHoverBg }}>
-						<Td><Text fontWeight="semibold" noOfLines={1}>{payment.paymentMethod || "Payment"}</Text><Text fontSize="xs" color={muted} noOfLines={1}>{payment.txRef}</Text>{payment.refundRef && <Text fontSize="xs" color={muted} noOfLines={1}>Refund {payment.refundRef}</Text>}</Td>
-						<Td><Text fontWeight="medium" noOfLines={1}>{payment.item?.title || "Listing removed"}</Text><Text fontSize="xs" color={muted}>{payment.item?.itemType?.replace(/_/g, " ") || "—"}</Text>{payment.refundRequestStatus === "PENDING" && <><Badge mt="1" colorScheme="orange" borderRadius="full">REFUND REQUEST PENDING</Badge>{payment.refundRequestReason && <Text mt="1" fontSize="xs" color={muted} noOfLines={3}>{payment.refundRequestReason}</Text>}</>}</Td>
+						<Td><Text fontWeight="semibold" noOfLines={1}>{payment.paymentMethod || copy.payment}</Text><Text fontSize="xs" color={muted} noOfLines={1}>{payment.txRef}</Text>{payment.refundRef && <Text fontSize="xs" color={muted} noOfLines={1}>{copy.refundReference} {payment.refundRef}</Text>}</Td>
+						<Td><Text fontWeight="medium" noOfLines={1}>{payment.item?.title || copy.listingRemoved}</Text><Text fontSize="xs" color={muted}>{listingTypeLabels[payment.item?.itemType] || "—"}</Text>{payment.refundRequestStatus === "PENDING" && <><Badge mt="1" colorScheme="orange" borderRadius="full">{copy.refundPending}</Badge>{payment.refundRequestReason && <Text mt="1" fontSize="xs" color={muted} noOfLines={3}>{payment.refundRequestReason}</Text>}</>}</Td>
 						<Td display={{ base: "none", md: "table-cell" }}><Text noOfLines={1}>{payment.item?.user?.email || "—"}</Text></Td>
-						<Td whiteSpace="nowrap" fontWeight="semibold">{formatMoney(Number(payment.amount) || 0, payment.currency || "EUR")}</Td>
-						<Td><Flex direction="column" align="flex-start" gap="1"><Badge borderRadius="full" colorScheme={payment.status === "PAID" ? "green" : payment.status === "FAILED" ? "red" : "orange"}>{payment.status === "INITIATED" ? "IN PROGRESS" : payment.status}</Badge>{payment.refundRequestStatus === "APPROVED" && <Badge borderRadius="full" colorScheme="green">REQUEST APPROVED</Badge>}{payment.refundRequestStatus === "DECLINED" && <Badge borderRadius="full" colorScheme="red">REQUEST DECLINED</Badge>}{payment.refundStatus === "REFUNDED" && <><Badge borderRadius="full" colorScheme="purple">REFUNDED</Badge><Text fontSize="xs" color={muted}>{payment.refundedAt ? dayjs(payment.refundedAt).format("MMM D, YYYY · HH:mm") : "Refund completed"}</Text></>}{payment.refundStatus === "PROCESSING" && <Badge borderRadius="full" colorScheme="orange">REFUND PROCESSING</Badge>}</Flex></Td>
-						<Td display={{ base: "none", lg: "table-cell" }} color={muted} whiteSpace="nowrap">{dayjs(payment.verifiedAt || payment.createdAt).format("MMM D, YYYY · HH:mm")}</Td>
-						{!compact && <Td><Flex direction="column" align="flex-start" gap="2">{payment.refundRequestStatus === "PENDING" && payment.refundStatus === "NOT_REFUNDED" && <Button size="xs" variant="ghost" colorScheme="gray" borderRadius="lg" isLoading={decliningId === payment.id} isDisabled={Boolean((decliningId && decliningId !== payment.id) || (refundingId && refundingId !== payment.id))} onClick={() => handleDeclineRefundRequest(payment)}>Decline request</Button>}{payment.status === "PAID" && payment.refundStatus !== "REFUNDED" && payment.txRef?.startsWith("HB-STRIPE-") && payment.providerRef?.startsWith("cs_test_") ? <Button size="xs" variant="outline" colorScheme="red" borderRadius="lg" isLoading={refundingId === payment.id} isDisabled={Boolean((refundingId && refundingId !== payment.id) || (decliningId && decliningId !== payment.id)) || (payment.refundStatus === "PROCESSING" && payment.refundStartedAt && dayjs(payment.refundStartedAt).isAfter(dayjs().subtract(2, "minute")))} onClick={() => handleRefund(payment)}>{payment.refundStatus === "PROCESSING" ? "Check refund" : payment.refundRequestStatus === "PENDING" ? "Approve & refund" : "Full refund"}</Button> : payment.refundStatus === "REFUNDED" ? <Text fontSize="xs" color={muted}>Completed</Text> : <Text fontSize="xs" color={muted}>Unavailable</Text>}</Flex></Td>}
+						<Td whiteSpace="nowrap" fontWeight="semibold">{formatMoney(Number(payment.amount) || 0, payment.currency || "EUR", numberLocale)}</Td>
+						<Td><Flex direction="column" align="flex-start" gap="1"><Badge borderRadius="full" colorScheme={payment.status === "PAID" ? "green" : payment.status === "FAILED" ? "red" : "orange"}>{paymentStatusLabel(payment.status)}</Badge>{payment.refundRequestStatus === "APPROVED" && <Badge borderRadius="full" colorScheme="green">{copy.requestApproved}</Badge>}{payment.refundRequestStatus === "DECLINED" && <Badge borderRadius="full" colorScheme="red">{copy.requestDeclined}</Badge>}{payment.refundStatus === "REFUNDED" && <><Badge borderRadius="full" colorScheme="purple">{copy.refunded}</Badge><Text fontSize="xs" color={muted}>{payment.refundedAt ? dayjs(payment.refundedAt).locale(dateLocale).format("MMM D, YYYY · HH:mm") : copy.refundCompleted}</Text></>}{payment.refundStatus === "PROCESSING" && <Badge borderRadius="full" colorScheme="orange">{copy.refundProcessing}</Badge>}</Flex></Td>
+						<Td display={{ base: "none", lg: "table-cell" }} color={muted} whiteSpace="nowrap">{dayjs(payment.verifiedAt || payment.createdAt).locale(dateLocale).format("MMM D, YYYY · HH:mm")}</Td>
+						{!compact && <Td><Flex direction="column" align="flex-start" gap="2">{payment.refundRequestStatus === "PENDING" && payment.refundStatus === "NOT_REFUNDED" && <Button size="xs" variant="ghost" colorScheme="gray" borderRadius="lg" isLoading={decliningId === payment.id} isDisabled={Boolean((decliningId && decliningId !== payment.id) || (refundingId && refundingId !== payment.id))} onClick={() => handleDeclineRefundRequest(payment)}>{copy.declineRequest}</Button>}{payment.status === "PAID" && payment.refundStatus !== "REFUNDED" && payment.txRef?.startsWith("HB-STRIPE-") && payment.providerRef?.startsWith("cs_test_") ? <Button size="xs" variant="outline" colorScheme="red" borderRadius="lg" isLoading={refundingId === payment.id} isDisabled={Boolean((refundingId && refundingId !== payment.id) || (decliningId && decliningId !== payment.id)) || (payment.refundStatus === "PROCESSING" && payment.refundStartedAt && dayjs(payment.refundStartedAt).isAfter(dayjs().subtract(2, "minute")))} onClick={() => handleRefund(payment)}>{payment.refundStatus === "PROCESSING" ? copy.checkRefund : payment.refundRequestStatus === "PENDING" ? copy.approveRefund : copy.fullRefund}</Button> : payment.refundStatus === "REFUNDED" ? <Text fontSize="xs" color={muted}>{copy.completed}</Text> : <Text fontSize="xs" color={muted}>{copy.unavailable}</Text>}</Flex></Td>}
 					</Tr>)}</Tbody>
 				</Table>
 			</TableContainer>
 			{!compact && data.total > data.pageSize && <Flex align="center" justify="space-between" direction={{ base: "column", sm: "row" }} gap="3" mt="5">
-				<Button w={{ base: "full", sm: "auto" }} size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>Previous</Button>
-				<Text color={muted} fontSize="sm">Page {page + 1} of {Math.ceil(data.total / data.pageSize)}</Text>
-				<Button w={{ base: "full", sm: "auto" }} size="sm" colorScheme="orange" isDisabled={(page + 1) * data.pageSize >= data.total} onClick={() => setPage((current) => current + 1)}>Next</Button>
+				<Button w={{ base: "full", sm: "auto" }} size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>{copy.previous}</Button>
+				<Text color={muted} fontSize="sm">{pageLabel(data.total, data.pageSize)}</Text>
+				<Button w={{ base: "full", sm: "auto" }} size="sm" colorScheme="orange" isDisabled={(page + 1) * data.pageSize >= data.total} onClick={() => setPage((current) => current + 1)}>{copy.next}</Button>
 			</Flex>}
 		</>}
 	</Flex>;
 }
 
 function UsersPanel({ currentUserId }: { currentUserId: string }) {
+	const copy = useLang().adminPage.users;
 	const [page, setPage] = useState(0);
 	const [role, setRole] = useState("ALL");
 	const [searchInput, setSearchInput] = useState("");
@@ -484,20 +520,21 @@ function UsersPanel({ currentUserId }: { currentUserId: string }) {
 	const tableHead = useColorModeValue("gray.50", "#111113");
 	const rowHoverBg = useColorModeValue("gray.50", "whiteAlpha.50");
 	const mobileCardBg = useColorModeValue("gray.50", "whiteAlpha.50");
+	const pageLabel = (total: number, pageSize: number) => copy.page.replace("{page}", String(page + 1)).replace("{pages}", String(Math.ceil(total / pageSize)));
 	useEffect(() => setPage(0), [role, query]);
 
 	const updateRole = async (target: any, newRole: string) => {
-		if (newRole === "ADMIN" && !window.confirm(`Give administrator access to ${target.email}? Administrators can manage all listings and accounts.`)) {
+		if (newRole === "ADMIN" && !window.confirm(copy.confirmRole.replace("{email}", target.email))) {
 			setRefreshKey((value) => value + 1);
 			return;
 		}
 		setWorkingId(target.id);
 		try {
 			await axios.post("/api/admin/changeUserRole", { userId: target.id, role: newRole });
-			toast({ title: "Account role updated", status: "success", isClosable: true });
+			toast({ title: copy.roleUpdated, status: "success", isClosable: true });
 			setRefreshKey((value) => value + 1);
 		} catch (requestError: any) {
-			toast({ title: "Could not update role", description: requestError?.response?.data?.err || "Refresh the account list and try again.", status: "error", isClosable: true });
+			toast({ title: copy.roleUpdateFailed, description: requestError?.response?.data?.err || copy.roleRetry, status: "error", isClosable: true });
 			setRefreshKey((value) => value + 1);
 		} finally {
 			setWorkingId("");
@@ -506,31 +543,31 @@ function UsersPanel({ currentUserId }: { currentUserId: string }) {
 
 	return <Flex className="admin-data-panel" direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }}>
 		<Flex direction={{ base: "column", md: "row" }} align={{ base: "stretch", md: "center" }} gap="4" mb="5">
-			<Box flex="1"><Heading size="md">User accounts</Heading><Text mt="1" fontSize="sm" color={muted}>Search accounts, check email verification, and manage administrator access.</Text></Box>
+			<Box flex="1"><Heading size="md">{copy.title}</Heading><Text mt="1" fontSize="sm" color={muted}>{copy.description}</Text></Box>
 			<Flex gap="3" direction={{ base: "column", sm: "row" }}>
-				<InputGroup maxW={{ sm: "sm" }}><Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") setQuery(searchInput.trim()); }} placeholder="Search name or email" borderRadius="xl" /><InputRightElement><IconButton aria-label="Search accounts" variant="ghost" icon={<Search2Icon />} onClick={() => setQuery(searchInput.trim())} /></InputRightElement></InputGroup>
-				<Select value={role} onChange={(event) => setRole(event.target.value)} maxW={{ sm: "44" }} borderRadius="xl" aria-label="Filter accounts by role"><option value="ALL">All roles</option><option value="USER">Users</option><option value="ADMIN">Administrators</option></Select>
+				<InputGroup maxW={{ sm: "sm" }}><Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") setQuery(searchInput.trim()); }} placeholder={copy.searchPlaceholder} borderRadius="xl" /><InputRightElement><IconButton aria-label={copy.searchAria} variant="ghost" icon={<Search2Icon />} onClick={() => setQuery(searchInput.trim())} /></InputRightElement></InputGroup>
+				<Select value={role} onChange={(event) => setRole(event.target.value)} maxW={{ sm: "44" }} borderRadius="xl" aria-label={copy.filterAria}><option value="ALL">{copy.roles.ALL}</option><option value="USER">{copy.roles.USER}</option><option value="ADMIN">{copy.roles.ADMIN}</option></Select>
 			</Flex>
 		</Flex>
-		{loading ? <Flex py="10" justify="center"><Spinner /></Flex> : error ? <Alert status="error" borderRadius="lg"><AlertIcon /><AlertTitle>Could not load accounts</AlertTitle></Alert> : !data?.users?.length ? <Text py="8" textAlign="center" color={muted}>No matching accounts found.</Text> : <>
+		{loading ? <Flex py="10" justify="center"><Spinner /></Flex> : error ? <Alert status="error" borderRadius="lg"><AlertIcon /><AlertTitle>{copy.loadError}</AlertTitle></Alert> : !data?.users?.length ? <Text py="8" textAlign="center" color={muted}>{copy.empty}</Text> : <>
 				<Flex display={{ base: "flex", lg: "none" }} direction="column" gap="3">
 				{data.users.map((account) => <Box key={account.id} className="admin-mobile-record" p="4" border="1px solid" borderColor={border} borderRadius="xl" bg={mobileCardBg}>
-					<Flex justify="space-between" align="flex-start" gap="3"><Box minW="0"><Text fontWeight="bold" noOfLines={1}>{account.firstName} {account.lastName}</Text><Text mt="1" fontSize="sm" color={muted} wordBreak="break-word">{account.email}</Text></Box><Badge flexShrink="0" colorScheme={account.verfied ? "green" : "orange"} borderRadius="full">{account.verfied ? "Verified" : "Unverified"}</Badge></Flex>
-					<Flex mt="3" justify="space-between" align="center" gap="3"><Text fontSize="sm" color={muted}>{account._count?.AddedItem ?? 0} listings</Text>{account.id === currentUserId ? <Badge colorScheme="purple" borderRadius="full" px="3">Administrator · you</Badge> : <Select size="sm" maxW="48" value={account.role} isDisabled={workingId === account.id} onChange={(event) => updateRole(account, event.target.value)} aria-label={`Change role for ${account.email}`} borderRadius="lg"><option value="USER">User</option><option value="ADMIN">Administrator</option></Select>}</Flex>
+					<Flex justify="space-between" align="flex-start" gap="3"><Box minW="0"><Text fontWeight="bold" noOfLines={1}>{account.firstName} {account.lastName}</Text><Text mt="1" fontSize="sm" color={muted} wordBreak="break-word">{account.email}</Text></Box><Badge flexShrink="0" colorScheme={account.verfied ? "green" : "orange"} borderRadius="full">{account.verfied ? copy.verified : copy.unverified}</Badge></Flex>
+					<Flex mt="3" justify="space-between" align="center" gap="3"><Text fontSize="sm" color={muted}>{account._count?.AddedItem ?? 0} {copy.listings}</Text>{account.id === currentUserId ? <Badge colorScheme="purple" borderRadius="full" px="3">{copy.adminYou}</Badge> : <Select size="sm" maxW="48" value={account.role} isDisabled={workingId === account.id} onChange={(event) => updateRole(account, event.target.value)} aria-label={copy.changeRoleAria.replace("{email}", account.email)} borderRadius="lg"><option value="USER">{copy.user}</option><option value="ADMIN">{copy.administrator}</option></Select>}</Flex>
 				</Box>)}
 			</Flex>
 			<TableContainer display={{ base: "none", lg: "block" }} border="1px solid" borderColor={border} borderRadius="xl">
 				<Table size="sm" variant="simple" minW="680px" sx={{ "th": { bg: tableHead, color: muted, fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", borderColor: border, py: 3 }, "td": { borderColor: border, py: 3 } }}>
-					<Thead><Tr><Th>Account</Th><Th>Listings</Th><Th>Email status</Th><Th>Account access</Th></Tr></Thead>
+					<Thead><Tr><Th>{copy.account}</Th><Th>{copy.listingCount}</Th><Th>{copy.emailStatus}</Th><Th>{copy.access}</Th></Tr></Thead>
 					<Tbody>{data.users.map((account) => <Tr key={account.id} _hover={{ bg: rowHoverBg }}>
 						<Td><Text fontWeight="semibold">{account.firstName} {account.lastName}</Text><Text fontSize="xs" color={muted}>{account.email}</Text></Td>
 						<Td>{account._count?.AddedItem ?? 0}</Td>
-						<Td><Badge colorScheme={account.verfied ? "green" : "orange"} borderRadius="full">{account.verfied ? "Verified" : "Not verified"}</Badge></Td>
-						<Td>{account.id === currentUserId ? <Badge colorScheme="purple" borderRadius="full" px="3">Administrator · you</Badge> : <Select size="sm" maxW="40" value={account.role} isDisabled={workingId === account.id} onChange={(event) => updateRole(account, event.target.value)} aria-label={`Change role for ${account.email}`} borderRadius="lg"><option value="USER">User</option><option value="ADMIN">Administrator</option></Select>}</Td>
+						<Td><Badge colorScheme={account.verfied ? "green" : "orange"} borderRadius="full">{account.verfied ? copy.verified : copy.notVerified}</Badge></Td>
+						<Td>{account.id === currentUserId ? <Badge colorScheme="purple" borderRadius="full" px="3">{copy.adminYou}</Badge> : <Select size="sm" maxW="40" value={account.role} isDisabled={workingId === account.id} onChange={(event) => updateRole(account, event.target.value)} aria-label={copy.changeRoleAria.replace("{email}", account.email)} borderRadius="lg"><option value="USER">{copy.user}</option><option value="ADMIN">{copy.administrator}</option></Select>}</Td>
 					</Tr>)}</Tbody>
 				</Table>
 			</TableContainer>
-			{data.total > data.pageSize && <Flex align="center" justify="space-between" direction={{ base: "column", sm: "row" }} gap="3" mt="5"><Button w={{ base: "full", sm: "auto" }} size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((value) => Math.max(0, value - 1))}>Previous</Button><Text color={muted} fontSize="sm">Page {page + 1} of {Math.ceil(data.total / data.pageSize)}</Text><Button w={{ base: "full", sm: "auto" }} size="sm" colorScheme="orange" isDisabled={(page + 1) * data.pageSize >= data.total} onClick={() => setPage((value) => value + 1)}>Next</Button></Flex>}
+			{data.total > data.pageSize && <Flex align="center" justify="space-between" direction={{ base: "column", sm: "row" }} gap="3" mt="5"><Button w={{ base: "full", sm: "auto" }} size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((value) => Math.max(0, value - 1))}>{copy.previous}</Button><Text color={muted} fontSize="sm">{pageLabel(data.total, data.pageSize)}</Text><Button w={{ base: "full", sm: "auto" }} size="sm" colorScheme="orange" isDisabled={(page + 1) * data.pageSize >= data.total} onClick={() => setPage((value) => value + 1)}>{copy.next}</Button></Flex>}
 		</>}
 	</Flex>;
 }
@@ -551,6 +588,9 @@ function QueueCard({ label, count, detail, action, tone, onClick }: { label: str
 }
 
 function StatsBar({ onOpenListings, onOpenPayments }: { onOpenListings: () => void; onOpenPayments: (status: string) => void }) {
+	const copy = useLang().adminPage.stats;
+	const { locale } = useRouter();
+	const numberLocale = locale === "am" ? "am-ET" : "en-US";
 	const [data, loading, err] = useFetch({
 		fetchFunction: () => axios.get("/api/admin/stat"),
 	});
@@ -573,7 +613,7 @@ function StatsBar({ onOpenListings, onOpenPayments }: { onOpenListings: () => vo
 		return (
 			<Alert variant={"left-accent"} status="error">
 				<AlertIcon></AlertIcon>
-				<AlertTitle>Error Loading Stats</AlertTitle>
+				<AlertTitle>{copy.loadError}</AlertTitle>
 			</Alert>
 		);
 	}
@@ -581,29 +621,29 @@ function StatsBar({ onOpenListings, onOpenPayments }: { onOpenListings: () => vo
 	if (!data) return null;
 
 	const revenue = (data.revenueByCurrency || []).length
-		? data.revenueByCurrency.map((entry) => formatMoney(Number(entry.amount) || 0, entry.currency)).join(" · ")
-		: formatMoney(0, "EUR");
+		? data.revenueByCurrency.map((entry) => formatMoney(Number(entry.amount) || 0, entry.currency, numberLocale)).join(" · ")
+		: formatMoney(0, "EUR", numberLocale);
 	const refundedAmount = (data.refundsByCurrency || []).length
-		? data.refundsByCurrency.map((entry) => formatMoney(Number(entry.amount) || 0, entry.currency)).join(" · ")
-		: formatMoney(0, "EUR");
+		? data.refundsByCurrency.map((entry) => formatMoney(Number(entry.amount) || 0, entry.currency, numberLocale)).join(" · ")
+		: formatMoney(0, "EUR", numberLocale);
 	const cards = [
-		{ label: "Registered accounts", value: data.users ?? 0, note: "Marketplace members", icon: FaUsers, tone: "blue" },
-		{ label: "Approved listings", value: data.approvedItems ?? 0, note: `${data.listings ?? 0} listings in the marketplace`, icon: FaBuilding, tone: "teal" },
-		{ label: "Awaiting review", value: data.waitingItems ?? 0, note: "Payment confirmed · review required", icon: FaClock, tone: "orange" },
-		{ label: "Net fees collected", value: revenue, note: `${data.paidPayments ?? 0} retained listing payments`, icon: FaCreditCard, tone: "green" },
+		{ label: copy.registeredAccounts, value: data.users ?? 0, note: copy.members, icon: FaUsers, tone: "blue" },
+		{ label: copy.approvedListings, value: data.approvedItems ?? 0, note: copy.listingsInMarket.replace("{count}", String(data.listings ?? 0)), icon: FaBuilding, tone: "teal" },
+		{ label: copy.awaitingReview, value: data.waitingItems ?? 0, note: copy.paymentConfirmedReview, icon: FaClock, tone: "orange" },
+		{ label: copy.netFees, value: revenue, note: copy.retainedPayments.replace("{count}", String(data.paidPayments ?? 0)), icon: FaCreditCard, tone: "green" },
 	];
 	const inventory = [
-		{ label: "Homes", value: data.houses ?? 0, icon: FaHome, tone: "cyan" },
-		{ label: "Vehicles", value: data.cars ?? 0, icon: FaCarSide, tone: "purple" },
-		{ label: "Business spaces", value: data.businessSpaces ?? 0, icon: FaBuilding, tone: "teal" },
-		{ label: "Services", value: data.services ?? 0, icon: FaTools, tone: "pink" },
+		{ label: copy.homes, value: data.houses ?? 0, icon: FaHome, tone: "cyan" },
+		{ label: copy.vehicles, value: data.cars ?? 0, icon: FaCarSide, tone: "purple" },
+		{ label: copy.businessSpaces, value: data.businessSpaces ?? 0, icon: FaBuilding, tone: "teal" },
+		{ label: copy.services, value: data.services ?? 0, icon: FaTools, tone: "pink" },
 	];
 	const paymentStates = [
-		{ label: "Confirmed", value: data.paidPayments ?? 0, tone: "green" },
-		{ label: "Refunded", value: data.refundedPayments ?? 0, tone: "purple", note: refundedAmount },
-		{ label: "Refund requests", value: data.pendingRefundRequests ?? 0, tone: "orange" },
-		{ label: "In progress", value: data.initiatedPayments ?? 0, tone: "orange" },
-		{ label: "Failed", value: data.failedPayments ?? 0, tone: "red" },
+		{ label: copy.confirmed, value: data.paidPayments ?? 0, tone: "green" },
+		{ label: copy.refunded, value: data.refundedPayments ?? 0, tone: "purple", note: refundedAmount },
+		{ label: copy.refundRequests, value: data.pendingRefundRequests ?? 0, tone: "orange" },
+		{ label: copy.inProgress, value: data.initiatedPayments ?? 0, tone: "orange" },
+		{ label: copy.failed, value: data.failedPayments ?? 0, tone: "red" },
 	];
 
 	return <Flex direction="column" gap={{ base: 4, md: 5 }}>
@@ -613,7 +653,7 @@ function StatsBar({ onOpenListings, onOpenPayments }: { onOpenListings: () => vo
 				<Flex align="flex-start" justify="space-between" gap="3">
 					<Box minW="0">
 						<Text color={labelText} fontSize="xs" fontWeight="bold" letterSpacing="0.1em" textTransform="uppercase">{card.label}</Text>
-						<Heading mt="3" color={statText} fontSize={card.label === "Fees collected" ? { base: "xl", md: "2xl" } : { base: "2xl", md: "3xl" }} lineHeight="1.05" noOfLines={1}>{card.value}</Heading>
+						<Heading mt="3" color={statText} fontSize={card.label === copy.netFees ? { base: "xl", md: "2xl" } : { base: "2xl", md: "3xl" }} lineHeight="1.05" noOfLines={1}>{card.value}</Heading>
 						<Text mt="2" color={labelText} fontSize="xs" noOfLines={1}>{card.note}</Text>
 					</Box>
 					<Flex w="10" h="10" flexShrink={0} align="center" justify="center" borderRadius="lg" bg={iconSurface} color={`${card.tone}.500`}><Icon as={card.icon} boxSize="4" /></Flex>
@@ -621,20 +661,20 @@ function StatsBar({ onOpenListings, onOpenPayments }: { onOpenListings: () => vo
 			</Box>)}
 		</SimpleGrid>
 		<SimpleGrid className="admin-work-queue" columns={{ base: 1, sm: 3 }} spacing={{ base: 3, md: 4 }}>
-			<QueueCard label="Listing review" count={data.waitingItems ?? 0} detail="Paid listings waiting for an administrator decision." action="Open review queue" tone="orange" onClick={onOpenListings} />
-			<QueueCard label="Refund requests" count={data.pendingRefundRequests ?? 0} detail="Customer requests that need a refund decision." action="Review refund requests" tone="purple" onClick={() => onOpenPayments("REFUND_REQUESTED")} />
-			<QueueCard label="Payment records" count={(data.paidPayments ?? 0) + (data.initiatedPayments ?? 0) + (data.failedPayments ?? 0)} detail="Review listing fees, payment status, and refund activity." action="Open payment records" tone="teal" onClick={() => onOpenPayments("ALL")} />
+			<QueueCard label={copy.listingReview} count={data.waitingItems ?? 0} detail={copy.paidWaiting} action={copy.openReviewQueue} tone="orange" onClick={onOpenListings} />
+			<QueueCard label={copy.refundRequests} count={data.pendingRefundRequests ?? 0} detail={copy.refundQueue} action={copy.reviewRefundRequests} tone="purple" onClick={() => onOpenPayments("REFUND_REQUESTED")} />
+			<QueueCard label={copy.paymentRecords} count={(data.paidPayments ?? 0) + (data.initiatedPayments ?? 0) + (data.failedPayments ?? 0)} detail={copy.paymentActivity} action={copy.openPaymentRecords} tone="teal" onClick={() => onOpenPayments("ALL")} />
 		</SimpleGrid>
 		<SimpleGrid columns={{ base: 1, lg: 2 }} spacing={{ base: 4, md: 5 }}>
 			<Box className="admin-data-panel" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} boxShadow="0 4px 18px rgba(20,30,40,.035)">
-				<Flex align="center" justify="space-between" mb="2"><Box><Heading size="sm" color={statText}>Marketplace inventory</Heading><Text mt="1" color={labelText} fontSize="xs">Listings grouped by category</Text></Box><Badge colorScheme="gray" borderRadius="full" px="3">{data.listings ?? 0} total</Badge></Flex>
+				<Flex align="center" justify="space-between" mb="2"><Box><Heading size="sm" color={statText}>{copy.inventory}</Heading><Text mt="1" color={labelText} fontSize="xs">{copy.listingsGrouped}</Text></Box><Badge colorScheme="gray" borderRadius="full" px="3">{data.listings ?? 0} {copy.total}</Badge></Flex>
 				{inventory.map((entry, index) => <Flex key={entry.label} align="center" gap="3" py="3" borderBottom={index < inventory.length - 1 ? "1px solid" : "none"} borderColor={border}>
 					<Flex w="8" h="8" align="center" justify="center" bg={iconSurface} color={`${entry.tone}.500`} borderRadius="lg"><Icon as={entry.icon} boxSize="3.5" /></Flex>
 					<Text flex="1" fontSize="sm" color={statText} fontWeight="medium">{entry.label}</Text><Text fontSize="sm" color={statText} fontWeight="bold">{entry.value}</Text>
 				</Flex>)}
 			</Box>
 			<Box className="admin-data-panel" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} boxShadow="0 4px 18px rgba(20,30,40,.035)">
-				<Flex align="center" justify="space-between" mb="4"><Box><Heading size="sm" color={statText}>Payment health</Heading><Text mt="1" color={labelText} fontSize="xs">Listing publication fee transactions</Text></Box><Icon as={FaCreditCard} color="mainorange" /></Flex>
+				<Flex align="center" justify="space-between" mb="4"><Box><Heading size="sm" color={statText}>{copy.paymentHealth}</Heading><Text mt="1" color={labelText} fontSize="xs">{copy.feeTransactions}</Text></Box><Icon as={FaCreditCard} color="mainorange" /></Flex>
 				<SimpleGrid columns={{ base: 2, lg: 4 }} spacing="3">
 					{paymentStates.map((state) => <Box key={state.label} bg={insetSurface} border="1px solid" borderColor={border} borderRadius="lg" p={{ base: 3, md: 4 }}>
 						<Flex align="center" gap="2"><Box w="2" h="2" borderRadius="full" bg={`${state.tone}.400`} /><Text color={labelText} fontSize="xs" fontWeight="semibold">{state.label}</Text></Flex>
@@ -642,7 +682,7 @@ function StatsBar({ onOpenListings, onOpenPayments }: { onOpenListings: () => vo
 						{state.note && <Text mt="1" color={labelText} fontSize="xs" noOfLines={1}>{state.note}</Text>}
 					</Box>)}
 				</SimpleGrid>
-				<Text mt="4" color={labelText} fontSize="xs" lineHeight="1.6">Only confirmed listing publication fees are included in the total.</Text>
+				<Text mt="4" color={labelText} fontSize="xs" lineHeight="1.6">{copy.confirmedOnly}</Text>
 			</Box>
 		</SimpleGrid>
 	</Flex>;

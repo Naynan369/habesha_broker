@@ -11,25 +11,29 @@ datasource db {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  firstName     String
-  lastName      String
-  email         String          @unique
-  password      String
-  bio           String?
-  profile_url   String?
-  role          Role            @default(USER)
-  verfied       Boolean         @default(false)
-  sessionVersion Int            @default(0)
-  ContactInfo   ContactInfo[]
-  AddedItem     Item[]          @relation("Addes")
-  ApprovedItem  Item[]          @relation("Approves")
-  SavedItems    SavedItems[]
-  RecentActions RecentActions[]
-  Verification  Verification[]
-  PasswordReset PasswordReset[]
+  id                        String           @id @default(cuid())
+  firstName                 String
+  lastName                  String
+  email                     String           @unique
+  password                  String
+  bio                       String?
+  profile_url               String?
+  role                      Role             @default(USER)
+  verfied                   Boolean          @default(false)
+  sessionVersion            Int              @default(0)
+  ContactInfo               ContactInfo[]
+  AddedItem                 Item[]           @relation("Addes")
+  ApprovedItem              Item[]           @relation("Approves")
+  SavedItems                SavedItems[]
+  RecentActions             RecentActions[]
+  Verification              Verification[]
+  PasswordReset             PasswordReset[]
   ServiceRequestsAsCustomer ServiceRequest[] @relation("ServiceRequestCustomer")
   ServiceRequestsAsProvider ServiceRequest[] @relation("ServiceRequestProvider")
+  ListingReportsSubmitted   ListingReport[]  @relation("ListingReportReporter")
+  ListingReportsReviewed    ListingReport[]  @relation("ListingReportReviewer")
+  ServiceReviewsAuthored    ServiceReview[]  @relation("ServiceReviewAuthor")
+  ServiceReviewsReceived    ServiceReview[]  @relation("ServiceReviewProvider")
 }
 
 model ContactInfo {
@@ -63,6 +67,8 @@ model Item {
   description     String?
   price           Float
   priceType       PriceType
+  sellerType      ListingSellerType    @default(OWNER)
+  sellerAttested  Boolean              @default(false)
   images          String[]             @default([])
   createdAt       DateTime             @default(now())
   itemType        ItemType
@@ -81,36 +87,38 @@ model Item {
   RecentActions   RecentActions[]
   ListingPayments ListingPayment[]
   ServiceRequests ServiceRequest[]
+  ListingReports  ListingReport[]
+  ServiceReviews  ServiceReview[]
 
   @@index([status, createdAt])
   @@index([itemType, status])
 }
 
 model ListingPayment {
-  id            String              @id @default(cuid())
-  itemId        String
-  item          Item                @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  txRef         String              @unique
-  amount        Float
-  currency      String              @default("EUR")
-  status        ListingPaymentState @default(INITIATED)
-  checkoutUrl   String?
-  providerRef   String?
-  paymentMethod String?
-  createdAt     DateTime            @default(now())
-  verifiedAt    DateTime?
-  refundStatus  ListingRefundStatus  @default(NOT_REFUNDED)
-  refundAttempt Int                  @default(0)
-  refundRef     String?              @unique
-  refundStartedAt DateTime?
-  refundedAt    DateTime?
-  refundedById  String?
+  id                  String                     @id @default(cuid())
+  itemId              String
+  item                Item                       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  txRef               String                     @unique
+  amount              Float
+  currency            String                     @default("EUR")
+  status              ListingPaymentState        @default(INITIATED)
+  checkoutUrl         String?
+  providerRef         String?
+  paymentMethod       String?
+  createdAt           DateTime                   @default(now())
+  verifiedAt          DateTime?
+  refundStatus        ListingRefundStatus        @default(NOT_REFUNDED)
+  refundAttempt       Int                        @default(0)
+  refundRef           String?                    @unique
+  refundStartedAt     DateTime?
+  refundedAt          DateTime?
+  refundedById        String?
   refundRequestStatus ListingRefundRequestStatus @default(NONE)
-  refundRequestedAt DateTime?
+  refundRequestedAt   DateTime?
   refundRequestReason String?
-  refundReviewedAt DateTime?
-  refundReviewedById String?
-  refundReviewNote String?
+  refundReviewedAt    DateTime?
+  refundReviewedById  String?
+  refundReviewNote    String?
 
   @@index([itemId, createdAt])
   @@index([refundStatus, createdAt])
@@ -118,27 +126,27 @@ model ListingPayment {
 }
 
 model House {
-  id            String                   @id @default(cuid())
-  itemId        String                   @unique
-  item          Item                     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  area          Float?
-  room          Int?
-  type          HouseType?
-  propertyType  ResidentialPropertyType?
+  id             String                   @id @default(cuid())
+  itemId         String                   @unique
+  item           Item                     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  area           Float?
+  room           Int?
+  type           HouseType?
+  propertyType   ResidentialPropertyType?
   priceFrequency PriceFrequency?
-  bedrooms      Int?
-  bathrooms     Int?
-  floor         Int?
-  totalFloors   Int?
-  furnishing    FurnishingStatus?
-  video         String?
-  region        String?
-  city          String?
-  subcity       String?
-  woreda        String?
-  neighborhood  String?
-  landmark      String?
-  features      String[]                 @default([])
+  bedrooms       Int?
+  bathrooms      Int?
+  floor          Int?
+  totalFloors    Int?
+  furnishing     FurnishingStatus?
+  video          String?
+  region         String?
+  city           String?
+  subcity        String?
+  woreda         String?
+  neighborhood   String?
+  landmark       String?
+  features       String[]                 @default([])
 }
 
 model Car {
@@ -165,7 +173,7 @@ model Car {
   subcity      String?
   neighborhood String?
   landmark     String?
-  features     String[]   @default([])
+  features     String[]          @default([])
 }
 
 model BusinessSpace {
@@ -189,13 +197,14 @@ model BusinessSpace {
 }
 
 model Service {
-  id          String          @id @default(cuid())
-  itemId      String          @unique
-  item        Item            @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  category    ServiceCategory
-  region      String
-  city        String
-  serviceArea String?
+  id           String          @id @default(cuid())
+  itemId       String          @unique
+  item         Item            @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  category     ServiceCategory
+  region       String
+  city         String
+  serviceArea  String?
+  availability String?
 
   @@index([category, region, city])
 }
@@ -206,26 +215,87 @@ enum ServiceRequestStatus {
   DECLINED
   COMPLETED
   CANCELLED
+  QUOTED
+  SCHEDULED
 }
 
 model ServiceRequest {
-  id          String               @id @default(cuid())
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-  itemId      String
-  item        Item                 @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  customerId  String
-  customer    User                 @relation("ServiceRequestCustomer", fields: [customerId], references: [id], onDelete: Cascade)
-  providerId  String
-  provider    User                 @relation("ServiceRequestProvider", fields: [providerId], references: [id], onDelete: Cascade)
-  preferredAt DateTime?
-  message     String
-  contactPhone String?
-  status      ServiceRequestStatus @default(NEW)
+  id            String               @id @default(cuid())
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  itemId        String
+  item          Item                 @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  customerId    String
+  customer      User                 @relation("ServiceRequestCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  providerId    String
+  provider      User                 @relation("ServiceRequestProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  preferredAt   DateTime?
+  message       String
+  contactPhone  String?
+  quoteAmount   Float?
+  quoteNote     String?
+  appointmentAt DateTime?
+  status        ServiceRequestStatus @default(NEW)
+  review        ServiceReview?
 
   @@index([providerId, status, createdAt])
   @@index([customerId, createdAt])
   @@index([itemId, createdAt])
+}
+
+enum ListingReportReason {
+  SUSPECTED_FRAUD
+  MISLEADING_INFORMATION
+  UNAUTHORIZED_LISTING
+  PROHIBITED_CONTENT
+  HARASSMENT
+  OTHER
+}
+
+enum ListingReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model ListingReport {
+  id         String              @id @default(cuid())
+  itemId     String?
+  item       Item?               @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  reporterId String?
+  reporter   User?               @relation("ListingReportReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  reason     ListingReportReason
+  details    String?
+  status     ListingReportStatus @default(OPEN)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  reviewedAt DateTime?
+  reviewerId String?
+  reviewer   User?               @relation("ListingReportReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewNote String?
+
+  @@index([status, createdAt])
+  @@index([itemId, status])
+  @@index([reporterId, itemId, status])
+}
+
+model ServiceReview {
+  id         String         @id @default(cuid())
+  requestId  String         @unique
+  request    ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  itemId     String
+  item       Item           @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User           @relation("ServiceReviewAuthor", fields: [reviewerId], references: [id], onDelete: Cascade)
+  providerId String
+  provider   User           @relation("ServiceReviewProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  rating     Int
+  comment    String?
+  createdAt  DateTime       @default(now())
+
+  @@index([itemId, createdAt])
+  @@index([providerId, createdAt])
 }
 
 model SavedItems {
@@ -256,6 +326,15 @@ enum ItemType {
   CAR
   BUSINESS_SPACE
   SERVICE
+}
+
+enum ListingSellerType {
+  OWNER
+  AUTHORIZED_AGENT
+  BROKER
+  DEALER_RETAILER
+  SERVICE_PROVIDER
+  SERVICE_COMPANY
 }
 
 enum ServiceCategory {

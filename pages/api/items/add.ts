@@ -68,6 +68,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 		if (price < 0) throw new ListingInputError("Price must be non-negative");
 		if (!["FIXED", "NEGOTIABLE"].includes(priceType)) throw new ListingInputError("Invalid price type");
 		if (!["HOUSE", "CAR", "BUSINESS_SPACE", "SERVICE"].includes(itemType)) throw new ListingInputError("Invalid listing type");
+		const sellerTypesByItemType: Record<string, string[]> = {
+			HOUSE: ["OWNER", "AUTHORIZED_AGENT", "BROKER"],
+			CAR: ["OWNER", "DEALER_RETAILER", "BROKER"],
+			BUSINESS_SPACE: ["OWNER", "AUTHORIZED_AGENT", "BROKER"],
+			SERVICE: ["SERVICE_PROVIDER", "SERVICE_COMPANY"],
+		};
+		if (!sellerTypesByItemType[itemType]?.includes(body.sellerType)) throw new ListingInputError("Choose a valid seller role for this listing");
+		if (body.sellerAttested !== true) throw new ListingInputError("Confirm that you are authorized to post this listing");
 		if (["HOUSE", "CAR"].includes(itemType) && price === 0) throw new ListingInputError("Price must be greater than zero");
 		if (video && itemType !== "HOUSE") throw new ListingInputError("Videos can only be added to home listings");
 
@@ -77,6 +85,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 			price,
 			priceType,
 			itemType,
+			sellerType: body.sellerType,
+			sellerAttested: true,
 			paymentStatus: "DUE",
 			images,
 			user: { connect: { id: user.id } },
@@ -174,6 +184,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 				region: body.region.trim().slice(0, 100),
 				city: body.city.trim().slice(0, 100),
 				serviceArea: String(body.serviceArea || "").trim().slice(0, 240) || null,
+				availability: String(body.availability || "").trim().slice(0, 240) || null,
 			} };
 		} else {
 			const area = parseNumber(body.area, "area");

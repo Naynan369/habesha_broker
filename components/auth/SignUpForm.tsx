@@ -137,7 +137,7 @@ export const SignUpForm = () => {
 							aria-label={lang.auth.agree}
 						>
 							<Text fontSize="sm" color={mutedColor} lineHeight="1.6">
-								{lang.auth.agree}
+								{lang.auth.agree} <Link href="/policies"><Text as="span" color="mainorange" fontWeight="semibold" textDecoration="underline">{lang.auth.policiesLink}</Text></Link>
 							</Text>
 						</Checkbox>
 					</Flex>

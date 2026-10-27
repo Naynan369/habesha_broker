@@ -25,6 +25,7 @@ export const Profile: FC<IProfile> = ({ user }) => {
 	const nameColor = useColorModeValue("#25383d", "#e8eff0");
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const iconHoverBg = useColorModeValue("gray.100", "whiteAlpha.100");
+	const iconHoverColor = useColorModeValue("#8d421e", "#f0b783");
 	return (
 		<Flex
 			background={surface}
@@ -41,7 +42,7 @@ export const Profile: FC<IProfile> = ({ user }) => {
 					{dashboardText.profile}
 				</Heading>
 				<Link legacyBehavior href={"/dashboard/edit-profile"} passHref>
-					<IconButton as="a" variant="ghost" color={muted} _hover={{ bg: iconHoverBg, color: "mainorange" }} _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }} aria-label={dashboardText.editProfile}>
+					<IconButton as="a" variant="ghost" color={muted} _hover={{ bg: iconHoverBg, color: iconHoverColor }} _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }} aria-label={dashboardText.editProfile}>
 						<MdEdit />
 					</IconButton>
 				</Link>

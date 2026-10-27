@@ -29,8 +29,8 @@ const config: ChakraTheme = {
 	},
 	fonts: {
 		...defaultTheme.fonts,
-		heading: "'Space Grotesk', 'Noto Sans Ethiopic', 'Kefa III', Kefa, Avenir Next, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
-		body: "'Space Grotesk', 'Noto Sans Ethiopic', 'Kefa III', Kefa, Noto Sans, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+		heading: "var(--font-space-grotesk), var(--font-noto-sans-ethiopic), 'Kefa III', Kefa, Avenir Next, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+		body: "var(--font-space-grotesk), var(--font-noto-sans-ethiopic), 'Kefa III', Kefa, 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 	},
 	styles: {
 		global: (props) => ({

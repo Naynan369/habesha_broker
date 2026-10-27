@@ -2,7 +2,7 @@ import { Box, Flex, SimpleGrid, Heading, Text, useColorModeValue } from "@chakra
 import Link, { LinkProps } from "next/link";
 import { FC, ReactElement, ReactNode } from "react";
 import styles from "@styles/Home.module.scss";
-import { ChatIcon, EmailIcon, PhoneIcon } from "@chakra-ui/icons";
+import { ChatIcon, EmailIcon } from "@chakra-ui/icons";
 import { am } from "@locales/am";
 import { en } from "@locales/en";
 import { useRouter } from "next/router";
@@ -20,8 +20,8 @@ export const HomeFooter = () => {
 					<Text color="whiteAlpha.700" lineHeight="1.8" maxW="300px">{lang.home.footer_description}</Text>
 				</Flex>
 				<FooterColumn title={lang.home.services_txt}><FooterLink href="/#categories">{lang.home.browse_categories}</FooterLink><FooterLink href="/explore?itemType=SERVICE">{lang.home.services_txt}</FooterLink><FooterLink href="/explore">{lang.home.explore_all}</FooterLink><FooterLink href="/auth/login">{lang.home.work_btn}</FooterLink></FooterColumn>
-				<FooterColumn title={lang.home.footer.links}><FooterLink href="/">{lang.nav.home}</FooterLink><FooterLink href="/explore">{lang.nav.explore}</FooterLink><FooterLink href="/#Contact">{lang.home.contacttxt}</FooterLink></FooterColumn>
-				<FooterColumn title={lang.home.contacttxt}><ContactLink icon={<PhoneIcon />} href="tel:0973723769">0973723769</ContactLink><ContactLink icon={<EmailIcon />} href="mailto:naolchala6@gmail.com">naolchala6@gmail.com</ContactLink><ContactLink icon={<ChatIcon />} href="https://t.me/stepphenwolf">@stepphenwolf</ContactLink></FooterColumn>
+				<FooterColumn title={lang.home.footer.links}><FooterLink href="/">{lang.nav.home}</FooterLink><FooterLink href="/explore">{lang.nav.explore}</FooterLink><FooterLink href="/#Contact">{lang.home.contacttxt}</FooterLink><FooterLink href="/policies">{lang.policies.heading}</FooterLink></FooterColumn>
+				<FooterColumn title={lang.home.contacttxt}><ContactLink icon={<EmailIcon />} href="mailto:nasaamazement321@gmail.com">nasaamazement321@gmail.com</ContactLink><ContactLink icon={<ChatIcon />} href="https://t.me/Nine131621">@Nine131621</ContactLink></FooterColumn>
 			</SimpleGrid>
 			<Flex bg="blackAlpha.200" justify="center" px="6" py="5" align="center"><Text fontSize="sm" color="whiteAlpha.600">© {new Date().getFullYear()} {lang.title}. {lang.home.copyright}</Text></Flex>
 		</Flex>

@@ -15,6 +15,7 @@ import {
 	useColorModeValue,
 } from "@chakra-ui/react";
 import { useLang } from "@libs/hooks/useLang";
+import { sellerPhoneCountries } from "@libs/helpers/phoneCountries";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
@@ -25,15 +26,6 @@ type SellerContactInfo = {
 };
 
 const sellerContactTypes = ["PHONE_NUMBER", "WHATSAPP", "TELEGRAM"] as const;
-const phoneCountries = [
-	["Ethiopia", "+251"], ["Eritrea", "+291"], ["Djibouti", "+253"], ["Somalia", "+252"],
-	["Kenya", "+254"], ["Sudan", "+249"], ["South Sudan", "+211"], ["Uganda", "+256"],
-	["Tanzania", "+255"], ["Rwanda", "+250"], ["Egypt", "+20"], ["South Africa", "+27"],
-	["United Arab Emirates", "+971"], ["Saudi Arabia", "+966"], ["Qatar", "+974"],
-	["United Kingdom", "+44"], ["United States", "+1"], ["Canada", "+1"], ["Germany", "+49"],
-	["Italy", "+39"], ["France", "+33"], ["India", "+91"],
-] as const;
-
 export function useSellerContact(userId: string) {
 	const copy = useLang().sellerContact;
 	const [contacts, setContacts] = useState<SellerContactInfo[]>([]);
@@ -144,7 +136,7 @@ export function SellerContactStep({ contact }: { contact: ReturnType<typeof useS
 						) : (
 							<SimpleGrid columns={{ base: 1, sm: 2 }} spacing="3">
 								<Select id="seller-contact-country" aria-label={copy.countryCodeLabel} value={contact.countryCode} onChange={(event) => contact.setCountryCode(event.target.value)} borderRadius="xl" bg={surface} borderColor={fieldBorder}>
-									{phoneCountries.map(([country, code]) => <option key={`${country}-${code}`} value={code}>{country} ({code})</option>)}
+									{sellerPhoneCountries.map(([country, code]) => <option key={`${country}-${code}`} value={code}>{country} ({code})</option>)}
 								</Select>
 								<Input id="seller-contact-phone" type="tel" inputMode="tel" isRequired value={contact.value} onChange={(event) => contact.setValue(event.target.value)} placeholder={copy.phonePlaceholder} borderRadius="xl" bg={surface} borderColor={fieldBorder} _placeholder={{ color: subtle }} />
 							</SimpleGrid>

@@ -26,6 +26,7 @@ import {
 import { InputField } from "@components/dashboard/forms/InputField";
 import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizardProgress";
 import { SellerContactStep, useSellerContact } from "@components/dashboard/forms/SellerContactStep";
+import { SellerTypeField } from "@components/dashboard/forms/SellerTypeField";
 import { useLang } from "@libs/hooks/useLang";
 import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import axios from "axios";
@@ -43,6 +44,8 @@ const SPACE_TYPES = ["SHOP", "OFFICE", "WAREHOUSE", "MARKET_STALL", "WORKSHOP", 
 function createSchema(text: any) {
 	return yup.object().shape({
 		title: yup.string().trim().min(5, "Use at least 5 characters").max(300, "Keep the title under 300 characters").required("A listing title is required"),
+		sellerType: yup.string().oneOf(["OWNER", "AUTHORIZED_AGENT", "BROKER"]).required("Choose your role for this listing"),
+		sellerAttested: yup.boolean().oneOf([true], "Confirm that you are authorized to post this listing"),
 		description: yup.string().max(10000, "Keep the description under 10,000 characters"),
 		price: yup.number().typeError("Enter a valid price").min(0, "Price cannot be negative").required("A price is required"),
 		priceType: yup.string().oneOf(["FIXED", "NEGOTIABLE"]).required("Choose a price type"),
@@ -73,7 +76,9 @@ function createSchema(text: any) {
 export const AddBusinessSpace = ({ user }: { user?: { id: string } }) => {
 	const router = useRouter();
 	const toast = useToast();
-	const text = useLang().businessListing;
+	const lang = useLang();
+	const text = lang.businessListing;
+	const sellerTypeText = lang.sellerType;
 	const validationSchema = createSchema(text);
 	const uploadButtonBg = useColorModeValue("orange.50", "whiteAlpha.100");
 	const uploadButtonText = useColorModeValue("orange.800", "orange.100");
@@ -91,7 +96,7 @@ export const AddBusinessSpace = ({ user }: { user?: { id: string } }) => {
 	const steps = text.wizard.steps as string[];
 	const hints = text.wizard.hints as string[];
 	const fieldsByStep = [
-		["title", "spaceType", "type", "priceType", "price", "priceFrequency"],
+		["title", "sellerType", "sellerAttested", "spaceType", "type", "priceType", "price", "priceFrequency"],
 		["area", "electricity", "water", "roadAccess", "parking"],
 		["region", "city", "subcity", "woreda", "neighborhood", "landmark", "description"],
 		["files"],
@@ -168,6 +173,8 @@ export const AddBusinessSpace = ({ user }: { user?: { id: string } }) => {
 		<Formik
 			initialValues={{
 				title: "",
+				sellerType: "",
+				sellerAttested: false,
 				description: "",
 				price: 0,
 				priceType: "NEGOTIABLE",
@@ -210,6 +217,7 @@ export const AddBusinessSpace = ({ user }: { user?: { id: string } }) => {
 
 					{step === 0 && <Flex direction="column" gap="5">
 						<InputField formik={formik} label={text.title} name="title" placeholder={text.titleHint} helperText={text.titleHelp} required />
+						<SellerTypeField formik={formik} itemType="BUSINESS_SPACE" />
 						<SimpleGrid columns={{ base: 1, md: 2 }} spacing="5">
 							<SelectField formik={formik} name="spaceType" label={text.spaceType} options={SPACE_TYPES.map((value) => [value, text.spaceTypes[value]])} required />
 							<SelectField formik={formik} name="type" label={text.rentOrSale} options={[["RENT", text.rent], ["FORSALE", text.sale]]} required onChange={(value) => {
@@ -256,6 +264,7 @@ export const AddBusinessSpace = ({ user }: { user?: { id: string } }) => {
 					{step === 3 && <Flex direction="column" gap="5">
 						<SimpleGrid columns={{ base: 1, md: 2 }} spacing="4">
 							<ReviewCard label={text.title} value={formik.values.title || "—"} />
+							<ReviewCard label={sellerTypeText.label} value={sellerTypeText.options[formik.values.sellerType] || "—"} />
 							<ReviewCard label={text.price} value={"ETB " + Number(formik.values.price || 0).toLocaleString("en-US")} />
 							<ReviewCard label={text.spaceType} value={text.spaceTypes[formik.values.spaceType] || "—"} />
 							<ReviewCard label={text.rentOrSale} value={formik.values.type === "RENT" ? text.rent : text.sale} />

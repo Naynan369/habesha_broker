@@ -67,6 +67,7 @@ export const ItemList: FC<IItemsList> = ({ user, paymentFee, paymentEnabled, fil
 						ownerPhoto={user.profile_url}
 						price={item.price}
 						itemType={item.itemType}
+						sellerType={item.sellerType}
 						priceFrequency={item.BusinessSpace?.priceFrequency}
 						listingIntent={item.House?.type || item.BusinessSpace?.type}
 						serviceCategory={item.Service?.category}

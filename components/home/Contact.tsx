@@ -1,11 +1,12 @@
-import { Box, Button, useToast, Flex, FormControl, FormLabel, Heading, Input, Text, Textarea, useColorModeValue } from "@chakra-ui/react";
+import { Box, Button, useToast, Flex, FormControl, FormLabel, Heading, Input, SimpleGrid, Text, Textarea, useColorModeValue } from "@chakra-ui/react";
 import { am } from "@locales/am";
 import { en } from "@locales/en";
 import { useRouter } from "next/router";
-import { MdArrowOutward, MdEmail, MdLocationOn } from "react-icons/md";
+import { MdArrowOutward, MdEmail, MdLocationOn, MdSend } from "react-icons/md";
 import type { CSSProperties, FormEvent } from "react";
 
-const contactEmail = "naolchala6@gmail.com";
+const contactEmail = "nasaamazement321@gmail.com";
+const contactTelegram = "Nine131621";
 
 export const HomeContact = () => {
 	const { locale } = useRouter();
@@ -22,7 +23,7 @@ export const HomeContact = () => {
 		event.preventDefault();
 		const form = new FormData(event.currentTarget);
 		const subject = encodeURIComponent(`Habesha Brokers enquiry from ${String(form.get("name") || "")}`);
-		const body = encodeURIComponent(`Name: ${form.get("name")}\nEmail: ${form.get("email")}\n\n${form.get("message")}`);
+		const body = encodeURIComponent(`Name: ${form.get("name")}\n\n${form.get("message")}`);
 		window.location.href = `mailto:${contactEmail}?subject=${subject}&body=${body}`;
 		toast({ title: lang.home.contact_ready_title, description: lang.home.contact_ready_description, status: "info", isClosable: true });
 	};
@@ -52,9 +53,18 @@ export const HomeContact = () => {
 				<Box data-home-stagger style={{ "--home-stagger-delay": "120ms" } as CSSProperties} flex="1" bg={surface} color={textColor} border="1px solid" borderColor={fieldBorder} borderRadius="2xl" p={{ base: 6, md: 8 }}>
 					<Flex align="center" gap="3"><Box color="mainred"><MdEmail size={22} /></Box><Heading fontSize="xl">{lang.home.msgus}</Heading></Flex>
 					<Text color={mutedColor} mt="3" mb="5" lineHeight="1.7">{lang.home.contact_form_description}</Text>
+					<SimpleGrid columns={{ base: 1, sm: 2 }} spacing="3" mb="6">
+						<Flex as="a" href={`mailto:${contactEmail}`} align="center" gap="3" minW="0" p="4" bg={fieldBg} border="1px solid" borderColor={fieldBorder} borderRadius="xl" transition="border-color .2s, transform .2s" _hover={{ borderColor: "mainred", transform: "translateY(-2px)" }}>
+							<Box color="mainred" flexShrink={0}><MdEmail size={20} /></Box>
+							<Box minW="0"><Text color={mutedColor} fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing=".08em">{lang.home.contactForm.email}</Text><Text mt="1" fontSize="sm" fontWeight="semibold" noOfLines={1}>{contactEmail}</Text></Box>
+						</Flex>
+						<Flex as="a" href={`https://t.me/${contactTelegram}`} target="_blank" rel="noopener noreferrer" align="center" gap="3" minW="0" p="4" bg={fieldBg} border="1px solid" borderColor={fieldBorder} borderRadius="xl" transition="border-color .2s, transform .2s" _hover={{ borderColor: "mainred", transform: "translateY(-2px)" }}>
+							<Box color="mainred" flexShrink={0}><MdSend size={20} /></Box>
+							<Box minW="0"><Text color={mutedColor} fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing=".08em">{lang.home.contact_telegram_label}</Text><Text mt="1" fontSize="sm" fontWeight="semibold">@{contactTelegram}</Text></Box>
+						</Flex>
+					</SimpleGrid>
 					<form onSubmit={submitContact}>
 						<FormControl mb="4" isRequired><FormLabel htmlFor="name">{lang.home.contactForm.name}</FormLabel><Input id="name" name="name" type="text" autoComplete="name" placeholder={lang.home.contact_name_placeholder} bg={fieldBg} borderColor={fieldBorder} color={textColor} _hover={{ bg: fieldBg }} _focus={{ bg: fieldBg, borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
-						<FormControl mb="4" isRequired><FormLabel htmlFor="email">{lang.home.contactForm.email}</FormLabel><Input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" bg={fieldBg} borderColor={fieldBorder} color={textColor} _hover={{ bg: fieldBg }} _focus={{ bg: fieldBg, borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
 						<FormControl mb="5" isRequired><FormLabel htmlFor="msg">{lang.home.contactForm.msg}</FormLabel><Textarea id="msg" name="message" required rows={4} placeholder={lang.home.contact_message_placeholder} bg={fieldBg} borderColor={fieldBorder} color={textColor} _hover={{ bg: fieldBg }} _focus={{ bg: fieldBg, borderColor: "mainred", boxShadow: "0 0 0 1px #D62828" }} /></FormControl>
 						<Flex justify="space-between" align="center" gap="4" flexWrap="wrap"><Text color={mutedColor} fontSize="xs">{lang.home.contact_email_note}</Text><Button type="submit" bg="mainred" color="white" borderRadius="xl" rightIcon={<MdArrowOutward />} _hover={{ bg: "#ae2020" }}>{lang.home.contactForm.sbmt}</Button></Flex>
 					</form>

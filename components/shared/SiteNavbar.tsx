@@ -75,8 +75,16 @@ export function SiteNavbar({ mode = "public", user, onLogout }: SiteNavbarProps)
 	const logoutHover = useColorModeValue("red.50", "whiteAlpha.100");
 
 	const changeLocale = (nextLocale: "en" | "am") => {
-		void router.push(asPath, asPath, { locale: nextLocale });
 		drawer.onClose();
+		if (nextLocale === locale) return;
+
+		// Keep the current page and its query when changing languages. Using the
+		// route object lets Next resolve the localized dashboard route reliably.
+		void router.replace(
+			{ pathname: router.pathname, query: router.query },
+			asPath,
+			{ locale: nextLocale, scroll: false },
+		);
 	};
 
 	const accountLabel = mode === "admin" || user?.role === "ADMIN"
