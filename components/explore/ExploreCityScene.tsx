@@ -109,8 +109,8 @@ export default function ExploreCityScene() {
 		renderer.toneMappingExposure = 1.2;
 		renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 		renderer.setClearColor(0x000000, 0);
-		renderer.domElement.setAttribute("aria-label", "Interactive animated three-dimensional cityscape. Move or drag to explore the skyline.");
-		Object.assign(renderer.domElement.style, { display: "block", width: "100%", height: "100%", cursor: "grab", touchAction: "pan-y" });
+		renderer.domElement.setAttribute("aria-label", "Animated illustration of a city skyline with illuminated routes and buildings.");
+		Object.assign(renderer.domElement.style, { display: "block", width: "100%", height: "100%", pointerEvents: "none", userSelect: "none" });
 		mount.appendChild(renderer.domElement);
 
 		const ambient = new THREE.HemisphereLight("#fff0d5", "#28515a", 2.05);
@@ -242,49 +242,6 @@ export default function ExploreCityScene() {
 		resizeObserver.observe(mount);
 		resize();
 
-		let pointerTargetX = 0;
-		let pointerTargetY = 0;
-		let dragging = false;
-		let dragX = 0;
-		let dragRotation = 0;
-		const onPointerDown = (event: PointerEvent) => {
-			dragging = true;
-			dragX = event.clientX;
-			dragRotation = city.rotation.y;
-			if (event.pointerType === "mouse") {
-				renderer.domElement.style.cursor = "grabbing";
-				renderer.domElement.setPointerCapture(event.pointerId);
-			}
-		};
-		const onPointerMove = (event: PointerEvent) => {
-			const rect = renderer.domElement.getBoundingClientRect();
-			if (dragging) {
-				pointerTargetX = THREE.MathUtils.clamp(dragRotation + (event.clientX - dragX) * 0.003, -0.32, 0.32);
-				return;
-			}
-			if (event.pointerType !== "mouse") return;
-			pointerTargetX = ((event.clientX - rect.left) / rect.width - 0.5) * 0.2;
-			pointerTargetY = ((event.clientY - rect.top) / rect.height - 0.5) * 0.06;
-		};
-		const onPointerUp = (event: PointerEvent) => {
-			dragging = false;
-			if (event.pointerType === "mouse") {
-				if (renderer.domElement.hasPointerCapture(event.pointerId)) renderer.domElement.releasePointerCapture(event.pointerId);
-				renderer.domElement.style.cursor = "grab";
-			}
-		};
-		const onPointerLeave = () => {
-			if (!dragging) {
-				pointerTargetX = 0;
-				pointerTargetY = 0;
-			}
-		};
-		renderer.domElement.addEventListener("pointerdown", onPointerDown);
-		renderer.domElement.addEventListener("pointermove", onPointerMove);
-		renderer.domElement.addEventListener("pointerup", onPointerUp);
-		renderer.domElement.addEventListener("pointercancel", onPointerUp);
-		renderer.domElement.addEventListener("pointerleave", onPointerLeave);
-
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 		let frame = 0;
 		let visible = false;
@@ -292,8 +249,7 @@ export default function ExploreCityScene() {
 			if (!reduceMotion) {
 				const seconds = time / 1000;
 				const idleTurn = Math.sin(seconds * 0.22) * 0.055;
-				city.rotation.y += (pointerTargetX + idleTurn - city.rotation.y) * 0.025;
-				city.rotation.x += (pointerTargetY - city.rotation.x) * 0.025;
+				city.rotation.y += (idleTurn - city.rotation.y) * 0.025;
 				for (const route of routeDots) {
 					const progress = (seconds * route.speed + route.phase) % 1;
 					route.trail.forEach((mesh, trailIndex) => {
@@ -346,11 +302,6 @@ export default function ExploreCityScene() {
 			visibilityObserver?.disconnect();
 			resizeObserver.disconnect();
 			document.removeEventListener("visibilitychange", update);
-			renderer.domElement.removeEventListener("pointerdown", onPointerDown);
-			renderer.domElement.removeEventListener("pointermove", onPointerMove);
-			renderer.domElement.removeEventListener("pointerup", onPointerUp);
-			renderer.domElement.removeEventListener("pointercancel", onPointerUp);
-			renderer.domElement.removeEventListener("pointerleave", onPointerLeave);
 			const geometries = new Set<THREE.BufferGeometry>();
 			const materials = new Set<THREE.Material>();
 			scene.traverse((object) => {

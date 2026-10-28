@@ -1,9 +1,7 @@
 import { withSessionApi } from "@config/cookie/cookie";
+import { mediaContentTypes, type MediaKind } from "@libs/helpers/blob";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import type { NextApiRequest, NextApiResponse } from "next";
-
-const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 
 type UploadSessionRequest = NextApiRequest & {
 	user?: { id: string; verfied: boolean };
@@ -13,6 +11,9 @@ async function handler(req: UploadSessionRequest, res: NextApiResponse) {
 	if (req.method !== "POST") return res.status(405).json({ err: "Method not allowed" });
 	const user = req.user;
 	if (!user) return res.status(401).json({ err: "Authentication required" });
+	if (!process.env.BLOB_READ_WRITE_TOKEN) {
+		return res.status(503).json({ err: "Photo storage is not configured. Add BLOB_READ_WRITE_TOKEN to this environment and restart the app." });
+	}
 
 	try {
 		const result = await handleUpload({
@@ -25,11 +26,13 @@ async function handler(req: UploadSessionRequest, res: NextApiResponse) {
 				if (userId !== user.id || !["listing", "profile"].includes(purpose)) throw new Error("Upload is not allowed");
 				if (purpose === "listing" && !user.verfied) throw new Error("Verify your email address first");
 				if (purpose === "listing" && !["HOUSE", "CAR", "BUSINESS_SPACE", "SERVICE"].includes(itemType)) throw new Error("Choose a valid listing type");
+				if (mediaKind !== "image" && mediaKind !== "video") throw new Error("Choose a valid media type");
 				if (purpose === "profile" && mediaKind !== "image") throw new Error("Profile uploads must be images");
 				if (mediaKind === "video" && (purpose !== "listing" || itemType !== "HOUSE")) throw new Error("Videos can only be added to home listings");
 				const expectedPrefix = `${purpose}/${user.id}/`;
 				if (!pathname.startsWith(expectedPrefix) || pathname.length > expectedPrefix.length + 100) throw new Error("Invalid upload path");
-				const allowedContentTypes = mediaKind === "video" ? VIDEO_TYPES : IMAGE_TYPES;
+				// HEIC/HEIF files are converted to JPEG in the browser before direct upload.
+				const allowedContentTypes = mediaContentTypes(mediaKind as MediaKind);
 				return {
 					allowedContentTypes,
 					maximumSizeInBytes: purpose === "profile" ? 5 * 1024 * 1024 : mediaKind === "video" ? 25 * 1024 * 1024 : 8 * 1024 * 1024,

@@ -1,15 +1,47 @@
 import { upload } from "@vercel/blob/client";
-import { isOwnedBlobUrl } from "@libs/helpers/blob";
+import { isOwnedBlobUrl, mediaExtension, type MediaKind } from "@libs/helpers/blob";
 
 type UploadPurpose = "listing" | "profile";
-type MediaKind = "image" | "video";
 
-function safeExtension(file: File) {
-	const extensions: Record<string, string> = {
-		"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif",
-		"video/mp4": "mp4", "video/webm": "webm", "video/quicktime": "mov",
-	};
-	return extensions[file.type] || "bin";
+function uploadLocally({
+	file,
+	purpose,
+	mediaKind,
+	itemType,
+	onProgress,
+}: {
+	file: File;
+	purpose: UploadPurpose;
+	mediaKind: MediaKind;
+	itemType?: "HOUSE" | "CAR" | "BUSINESS_SPACE" | "SERVICE";
+	onProgress: (loaded: number) => void;
+}) {
+	return new Promise<string>((resolve, reject) => {
+		const request = new XMLHttpRequest();
+		request.open("POST", "/api/blob/local-upload");
+		request.setRequestHeader("Content-Type", file.type);
+		request.setRequestHeader("X-Upload-Purpose", purpose);
+		request.setRequestHeader("X-Upload-Media-Kind", mediaKind);
+		if (itemType) request.setRequestHeader("X-Upload-Item-Type", itemType);
+		request.upload.onprogress = (event) => {
+			if (event.lengthComputable) onProgress(event.loaded);
+		};
+		request.onerror = () => reject(new Error("The local upload could not reach the server"));
+		request.onload = () => {
+			let result: { url?: string; err?: string } = {};
+			try { result = JSON.parse(request.responseText); } catch {}
+			if (request.status < 200 || request.status >= 300 || !result.url) {
+				reject(new Error(result.err || "The local upload failed"));
+				return;
+			}
+			resolve(result.url);
+		};
+		request.send(file);
+	});
+}
+
+function safeExtension(file: File, mediaKind: MediaKind) {
+	return mediaExtension(mediaKind, file.type) || "bin";
 }
 
 export async function uploadMediaFiles({
@@ -30,7 +62,21 @@ export async function uploadMediaFiles({
 	const urls: string[] = [];
 
 	for (const { file, mediaKind } of files) {
-		const pathname = `${purpose}/${userId}/${crypto.randomUUID()}.${safeExtension(file)}`;
+		if (process.env.NODE_ENV === "development") {
+			const url = await uploadLocally({
+				file,
+				purpose,
+				mediaKind,
+				itemType,
+				onProgress: (loaded) => onProgress?.(Math.min(99, Math.round(((finishedBytes + loaded) / totalBytes) * 100))),
+			});
+			finishedBytes += file.size;
+			urls.push(url);
+			onProgress?.(Math.min(99, Math.round((finishedBytes / totalBytes) * 100)));
+			continue;
+		}
+
+		const pathname = `${purpose}/${userId}/${crypto.randomUUID()}.${safeExtension(file, mediaKind)}`;
 		const blob = await upload(pathname, file, {
 			access: "public",
 			handleUploadUrl: "/api/blob/upload",

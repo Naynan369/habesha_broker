@@ -34,3 +34,13 @@ Images and optional home videos upload directly from the browser to Vercel Blob.
 The listing publication fee is fixed at **€40 EUR**. Checkout uses Stripe test mode only and accepts a secret key beginning with `sk_test_` or a restricted test key beginning with `rk_test_`; live Stripe keys are rejected. A restricted key must have permission to create and retrieve Checkout Sessions. Set `STRIPE_SECRET_KEY` in `.env` for local development or in the Vercel environment you want to test, then restart the local server or redeploy. No webhook secret is needed for this return-based test flow. The server verifies the Stripe Checkout session, test mode, amount, currency, and payment status before marking the listing paid. The listing remains private until an admin approves it.
 
 Checkout uses the payment methods enabled in your Stripe Dashboard for the account and EUR currency. Enable Cards in the Dashboard's test-mode payment-method settings to use Stripe's test card `4242 4242 4242 4242`, any future expiry date, and any CVC. Stripe test mode does not charge real money. For Vercel, use a Preview deployment and add the test secret to the Preview environment. Apply the database migrations to the PostgreSQL database used by the deployment before testing checkout.
+
+## Google and Apple sign-in
+
+Add the public provider identifiers to your local `.env` and Vercel project environment variables:
+
+- `NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID`: a Google OAuth 2.0 Web client ID. Add each site origin (for local development and production) to its authorized JavaScript origins.
+- `NEXT_PUBLIC_APPLE_SERVICE_ID`: the Apple Services ID configured for web sign-in.
+- `NEXT_PUBLIC_APPLE_REDIRECT_URI`: the exact HTTPS return URL registered for that Services ID. Apple web sign-in requires the website domain and return URL to be configured in Apple Developer; localhost is not a supported Apple web return URL.
+
+Apply the new Prisma migration before using either provider. The sign-in buttons stay unavailable until their provider configuration is present. Provider identities are linked by their stable account ID; only verified provider emails are accepted.

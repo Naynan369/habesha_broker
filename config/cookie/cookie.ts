@@ -8,7 +8,11 @@ import type {
 } from "next";
 import { prisma } from "@config/prisma";
 
-type SessionData = { userId?: string; sessionVersion?: number };
+type SessionData = {
+  userId?: string;
+  sessionVersion?: number;
+  oauthChallenges?: Partial<Record<"google" | "apple", { nonce: string; expiresAt: number }>>;
+};
 type AppSession = IronSession<SessionData>;
 
 declare module "http" {

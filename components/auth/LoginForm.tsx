@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import * as Yup from "yup";
 import { AuthInputField } from "./AuthInputField";
+import { SocialAuthButtons } from "./SocialAuthButtons";
 
 const LoginForm = () => {
 	const router = useRouter();
@@ -108,6 +109,8 @@ const LoginForm = () => {
 								: lang.auth.login}
 						</Button>
 					</Flex>
+
+					<SocialAuthButtons mode="login" />
 				</form>
 			)}
 		</Formik>

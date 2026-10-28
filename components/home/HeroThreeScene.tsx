@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 type Feature = "HOME" | "CAR";
 const CAR_TRACK = { centerX: -0.05, centerZ: 0, radiusX: 4.05, radiusZ: 3.0 };
@@ -327,7 +326,6 @@ function buildCar(scene: THREE.Scene) {
 
 export default function HeroThreeScene() {
 	const host = useRef<HTMLDivElement>(null);
-	const selectionRef = useRef<Feature>("HOME");
 
 	useEffect(() => {
 		const mount = host.current;
@@ -335,15 +333,16 @@ export default function HeroThreeScene() {
 		const scene = new THREE.Scene();
 		const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
 		camera.position.set(5.6, 8.1, 13.6);
-		const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+		const mobilePerformanceMode = window.matchMedia("(max-width: 768px)").matches || window.matchMedia("(pointer: coarse)").matches;
+		const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: !mobilePerformanceMode, powerPreference: "high-performance" });
 		renderer.outputColorSpace = THREE.SRGBColorSpace;
 		renderer.toneMapping = THREE.ACESFilmicToneMapping;
 		renderer.toneMappingExposure = 1.14;
-		renderer.shadowMap.enabled = true;
+		renderer.shadowMap.enabled = !mobilePerformanceMode;
 		renderer.shadowMap.type = THREE.PCFShadowMap;
-		renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
-		renderer.domElement.setAttribute("aria-label", "Interactive 3D apartment and car illustration. Drag to rotate and click the apartment or car to inspect.");
-		Object.assign(renderer.domElement.style, { width: "100%", height: "100%", display: "block", cursor: "grab", touchAction: "pan-y" });
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobilePerformanceMode ? 1 : 1.6));
+		renderer.domElement.setAttribute("aria-hidden", "true");
+		Object.assign(renderer.domElement.style, { width: "100%", height: "100%", display: "block", pointerEvents: "none", userSelect: "none" });
 		mount.appendChild(renderer.domElement);
 
 		const ambient = new THREE.HemisphereLight("#f7f1e7", "#465b6c", 1.58);
@@ -363,38 +362,8 @@ export default function HeroThreeScene() {
 		scene.add(fillLight);
 		const { building } = buildApartment(scene);
 		const car = buildCar(scene);
-		const homeRing = new THREE.Mesh(new THREE.TorusGeometry(1.82, 0.022, 8, 96), new THREE.MeshBasicMaterial({ color: "#ffd078", transparent: true, opacity: 0.94 }));
-		homeRing.rotation.x = Math.PI / 2;
-		homeRing.scale.set(1, 0.72, 1);
-		homeRing.position.set(-1.55, 0.34, -0.05);
-		scene.add(homeRing);
-		const carRing = new THREE.Mesh(new THREE.TorusGeometry(1.52, 0.022, 8, 96), new THREE.MeshBasicMaterial({ color: "#ffd078", transparent: true, opacity: 0.94 }));
-		carRing.rotation.x = Math.PI / 2;
-		carRing.scale.set(1, 0.72, 1);
-		carRing.position.set(car.position.x, 0.35, car.position.z);
-		carRing.visible = false;
-		scene.add(carRing);
-
-		const controls = new OrbitControls(camera, renderer.domElement);
-		controls.enableDamping = true;
-		controls.dampingFactor = 0.07;
-		controls.enablePan = false;
-		controls.enableZoom = true;
-		controls.minDistance = 11.5;
-		controls.maxDistance = 36;
-		controls.rotateSpeed = 0.72;
-		controls.minPolarAngle = Math.PI * 0.22;
-		controls.maxPolarAngle = Math.PI * 0.43;
-		controls.target.set(-4.5, 2.0, 0.05);
-		controls.update();
-		const targetGoal = controls.target.clone();
-		const focusFeature = (feature: Feature) => {
-			selectionRef.current = feature;
-			const target = feature === "HOME" ? new THREE.Vector3(-1.55, 2.15, 0) : new THREE.Vector3(car.position.x, 0.92, car.position.z);
-			targetGoal.copy(target);
-		};
-		controls.addEventListener("end", () => targetGoal.copy(controls.target));
-
+		const cameraTarget = new THREE.Vector3(-4.5, 2.0, 0.05);
+		const viewDirection = new THREE.Vector3(7.75, 6.1, 13.55).normalize();
 		let cameraConfigured = false;
 		const resize = () => {
 			const width = mount.clientWidth;
@@ -402,49 +371,16 @@ export default function HeroThreeScene() {
 			if (!width || !height) return;
 			camera.aspect = width / height;
 			if (!cameraConfigured) {
-				const viewDirection = new THREE.Vector3(7.75, 6.1, 13.55).normalize();
-				camera.position.copy(controls.target).addScaledVector(viewDirection, width < 640 ? 25.5 : 17.2);
+				camera.position.copy(cameraTarget).addScaledVector(viewDirection, width < 640 ? 25.5 : 17.2);
 				cameraConfigured = true;
 			}
+			camera.lookAt(cameraTarget);
 			camera.updateProjectionMatrix();
 			renderer.setSize(width, height, false);
 		};
 		const resizeObserver = new ResizeObserver(resize);
 		resizeObserver.observe(mount);
 		resize();
-
-		const raycaster = new THREE.Raycaster();
-		const pointer = new THREE.Vector2();
-		const selectable: THREE.Object3D[] = [];
-		building.traverse((object) => { if (object.userData.feature === "HOME") selectable.push(object); });
-		car.traverse((object) => { if (object.userData.feature === "CAR") selectable.push(object); });
-		let down: { x: number; y: number } | undefined;
-		const hitTest = (event: PointerEvent) => {
-			const rect = renderer.domElement.getBoundingClientRect();
-			pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-			pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-			raycaster.setFromCamera(pointer, camera);
-			return raycaster.intersectObjects(selectable, false).find((hit) => hit.object.userData.feature)?.object.userData.feature as Feature | undefined;
-		};
-		const onPointerMove = (event: PointerEvent) => {
-			if (!down) renderer.domElement.style.cursor = hitTest(event) ? "pointer" : "grab";
-		};
-		const onPointerDown = (event: PointerEvent) => { down = { x: event.clientX, y: event.clientY }; };
-		const onPointerCancel = () => { down = undefined; };
-		const onPointerUp = (event: PointerEvent) => {
-			if (!down) return;
-			const distance = Math.hypot(event.clientX - down.x, event.clientY - down.y);
-			down = undefined;
-			if (distance > 7) return;
-			const feature = hitTest(event);
-			if (!feature) return;
-			selectionRef.current = feature;
-			focusFeature(feature);
-		};
-		renderer.domElement.addEventListener("pointermove", onPointerMove);
-		renderer.domElement.addEventListener("pointerdown", onPointerDown);
-		renderer.domElement.addEventListener("pointerup", onPointerUp);
-		renderer.domElement.addEventListener("pointercancel", onPointerCancel);
 
 		const drawings: Record<Feature, THREE.LineSegments[]> = { HOME: [], CAR: [] };
 		const drawingVertexCounts: Record<Feature, number> = { HOME: 0, CAR: 0 };
@@ -514,6 +450,7 @@ export default function HeroThreeScene() {
 		let inViewport = false;
 		let lastTime = 0;
 		const drawingStarted = performance.now();
+		let drawingComplete = reduceMotion;
 		let carAngle = -Math.PI / 2;
 		const animate = (time: number) => {
 			frame = window.requestAnimationFrame(animate);
@@ -522,30 +459,22 @@ export default function HeroThreeScene() {
 			if (!reduceMotion && time >= drawingStarted + 3800) {
 				carAngle = (carAngle + dt * 0.36) % (Math.PI * 2);
 				setCarOnTrack(car, carAngle);
-				carRing.position.set(car.position.x, 0.35, car.position.z);
 			}
-			const shift = targetGoal.clone().sub(controls.target).multiplyScalar(Math.min(1, dt * 5.5));
-			controls.target.add(shift);
-			camera.position.add(shift);
 			const drawTime = Math.max(0, time - drawingStarted);
-			if (!reduceMotion && drawTime < 3800) {
+			if (!reduceMotion && !drawingComplete && drawTime < 3800) {
 				const homeProgress = THREE.MathUtils.smoothstep(drawTime, 0, 2150);
 				const carProgress = THREE.MathUtils.smoothstep(drawTime - 1750, 0, 2050);
 				revealFeature("HOME", homeProgress);
 				revealFeature("CAR", carProgress);
 				revealFill("HOME", homeProgress);
 				revealFill("CAR", carProgress);
-			} else if (!reduceMotion && drawTime >= 3800) {
+			} else if (!reduceMotion && !drawingComplete && drawTime >= 3800) {
 				revealFeature("HOME", 1);
 				revealFeature("CAR", 1);
 				revealFill("HOME", 1);
 				revealFill("CAR", 1);
+				drawingComplete = true;
 			}
-			homeRing.visible = selectionRef.current === "HOME";
-			carRing.visible = selectionRef.current === "CAR";
-			homeRing.scale.set(1, 0.72, 1);
-			carRing.scale.set(1, 0.72, 1);
-			controls.update();
 			renderer.render(scene, camera);
 		};
 		const updateAnimationState = () => {
@@ -574,11 +503,6 @@ export default function HeroThreeScene() {
 			visibilityObserver?.disconnect();
 			document.removeEventListener("visibilitychange", updateAnimationState);
 			resizeObserver.disconnect();
-			renderer.domElement.removeEventListener("pointermove", onPointerMove);
-			renderer.domElement.removeEventListener("pointerdown", onPointerDown);
-			renderer.domElement.removeEventListener("pointerup", onPointerUp);
-			renderer.domElement.removeEventListener("pointercancel", onPointerCancel);
-			controls.dispose();
 			const geometries = new Set<THREE.BufferGeometry>();
 			const materials = new Set<THREE.Material>();
 			scene.traverse((object) => {

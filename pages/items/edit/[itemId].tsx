@@ -304,12 +304,19 @@ export default function EditItemPage({ item, sellerPhone = "" }) {
 		</>
 	);
 
-	const statusTone = item.status === "DECLINED" ? "error" : item.status === "APPROVED" ? "success" : "warning";
+	const statusTone = item.status === "DECLINED" ? "error" : item.status === "APPROVED" ? "success" : item.status === "RENTED" || item.status === "SOLD" ? "info" : item.status === "CLOSED" ? "info" : "warning";
+	const statusColor = item.status === "APPROVED" ? "green" : item.status === "DECLINED" ? "red" : item.status === "RENTED" || item.status === "SOLD" ? "purple" : item.status === "CLOSED" ? "gray" : "orange";
 	const statusCopy = item.status === "APPROVED"
 		? "This listing is public. Saving any change sends it back for admin review."
 		: item.status === "DECLINED"
 			? "This listing was declined. After you update and save it, it will return to the admin review queue."
-			: "This listing is waiting for admin review. It stays out of public search until an admin approves it.";
+			: item.status === "RENTED"
+				? "This rental is marked as rented and hidden from public search. Saving an edit sends it back for admin review."
+				: item.status === "SOLD"
+					? "This listing is marked as sold and hidden from public search. Saving an edit sends it back for admin review."
+					: item.status === "CLOSED"
+						? "This listing is closed and hidden from public search. Saving an edit sends it back for admin review."
+						: "This listing is waiting for admin review. It stays out of public search until an admin approves it.";
 
 	return (
 		<>
@@ -329,7 +336,7 @@ export default function EditItemPage({ item, sellerPhone = "" }) {
 							<Heading mt="3" size="lg">Update your listing</Heading>
 							<Text mt="2" color={muted}>Make your changes, then save once when you are ready.</Text>
 						</Box>
-						<Badge colorScheme={item.status === "APPROVED" ? "green" : item.status === "DECLINED" ? "red" : "orange"} px="3" py="2" borderRadius="full">{item.status}</Badge>
+						<Badge colorScheme={statusColor} px="3" py="2" borderRadius="full">{item.status}</Badge>
 					</Flex>
 
 					<Alert status={statusTone} borderRadius="xl" mb="6" alignItems="flex-start">

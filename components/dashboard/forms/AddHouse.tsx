@@ -321,7 +321,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 								<Text fontSize="xs" color={muted}>{formik.values.files.length}/10 {common.wizard.photosCount}</Text>
 							</Flex>
 							<Text color={muted} fontSize="sm" mt="2" mb="3">{common.wizard.photoHelp}</Text>
-							<Input ref={photoInputRef} id="house-photos" onChange={(event) => choosePhotos(event, formik)} variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+								<Input ref={photoInputRef} id="house-photos" onChange={(event) => choosePhotos(event, formik)} variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
 							<FormErrorMessage>{String(formik.errors.files || "")}</FormErrorMessage>
 						</FormControl>
 						<FormControl isInvalid={Boolean(formik.touched.video && formik.errors.video)}>

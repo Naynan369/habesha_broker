@@ -388,6 +388,49 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 	to { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
 }
 
+/* Keep the home page reveal motion light during touch scrolling. */
+@media (max-width: 768px) {
+	.home-motion-ready [data-home-reveal]:not(.home-motion-visible),
+	.home-motion-ready [data-home-stagger]:not(.home-motion-visible) {
+		filter: none;
+		transition: opacity 420ms ease, transform 480ms cubic-bezier(.2,.7,.2,1);
+		will-change: auto;
+	}
+
+	#categories [data-home-stagger].home-category-card,
+	#featured-listings [data-home-stagger].home-featured-card {
+		transition: opacity 420ms ease, transform 480ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease;
+	}
+
+	#categories .home-category-card .home-card-image,
+	#featured-listings .home-featured-card .listing-card-media {
+		clip-path: none;
+		filter: none;
+		transform: scale(1.035);
+		transition: transform 620ms cubic-bezier(.2,.7,.2,1);
+	}
+
+	#categories .home-category-card.home-motion-visible .home-card-image,
+	#featured-listings .home-featured-card.home-motion-visible .listing-card-media {
+		transform: scale(1);
+	}
+
+	#categories .home-card-label,
+	#categories .home-card-arrow,
+	#categories .home-card-title,
+	#categories .home-card-description,
+	#categories .home-card-action,
+	#featured-listings .listing-card-featured-badge,
+	#featured-listings .listing-card-title,
+	#featured-listings .listing-card-date,
+	#featured-listings .listing-card-category,
+	#featured-listings .listing-card-price,
+	#featured-listings .listing-card-owner {
+		filter: none;
+		transition: opacity 360ms ease, transform 420ms cubic-bezier(.2,.7,.2,1);
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	*, *::before, *::after {
 		transition-duration: 0.01ms !important;

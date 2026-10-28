@@ -31,16 +31,16 @@ export const HomeHero = () => {
 			id="home"
 			as="section"
 			position="relative"
-			minH={{ base: "1040px", sm: "980px", lg: "min(900px, 100dvh)" }}
+			minH={{ base: "auto", lg: "min(900px, 100dvh)" }}
 			color="white"
 			overflow="hidden"
 			bg="#16383c"
 		>
-			<Box aria-hidden="true" position="absolute" inset="0" bgGradient="linear(128deg, #1b4649 0%, #17363d 43%, #304653 100%)" />
-			<Box aria-hidden="true" position="absolute" top="-32%" right="-12%" w={{ base: "90%", md: "68%" }} h="95%" bg="radial-gradient(ellipse, rgba(239,190,105,.24), transparent 66%)" />
-			<Box aria-hidden="true" position="absolute" bottom="-45%" left="-12%" w="65%" h="85%" bg="radial-gradient(ellipse, rgba(91,177,173,.25), transparent 70%)" />
-			<Box aria-hidden="true" position="absolute" top="12%" left="46%" w="38%" h="75%" bg="radial-gradient(ellipse, rgba(111,122,177,.17), transparent 72%)" />
-			<Box position="absolute" inset="0" zIndex="1" aria-label="Illustrated apartment and car background">
+			<Box aria-hidden="true" pointerEvents="none" position="absolute" inset="0" bgGradient="linear(128deg, #1b4649 0%, #17363d 43%, #304653 100%)" />
+			<Box aria-hidden="true" pointerEvents="none" position="absolute" top="-32%" right="-12%" w={{ base: "90%", md: "68%" }} h="95%" bg="radial-gradient(ellipse, rgba(239,190,105,.24), transparent 66%)" />
+			<Box aria-hidden="true" pointerEvents="none" position="absolute" bottom="-45%" left="-12%" w="65%" h="85%" bg="radial-gradient(ellipse, rgba(91,177,173,.25), transparent 70%)" />
+			<Box aria-hidden="true" pointerEvents="none" position="absolute" top="12%" left="46%" w="38%" h="75%" bg="radial-gradient(ellipse, rgba(111,122,177,.17), transparent 72%)" />
+			<Box position="absolute" inset="0" zIndex="1" pointerEvents="none" aria-hidden="true">
 				<HeroThreeScene />
 			</Box>
 			<Flex
@@ -48,10 +48,10 @@ export const HomeHero = () => {
 				zIndex="3"
 				pointerEvents="none"
 				maxW="1440px"
-				minH={{ base: "1040px", sm: "980px", lg: "min(900px, 100dvh)" }}
+				minH={{ base: "auto", lg: "min(900px, 100dvh)" }}
 				mx="auto"
 				px={{ base: 5, sm: 7, md: 10, xl: 14 }}
-				pt={{ base: "126px", lg: "138px" }}
+				pt={{ base: "96px", lg: "138px" }}
 				pb={{ base: 8, md: 10 }}
 				direction="column"
 				justify="center"

@@ -196,8 +196,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 			const frequencies = ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
 			if (body.type === "RENT" && !frequencies.includes(body.priceFrequency)) throw new ListingInputError("Choose how often the rent is charged");
 			const facilityFields = ["electricity", "water", "roadAccess", "parking"];
+			const facilities: Record<string, boolean> = {};
 			for (const field of facilityFields) {
-				if (body[field] !== "true" && body[field] !== "false") throw new ListingInputError("Invalid facility selection");
+				if (body[field] === true || body[field] === "true") facilities[field] = true;
+				else if (body[field] === false || body[field] === "false") facilities[field] = false;
+				else throw new ListingInputError("Invalid facility selection");
 			}
 			const optionalText = (value: unknown) => String(value || "").trim().slice(0, 120) || null;
 			common.BusinessSpace = { create: {
@@ -211,10 +214,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 				woreda: optionalText(body.woreda),
 				neighborhood: optionalText(body.neighborhood),
 				landmark: optionalText(body.landmark),
-				electricity: body.electricity === "true",
-				water: body.water === "true",
-				roadAccess: body.roadAccess === "true",
-				parking: body.parking === "true",
+				electricity: facilities.electricity,
+				water: facilities.water,
+				roadAccess: facilities.roadAccess,
+				parking: facilities.parking,
 			} };
 		}
 		const created = await prisma.item.create({ data: common, select: { id: true, userId: true } });

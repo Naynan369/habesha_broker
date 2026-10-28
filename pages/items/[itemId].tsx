@@ -338,6 +338,8 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, serviceRat
 	const priceFrequency = ["BUSINESS_SPACE", "HOUSE"].includes(data.itemType) && listingDetails?.type === "RENT" && listingDetails?.priceFrequency
 		? businessText.frequencies[listingDetails.priceFrequency]
 		: null;
+	const isRentalListing = ["HOUSE", "BUSINESS_SPACE"].includes(data.itemType) && listingDetails?.type === "RENT";
+	const isAvailableRental = data.status === "APPROVED" && isRentalListing;
 	const currentImageIndex = Math.max(0, images.indexOf(preview));
 	const locationLabel = [listingDetails?.neighborhood, listingDetails?.subcity, listingDetails?.city, listingDetails?.region]
 		.filter((value) => typeof value === "string" && value.trim())
@@ -382,6 +384,7 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, serviceRat
 		PENDING: listingText.pending,
 		DECLINED: listingText.declined,
 		SOLD: listingText.sold,
+		RENTED: listingText.rented,
 		CLOSED: listingText.closed,
 	};
 	const categoryLabel = data.itemType === "SERVICE"
@@ -469,11 +472,12 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, serviceRat
 									onSelectImage={setPreview}
 									onOpenGallery={galleryModal.onOpen}
 								/>
-			{data.status !== "APPROVED" && (user?.id === data.userId || user?.role === "ADMIN") && <Alert status={data.status === "DECLINED" ? "error" : data.status === "CLOSED" || data.status === "SOLD" ? "info" : "warning"} borderRadius="xl" alignItems="flex-start" boxShadow={cardShadow}>
+			{data.status !== "APPROVED" && (user?.id === data.userId || user?.role === "ADMIN") && <Alert status={data.status === "DECLINED" ? "error" : data.status === "CLOSED" || data.status === "SOLD" || data.status === "RENTED" ? "info" : "warning"} borderRadius="xl" alignItems="flex-start" boxShadow={cardShadow}>
 									<AlertIcon />
 									<AlertDescription>
 										{data.status === "CLOSED" ? listingText.closedDescription
 										: data.status === "SOLD" ? listingText.soldDescription
+						: data.status === "RENTED" ? listingText.rentedDescription
 										: data.status === "DECLINED" ? detailText.declinedDescription
 											: data.paymentStatus === "DUE" || data.paymentStatus === "NOT_REQUIRED" ? lang.payments.paymentDue
 												: data.paymentStatus === "PROCESSING" ? lang.payments.processing
@@ -481,16 +485,17 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, serviceRat
 														: detailText.pendingDescription}
 									</AlertDescription>
 								</Alert>}
-								{user?.id === data.userId && data.paymentStatus !== "PAID" && data.status !== "APPROVED" && data.status !== "SOLD" && data.status !== "CLOSED" && <ListingPaymentPanel item={data} fee={paymentFee} enabled={paymentEnabled} labels={lang.payments} />}
+								{user?.id === data.userId && data.paymentStatus !== "PAID" && data.status !== "APPROVED" && data.status !== "SOLD" && data.status !== "RENTED" && data.status !== "CLOSED" && <ListingPaymentPanel item={data} fee={paymentFee} enabled={paymentEnabled} labels={lang.payments} />}
 		</Flex>
 		<Box gridArea="summary" minW="0"><Box position="relative" overflow="hidden" bg={surface} border="1px solid" borderColor={subtleBorder} borderRadius="2xl" p={{ base: 5, md: 6 }} boxShadow={cardShadow}>
 									<Box position="absolute" top="0" left="0" right="0" h="1" bgGradient="linear(to-r, #c96f3d, #e6b35d, transparent)" />
 									<Flex direction="column" gap="5">
 										<Flex align="center" gap="2" wrap="wrap">
 											<Badge colorScheme="teal" variant="subtle" borderRadius="full" px="3" py="1.5">{categoryLabel}</Badge>
+											{isAvailableRental && <Badge colorScheme="green" variant="solid" borderRadius="full" px="3" py="1.5">{listingText.available}</Badge>}
 							{data.sellerType && sellerTypeText.options[data.sellerType] && <Badge colorScheme="purple" variant="subtle" borderRadius="full" px="3" py="1.5">{detailText.sellerTypeLabel}: {sellerTypeText.options[data.sellerType]}</Badge>}
 											{data.featured && <Badge colorScheme="orange" variant="subtle" borderRadius="full" px="3" py="1.5">{detailText.featured}</Badge>}
-											{data.status && <Badge colorScheme={data.status === "APPROVED" ? "green" : data.status === "DECLINED" ? "red" : data.status === "SOLD" ? "purple" : data.status === "CLOSED" ? "gray" : "orange"} borderRadius="full" px="3" py="1.5">{statusLabels[data.status] || data.status}</Badge>}
+											{data.status && <Badge colorScheme={data.status === "APPROVED" ? "green" : data.status === "DECLINED" ? "red" : data.status === "SOLD" || data.status === "RENTED" ? "purple" : data.status === "CLOSED" ? "gray" : "orange"} borderRadius="full" px="3" py="1.5">{statusLabels[data.status] || data.status}</Badge>}
 										</Flex>
 										<Box minW="0">
 											<Heading as="h1" color={headingText} fontSize={{ base: "2xl", md: "3xl" }} lineHeight="1.12" letterSpacing="-.04em" wordBreak="break-word">{data.title}</Heading>

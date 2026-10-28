@@ -21,6 +21,7 @@
     "formik": "^2.2.9",
     "framer-motion": "14.2.0",
     "iron-session": "8.0.1",
+    "jose": "^5.9.6",
     "next": "16.4.3",
     "next-seo": "7.3.0",
     "nextjs-progressbar": "0.0.16",

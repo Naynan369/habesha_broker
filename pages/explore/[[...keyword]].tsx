@@ -16,11 +16,28 @@ import { FilterNav } from "@components/explore/FilterNav";
 import { Navbar } from "@components/explore/Navbar";
 import { HomeMotionSystem } from "@components/home/HomeMotion";
 import { ItemCard, ItemLoader } from "@components/explore/ItemCard";
+import type { SearchMatchField } from "@components/explore/ItemCard";
 import { withSessionSsr } from "@config/cookie/cookie";
 
 const SERVICE_CATEGORIES = ["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"] as const;
 // Keep the Explore category card ready for a later relaunch; enable it here when needed.
 const SHOW_LOCAL_HELP_CARD = true;
+const LOCATION_FIELDS = ["region", "city", "subcity", "neighborhood", "landmark"] as const;
+
+const getSearchMatchFields = (item: any, keyword: string): SearchMatchField[] => {
+	const term = keyword.trim().toLocaleLowerCase();
+	if (!term) return [];
+	const matches = (...values: unknown[]) => values.some((value) => typeof value === "string" && value.toLocaleLowerCase().includes(term));
+	const fields: SearchMatchField[] = [];
+	if (matches(item.title)) fields.push("title");
+	if (matches(item.Car?.manufacturer)) fields.push("manufacturer");
+	if (matches(item.Car?.model)) fields.push("model");
+	const locationValues = [item.House, item.Car, item.BusinessSpace, item.Service].flatMap((details) => LOCATION_FIELDS.map((field) => details?.[field]));
+	if (matches(...locationValues)) fields.push("location");
+	if (matches(item.Service?.serviceArea)) fields.push("serviceArea");
+	return fields;
+};
+
 const ExploreThreeScene = dynamic(() => import("@components/explore/ExploreCityScene"), {
 	ssr: false,
 	loading: () => <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 76% 48%, rgba(233,183,92,.16), transparent 42%)" }} />,
@@ -337,7 +354,7 @@ export default function ExplorePage({ user, keyword }) {
 								<Text color={accentText} textTransform="uppercase" letterSpacing=".16em" fontWeight="bold" fontSize="xs">{lang.explore.marketplaceKicker}</Text>
 								<Heading mt="2" color={titleColor} fontSize={{ base: "2xl", md: "3xl" }} letterSpacing="-.04em">{lang.explore.listingHeading}</Heading>
 							</Box>
-							<Flex align="center" gap="3" wrap="wrap">
+								<Flex align="center" gap="3" wrap="wrap">
 								{activeResultLabel && <Badge color={titleColor} bg={badgeSurface} borderRadius="full" px="3" py="1">{activeResultLabel}</Badge>}
 								<Text color={bodyColor} fontSize="sm" fontWeight="medium">{error ? lang.explore.unavailable : loading ? lang.explore.loading : `${data?.total || 0} ${(data?.total || 0) === 1 ? lang.explore.foundSingular : lang.explore.foundPlural}`}</Text>
 							</Flex>
@@ -367,6 +384,8 @@ export default function ExplorePage({ user, keyword }) {
 												<ItemCard
 													id={item.id}
 													title={item.title}
+													searchTerm={search.trim()}
+													matchedFields={getSearchMatchFields(item, search)}
 													date={item.createdAt}
 													photoURL={item.images?.[0]}
 													ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")}
@@ -376,6 +395,7 @@ export default function ExplorePage({ user, keyword }) {
 													priceFrequency={item.BusinessSpace?.priceFrequency}
 													featured={item.featured}
 													status={item.status}
+													listingIntent={item.House?.type || item.BusinessSpace?.type}
 													serviceCategory={item.Service?.category}
 												/>
 											</Box>

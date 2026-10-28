@@ -16,6 +16,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import * as yup from "yup";
 import { AuthInputField } from "./AuthInputField";
+import { SocialAuthButtons } from "./SocialAuthButtons";
 
 export const SignUpForm = () => {
 	const [agree, setAgree] = useState(false);
@@ -141,6 +142,8 @@ export const SignUpForm = () => {
 							</Text>
 						</Checkbox>
 					</Flex>
+
+					<SocialAuthButtons mode="signup" termsAccepted={agree} />
 
 					<Flex
 						gap="4"

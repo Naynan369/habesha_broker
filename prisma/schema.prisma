@@ -34,6 +34,24 @@ model User {
   ListingReportsReviewed    ListingReport[]  @relation("ListingReportReviewer")
   ServiceReviewsAuthored    ServiceReview[]  @relation("ServiceReviewAuthor")
   ServiceReviewsReceived    ServiceReview[]  @relation("ServiceReviewProvider")
+  ExternalIdentities        ExternalIdentity[]
+}
+
+model ExternalIdentity {
+  id                String       @id @default(cuid())
+  provider          OAuthProvider
+  providerAccountId String
+  userId            String
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime     @default(now())
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+enum OAuthProvider {
+  GOOGLE
+  APPLE
 }
 
 model ContactInfo {
@@ -357,6 +375,7 @@ enum ItemStatus {
   DECLINED
   SOLD
   CLOSED
+  RENTED
 }
 
 enum ListingPaymentStatus {

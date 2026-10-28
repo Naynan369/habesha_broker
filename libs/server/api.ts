@@ -6,12 +6,19 @@ import { sendMail } from "@libs/email/sendMail";
 import { refundStripeTestCheckout } from "@libs/server/stripeTest";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { IUser } from "@libs/types/user";
 
 type SessionRequest = NextApiRequest & {
 	user?: IUser;
-	session: { userId?: string; sessionVersion?: number; save: () => Promise<void>; destroy: () => void };
+	session: {
+		userId?: string;
+		sessionVersion?: number;
+		oauthChallenges?: Partial<Record<"google" | "apple", { nonce: string; expiresAt: number }>>;
+		save: () => Promise<void>;
+		destroy: () => void;
+	};
 };
 
 const publicUserSelect = {
@@ -111,7 +118,7 @@ function safeStringFilter(value: any) {
 function safeItemWhere(body: any, user: IUser | null, isAdmin: boolean) {
 	const where: any = {};
 	if (isAdmin) {
-		where.status = ["PENDING", "APPROVED", "DECLINED", "SOLD", "CLOSED"].includes(body.status)
+		where.status = ["PENDING", "APPROVED", "DECLINED", "SOLD", "CLOSED", "RENTED"].includes(body.status)
 			? body.status
 			: "PENDING";
 		if (typeof body.id === "string" && body.id) where.id = body.id;
@@ -204,7 +211,7 @@ function searchableText(term: string, fields: string[]) {
 async function listItems(req: SessionRequest, res: NextApiResponse) {
 	const adminView = Boolean(
 		req.user?.role === "ADMIN" &&
-		(typeof req.body?.id === "string" || ["PENDING", "APPROVED", "DECLINED", "SOLD", "CLOSED"].includes(req.body?.status))
+		(typeof req.body?.id === "string" || ["PENDING", "APPROVED", "DECLINED", "SOLD", "CLOSED", "RENTED"].includes(req.body?.status))
 	);
 	const user = adminView ? req.user : await currentUser(req);
 	const isAdmin = adminView;
@@ -221,6 +228,7 @@ async function listItems(req: SessionRequest, res: NextApiResponse) {
 		? { [orderKey]: orderBy[orderKey] }
 		: { createdAt: "desc" };
 	const where = safeItemWhere(body, user as IUser | null, isAdmin);
+	if (!isAdmin && body.featured === true) where.featured = true;
 	const keyword = typeof body.keyword === "string" ? body.keyword.trim().slice(0, 120) : "";
 	if (keyword && !isAdmin) {
 		where.OR = [
@@ -503,7 +511,8 @@ async function userRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 			const baseUrl = getBaseUrl();
 			if (!baseUrl) throw new Error("DOMAIN is required to build password reset links");
 			const link = baseUrl.replace(/\/$/, "") + "/auth/reset_password?token=" + encodeURIComponent(resetToken);
-			await sendMail(user.email, "Reset your password", getPasswordRestLink(user.firstName, link));
+			const appLink = "habeshabrokers://reset-password?token=" + encodeURIComponent(resetToken);
+			await sendMail(user.email, "Reset your password", getPasswordRestLink(user.firstName, link, appLink));
 		}
 		return res.status(200).json({ ok: true });
 	}
@@ -815,9 +824,25 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 		if (!user) return;
 		const itemId = String(body.itemId || "");
 		const action = body.action;
-		if (!isValidRecordId(itemId) || !["close", "reopen", "sold"].includes(action)) return error(res, 400, "Listing ID or action is invalid");
+		if (!isValidRecordId(itemId) || !["close", "reopen", "sold", "rented", "available"].includes(action)) return error(res, 400, "Listing ID or action is invalid");
 		const item = await prisma.item.findUnique({ where: { id: itemId }, select: { id: true, userId: true, status: true, paymentStatus: true, itemType: true, House: { select: { type: true } }, BusinessSpace: { select: { type: true } } } });
 		if (!item || item.userId !== user.id) return error(res, 404, "Listing not found");
+		const isRentalListing = (item.itemType === "HOUSE" && item.House?.type === "RENT")
+			|| (item.itemType === "BUSINESS_SPACE" && item.BusinessSpace?.type === "RENT");
+		if (action === "rented") {
+			if (!isRentalListing) return error(res, 409, "Only rental listings can be marked as rented");
+			if (item.status !== "APPROVED") return error(res, 409, "Only published rental listings can be marked as rented");
+			const changed = await prisma.item.updateMany({ where: { id: item.id, userId: user.id, status: "APPROVED" }, data: { status: "RENTED", featured: false } });
+			if (!changed.count) return error(res, 409, "This listing changed. Refresh and try again.");
+			return res.status(200).json({ ok: true, status: "RENTED" });
+		}
+		if (action === "available") {
+			if (!isRentalListing || item.status !== "RENTED") return error(res, 409, "Only rented listings can be marked available");
+			if (item.paymentStatus !== "PAID") return error(res, 409, "A confirmed listing fee is required before relisting");
+			const changed = await prisma.item.updateMany({ where: { id: item.id, userId: user.id, status: "RENTED", paymentStatus: "PAID" }, data: { status: "APPROVED" } });
+			if (!changed.count) return error(res, 409, "This listing changed. Refresh and try again.");
+			return res.status(200).json({ ok: true, status: "APPROVED" });
+		}
 		if (action === "sold") {
 			if (item.status !== "APPROVED") return error(res, 409, "Only published listings can be marked sold");
 			const isSaleListing = item.itemType === "CAR"
@@ -1026,12 +1051,28 @@ async function itemRoutes(req: SessionRequest, res: NextApiResponse, slug: strin
 	const itemId = route;
 	if (req.method === "GET" && itemId && !itemId.includes("/")) {
 		if (!isValidRecordId(itemId)) return error(res, 404, "Listing not found");
-		const item = await prisma.item.findUnique({ where: { id: itemId }, include: itemInclude });
+		const item = await prisma.item.findUnique({
+			where: { id: itemId },
+			include: {
+				...itemInclude,
+				ServiceReviews: {
+					take: 10,
+					orderBy: { createdAt: "desc" },
+					include: { reviewer: { select: { firstName: true, lastName: true } } },
+				},
+			},
+		});
 		const user = await currentUser(req);
 		if (!item || (item.status !== "APPROVED" && item.userId !== user?.id && user?.role !== "ADMIN")) {
 			return error(res, 404, "Listing not found");
 		}
-		return res.status(200).json(item);
+		const serviceRatingData = item.itemType === "SERVICE"
+			? await prisma.serviceReview.aggregate({ where: { itemId: item.id }, _avg: { rating: true }, _count: { _all: true } })
+			: null;
+		return res.status(200).json({
+			...item,
+			serviceRating: { average: serviceRatingData?._avg.rating || 0, count: serviceRatingData?._count._all || 0 },
+		});
 	}
 
 	return error(res, 404, "Route not found");
@@ -1394,11 +1435,176 @@ async function adminRoutes(req: SessionRequest, res: NextApiResponse, slug: stri
 	return error(res, 404, "Route not found");
 }
 
+const googleProviderKeys = createRemoteJWKSet(new URL("https://www.googleapis.com/oauth2/v3/certs"));
+const appleProviderKeys = createRemoteJWKSet(new URL("https://appleid.apple.com/auth/keys"));
+
+function secureStringEqual(first: string, second: string) {
+	const firstBytes = Buffer.from(first);
+	const secondBytes = Buffer.from(second);
+	return firstBytes.length === secondBytes.length && crypto.timingSafeEqual(firstBytes, secondBytes);
+}
+
+async function providerAuthRoutes(req: SessionRequest, res: NextApiResponse, slug: string[]) {
+	if (slug[1] !== "provider") return error(res, 404, "Route not found");
+
+	if (slug[2] === "nonce") {
+		if (req.method !== "GET") return methodNotAllowed(res);
+		const provider = typeof req.query.provider === "string" ? req.query.provider : "";
+		if (provider !== "google" && provider !== "apple") return error(res, 400, "Choose a valid sign-in provider");
+		const nonce = crypto.randomBytes(32).toString("base64url");
+		req.session.oauthChallenges = req.session.oauthChallenges || {};
+		req.session.oauthChallenges[provider] = { nonce, expiresAt: Date.now() + 5 * 60 * 1000 };
+		await req.session.save();
+		res.setHeader("Cache-Control", "no-store, private");
+		return res.status(200).json({ nonce });
+	}
+
+	if (slug.length !== 2) return error(res, 404, "Route not found");
+	if (req.method !== "POST") return methodNotAllowed(res);
+
+	const provider = req.body?.provider;
+	const identityToken = String(req.body?.identityToken || "");
+	const isWebClient = req.body?.clientType === "web";
+	if ((provider !== "google" && provider !== "apple") || !identityToken || identityToken.length > 20_000) {
+		return error(res, 400, "The sign-in request is invalid");
+	}
+
+	const nonce = String(req.body?.nonce || "");
+	if (isWebClient) {
+		const challenges = { ...(req.session.oauthChallenges || {}) };
+		const challenge = challenges[provider];
+		delete challenges[provider];
+		req.session.oauthChallenges = Object.keys(challenges).length ? challenges : undefined;
+		await req.session.save();
+		if (!challenge || challenge.expiresAt < Date.now() || !nonce || !secureStringEqual(challenge.nonce, nonce)) {
+			return error(res, 401, "The sign-in session expired. Please try again.");
+		}
+	}
+
+	let payload: Record<string, any>;
+	if (provider === "google") {
+		const audiences = [
+			process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim(),
+			process.env.GOOGLE_IOS_CLIENT_ID?.trim(),
+		].filter((value): value is string => Boolean(value));
+		if (!audiences.length) return error(res, 503, "Google sign-in has not been configured yet");
+		try {
+			const verified = await jwtVerify(identityToken, googleProviderKeys, {
+				issuer: ["https://accounts.google.com", "accounts.google.com"],
+				audience: audiences,
+				clockTolerance: 60,
+			});
+			payload = verified.payload;
+			if (payload.azp && !audiences.includes(String(payload.azp))) return error(res, 401, "Google could not verify this sign-in");
+			if (isWebClient && !secureStringEqual(String(payload.nonce || ""), nonce)) return error(res, 401, "Google could not verify this sign-in");
+		} catch {
+			return error(res, 401, "Google could not verify this sign-in");
+		}
+	} else {
+		const audiences = [
+			process.env.NEXT_PUBLIC_APPLE_SERVICE_ID?.trim(),
+			process.env.APPLE_APP_BUNDLE_ID?.trim() || "com.habeshabrokers.app",
+		].filter((value): value is string => Boolean(value));
+		if (!nonce || nonce.length > 256) return error(res, 400, "The Apple sign-in request is invalid");
+		try {
+			const verified = await jwtVerify(identityToken, appleProviderKeys, {
+				issuer: "https://appleid.apple.com",
+				audience: audiences,
+				clockTolerance: 60,
+			});
+			payload = verified.payload;
+			const expectedNonce = crypto.createHash("sha256").update(nonce).digest("hex");
+			const tokenNonce = typeof payload.nonce === "string" ? payload.nonce : "";
+			if (!secureStringEqual(tokenNonce, expectedNonce)) return error(res, 401, "Apple could not verify this sign-in");
+		} catch {
+			return error(res, 401, "Apple could not verify this sign-in");
+		}
+	}
+
+	const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
+	const verifiedEmail = payload.email_verified === true || payload.email_verified === "true";
+	if (!verifiedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof payload.sub !== "string" || !payload.sub || payload.sub.length > 255) {
+		return error(res, 401, "The provider did not return a verified email address");
+	}
+
+	const cleanName = (value: unknown) => typeof value === "string"
+		? value.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 100)
+		: "";
+	const appleName = req.body?.fullName || {};
+	const firstName = cleanName(provider === "google" ? payload.given_name : appleName.givenName)
+		|| cleanName(email.split("@")[0]).split(/[._-]/)[0].slice(0, 100)
+		|| "Habesha";
+	const lastName = cleanName(provider === "google" ? payload.family_name : appleName.familyName) || "Member";
+	const providerUserSelect = { ...publicUserSelect, sessionVersion: true };
+	const providerKey: "GOOGLE" | "APPLE" = provider === "google" ? "GOOGLE" : "APPLE";
+	const identityWhere = { provider_providerAccountId: { provider: providerKey, providerAccountId: payload.sub } };
+	const knownIdentity = await prisma.externalIdentity.findUnique({ where: identityWhere, select: { userId: true } });
+	let identityLinked = Boolean(knownIdentity);
+	let user = knownIdentity
+		? await prisma.user.findUnique({ where: { id: knownIdentity.userId }, select: providerUserSelect })
+		: await prisma.user.findUnique({ where: { email }, select: providerUserSelect });
+
+	if (!user && req.body?.createAccount !== true) return error(res, 404, "No account exists for this email. Create an account first.");
+	if (!user && req.body?.termsAccepted !== true) return error(res, 400, "Accept the terms before creating an account");
+
+	if (!user) {
+		try {
+			user = await prisma.$transaction(async (tx) => {
+				const createdUser = await tx.user.create({
+					data: {
+						firstName,
+						lastName,
+						email,
+						password: await bcrypt.hash(crypto.randomBytes(48).toString("base64url"), 12),
+						verfied: true,
+					},
+					select: providerUserSelect,
+				});
+				await tx.externalIdentity.create({
+					data: { provider: providerKey, providerAccountId: payload.sub, userId: createdUser.id },
+				});
+				return createdUser;
+			});
+			identityLinked = true;
+		} catch (caught) {
+			if ((caught as any)?.code !== "P2002") throw caught;
+			const linkedIdentity = await prisma.externalIdentity.findUnique({ where: identityWhere, select: { userId: true } });
+			if (linkedIdentity) {
+				identityLinked = true;
+				user = await prisma.user.findUnique({ where: { id: linkedIdentity.userId }, select: providerUserSelect });
+			} else {
+				user = await prisma.user.findUnique({ where: { email }, select: providerUserSelect });
+			}
+		}
+	}
+
+	if (!user) return error(res, 500, "The account could not be created");
+	if (!identityLinked) {
+		try {
+			await prisma.externalIdentity.create({
+				data: { provider: providerKey, providerAccountId: payload.sub, userId: user.id },
+			});
+			identityLinked = true;
+		} catch (caught) {
+			if ((caught as any)?.code !== "P2002") throw caught;
+			const linkedIdentity = await prisma.externalIdentity.findUnique({ where: identityWhere, select: { userId: true } });
+			if (!linkedIdentity || linkedIdentity.userId !== user.id) return error(res, 409, "This provider account is linked to another account");
+		}
+	}
+	if (!user.verfied) user = await prisma.user.update({ where: { id: user.id }, data: { verfied: true }, select: providerUserSelect });
+	const { sessionVersion, ...safeUser } = user;
+	req.session.userId = user.id;
+	req.session.sessionVersion = sessionVersion;
+	await req.session.save();
+	return res.status(200).json({ user: safeUser });
+}
+
 export async function apiHandler(req: NextApiRequest, res: NextApiResponse) {
 	const sessionReq = req as SessionRequest;
 	const slug = Array.isArray(req.query.slug) ? req.query.slug : [];
 	try {
 		if (slug[0] === "user") return await userRoutes(sessionReq, res, slug);
+		if (slug[0] === "auth" && slug[1] === "provider") return await providerAuthRoutes(sessionReq, res, slug);
 		if (slug[0] === "items") return await itemRoutes(sessionReq, res, slug);
 		if (slug[0] === "serviceRequests") return await serviceRequestRoutes(sessionReq, res, slug);
 		if (slug[0] === "admin") return await adminRoutes(sessionReq, res, slug);

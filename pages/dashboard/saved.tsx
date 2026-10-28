@@ -109,6 +109,7 @@ export default function SavedItems({ user }) {
 									photoURL={savedItem.item.images?.[0]}
 									price={savedItem.item.price}
 									priceFrequency={savedItem.item.BusinessSpace?.priceFrequency}
+									listingIntent={savedItem.item.House?.type || savedItem.item.BusinessSpace?.type}
 									serviceCategory={savedItem.item.Service?.category}
 								/>
 							))

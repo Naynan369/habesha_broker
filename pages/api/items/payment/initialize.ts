@@ -34,7 +34,7 @@ async function handler(req: SessionRequest, res: NextApiResponse) {
 		select: { id: true, title: true, status: true, paymentStatus: true },
 	});
 	if (!item) return res.status(404).json({ err: "Listing not found" });
-	if (item.status === "APPROVED" || item.status === "SOLD") {
+	if (item.status === "APPROVED" || item.status === "SOLD" || item.status === "RENTED") {
 		return res.status(409).json({ err: "This listing is already published or closed" });
 	}
 	if (item.paymentStatus === "PAID" || item.paymentStatus === "NOT_REQUIRED") {

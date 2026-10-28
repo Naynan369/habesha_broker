@@ -18,7 +18,8 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => {
 			where: { status: "APPROVED", featured: true },
 			include: {
 				user: { select: { firstName: true, lastName: true, profile_url: true } },
-				BusinessSpace: { select: { priceFrequency: true } },
+				BusinessSpace: { select: { priceFrequency: true, type: true } },
+				House: { select: { type: true } },
 				Service: { select: { category: true } },
 			},
 			orderBy: { createdAt: "desc" },
@@ -33,6 +34,7 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => {
 			ownerPhoto: item.user.profile_url || undefined,
 			price: String(item.price),
 			itemType: item.itemType,
+			listingIntent: item.House?.type || item.BusinessSpace?.type || undefined,
 			priceFrequency: item.BusinessSpace?.priceFrequency || undefined,
 			serviceCategory: item.Service?.category || undefined,
 			featured: item.featured,

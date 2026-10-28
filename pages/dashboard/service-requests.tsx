@@ -123,9 +123,9 @@ export default function ServiceRequestsPage({ user }: { user: { id: string } }) 
 				<Box flex="1"><BrandLogo compact /></Box><ColorModeToggle />
 			</Flex>
 			<Container maxW="6xl" py={{ base: 8, md: 12 }} px={{ base: 4, md: 8 }} flex="1">
-				<Flex justify="space-between" align={{ base: "flex-start", md: "center" }} direction={{ base: "column", md: "row" }} gap="5" mb="7">
-					<Box><Text color="mainorange" fontSize="xs" fontWeight="bold" letterSpacing=".14em" textTransform="uppercase">{text.workspace}</Text><Heading mt="2" fontSize={{ base: "2xl", md: "4xl" }}>{text.heading}</Heading><Text mt="3" color={muted} maxW="2xl">{text.description}</Text></Box>
-					<SimpleGrid w={{ base: "full", md: "auto" }} minW={{ md: "520px" }} columns={{ base: 1, sm: 3 }} spacing="2" p="1" border="1px solid" borderColor={border} borderRadius="xl" bg={surface}>
+				<Flex justify="space-between" align={{ base: "flex-start", lg: "center" }} direction={{ base: "column", lg: "row" }} gap="5" mb="7">
+					<Box minW="0" flex="1"><Text color="mainorange" fontSize="xs" fontWeight="bold" letterSpacing=".14em" textTransform="uppercase">{text.workspace}</Text><Heading mt="2" fontSize={{ base: "2xl", md: "4xl" }}>{text.heading}</Heading><Text mt="3" color={muted} maxW="2xl">{text.description}</Text></Box>
+					<SimpleGrid w={{ base: "full", lg: "auto" }} minW={{ lg: "520px" }} columns={{ base: 1, sm: 3 }} spacing="2" p="1" border="1px solid" borderColor={border} borderRadius="xl" bg={surface}>
 						<Button variant={view === "services" ? "solid" : "ghost"} colorScheme={view === "services" ? "orange" : undefined} onClick={() => { setPage(0); setView("services"); }}>{text.myServices}</Button>
 						<Button variant={view === "received" ? "solid" : "ghost"} colorScheme={view === "received" ? "orange" : undefined} onClick={() => { setPage(0); setView("received"); }}>{text.received}</Button>
 						<Button variant={view === "sent" ? "solid" : "ghost"} colorScheme={view === "sent" ? "orange" : undefined} onClick={() => { setPage(0); setView("sent"); }}>{text.sent}</Button>

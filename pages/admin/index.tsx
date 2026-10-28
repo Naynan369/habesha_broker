@@ -179,8 +179,8 @@ export default function AdminDashboard({ user }) {
 								</InputGroup>
 							</FormControl>
 						</Flex>
-						<SimpleGrid columns={{ base: 2, sm: 3, xl: 6 }} spacing="2" my="5" role="group" aria-label={copy.listing.filterAria}>
-							{[["PAYMENT", copy.listing.filters.payment], ["PENDING", copy.listing.filters.pending], ["APPROVED", copy.listing.filters.approved], ["DECLINED", copy.listing.filters.declined], ["SOLD", copy.listing.filters.sold], ["CLOSED", copy.listing.filters.closed]].map(([value, label]) => (
+						<SimpleGrid columns={{ base: 2, sm: 4, xl: 7 }} spacing="2" my="5" role="group" aria-label={copy.listing.filterAria}>
+							{[["PAYMENT", copy.listing.filters.payment], ["PENDING", copy.listing.filters.pending], ["APPROVED", copy.listing.filters.approved], ["DECLINED", copy.listing.filters.declined], ["SOLD", copy.listing.filters.sold], ["CLOSED", copy.listing.filters.closed], ["RENTED", copy.listing.filters.rented]].map(([value, label]) => (
 								<Button key={value} size="sm" w="full" minW="0" px={{ base: 2, sm: 3 }} h="9" borderRadius="full" fontSize={{ base: "xs", sm: "sm" }} colorScheme={statusFilter === value ? "orange" : "gray"} variant={statusFilter === value ? "solid" : "outline"} onClick={() => setStatusFilter(value)}>
 									{label}
 								</Button>
@@ -340,7 +340,7 @@ const ItemCard: FC<ICard> = ({ item, onModerated }) => {
 				</Box>
 			</Flex>
 			<Flex align="center" gap="3" wrap="wrap" w={{ base: "full", lg: "auto" }} justify={{ base: "flex-end", lg: "flex-start" }}>
-				<Badge colorScheme={status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" ? "purple" : status === "CLOSED" ? "gray" : "orange"} borderRadius="full" px="3" py="1">{copy.status[status] || status}</Badge>
+				<Badge colorScheme={status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : status === "SOLD" || status === "RENTED" ? "purple" : status === "CLOSED" ? "gray" : "orange"} borderRadius="full" px="3" py="1">{copy.status[status] || status}</Badge>
 				<Link legacyBehavior href={`/items/${id}`} passHref><Button as="a" size="sm" variant="outline">{copy.reviewDetails}</Button></Link>
 				{status === "PENDING" && paymentStatus === "PAID" && (
 					<ButtonGroup size="sm">

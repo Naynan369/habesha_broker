@@ -56,6 +56,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 	const [step, setStep] = useState(0);
 	const sellerContact = useSellerContact(user?.id || "");
 	const previewsRef = useRef(previews);
+	const photoInputRef = useRef<HTMLInputElement>(null);
 	useEffect(() => { previewsRef.current = previews; }, [previews]);
 	useEffect(() => () => previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview)), []);
 
@@ -121,18 +122,20 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 
 	const choosePhotos = (event: ChangeEvent<HTMLInputElement>, formik: any) => {
 		const chosen = Array.from(event.currentTarget.files || []);
-		event.currentTarget.value = "";
 		if (chosen.length > MAX_PHOTOS) {
+			event.currentTarget.value = "";
 			formik.setFieldError("files", common.wizard.maxPhotos);
 			formik.setFieldTouched("files", true, false);
 			return;
 		}
 		if (chosen.some((file) => file.size > MAX_PHOTO_SIZE)) {
+			event.currentTarget.value = "";
 			formik.setFieldError("files", common.photoSizeError);
 			formik.setFieldTouched("files", true, false);
 			return;
 		}
 		if (chosen.some((file) => !ALLOWED_PHOTO_TYPES.includes(file.type))) {
+			event.currentTarget.value = "";
 			formik.setFieldError("files", common.photoTypeError);
 			formik.setFieldTouched("files", true, false);
 			return;
@@ -148,6 +151,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 		const nextPreviews = previews.filter((_preview, previewIndex) => previewIndex !== index);
 		if (previews[index]) URL.revokeObjectURL(previews[index]);
 		setPreviews(nextPreviews);
+		if (photoInputRef.current) photoInputRef.current.value = "";
 		formik.setFieldValue("files", nextFiles);
 		formik.setFieldTouched("files", true, false);
 	};
@@ -234,7 +238,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 								<Text fontSize="xs" color={muted}>{formik.values.files.length}/{MAX_PHOTOS} {common.wizard.photosCount}</Text>
 							</Flex>
 							<Text color={muted} fontSize="sm" mt="2" mb="3">{common.wizard.photoHelp}</Text>
-							<Input id="service-photos" type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} onChange={(event) => choosePhotos(event, formik)} />
+								<Input ref={photoInputRef} id="service-photos" type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} onChange={(event) => choosePhotos(event, formik)} />
 							<FormErrorMessage>{String(formik.errors.files || "")}</FormErrorMessage>
 						</FormControl>
 						<Grid templateColumns="repeat(auto-fill, minmax(145px, 1fr))" gap="4">
