@@ -2,7 +2,7 @@ import { Box, Button, Flex, Heading, Text, useColorModeValue } from "@chakra-ui/
 import Head from "next/head";
 import Link from "next/link";
 import { useLang } from "@libs/hooks/useLang";
-import { LoginForm } from "@components/auth/LoginForm";
+import { LoginForm } from "@components/auth/AuthForms";
 import { AuthPageLayout } from "@components/auth/AuthPageLayout";
 import { withSessionSsr } from "@config/cookie/cookie";
 

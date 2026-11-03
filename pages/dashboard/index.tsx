@@ -1,7 +1,7 @@
 import { Box, Container, Flex, Heading, SimpleGrid, Text, useColorModeValue } from "@chakra-ui/react";
-import { NavBar } from "@components/dashboard/Navbar";
+import { SiteNavbar } from "@components/shared/SiteNavbar";
 import { Profile } from "@components/dashboard/Profile";
-import { RecentActivities } from "@components/dashboard/RecentActivities/RecentActivities";
+import { RecentActivities } from "@components/dashboard/RecentActivities";
 import { withSessionSsr } from "@config/cookie/cookie";
 import axios from "axios";
 import { useUser } from "@libs/store";
@@ -48,7 +48,7 @@ export default function Dashboard({ user }) {
         <>
             <Head><title>{dashboardText.pageTitle}</title></Head>
             <Flex lang={router.locale === "am" ? "am" : "en"} minH="100dvh" direction="column" bg={pageBg}>
-                <NavBar logout={handleLogout} user={user} />
+                <SiteNavbar mode="dashboard" onLogout={handleLogout} user={user} />
                 <Container maxW="7xl" flex="1" py={{ base: 8, md: 12 }} px={{ base: 5, md: 8 }}>
                     <Flex as="section" mb={{ base: 7, md: 9 }} p={{ base: 5, md: 8 }} bg={heroSurface} border="1px solid" borderColor={heroBorder} borderRadius="3xl" boxShadow="0 12px 36px rgba(21,42,44,.06)" align={{ base: "flex-start", md: "center" }} justify="space-between" gap="6" direction={{ base: "column", md: "row" }}>
                         <Box>

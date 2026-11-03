@@ -9,5 +9,5 @@ export default defineConfig([
 			"react-hooks/set-state-in-effect": "off",
 		},
 	},
-	globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+	globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "public/assets/3d/draco_*.js"]),
 ]);

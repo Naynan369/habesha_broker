@@ -1,11 +1,10 @@
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import { Alert, Box, Button, Container, Flex, Grid, Heading, IconButton, Text, useColorModeValue } from "@chakra-ui/react";
-import { Item } from "@components/dashboard/itemList/Item";
-import { ItemLoader } from "@components/dashboard/itemList/ItemLoader";
+import { Item, ItemLoader } from "@components/dashboard/Listings";
 import { BrandLogo } from "@components/shared/BrandLogo";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 import { withSessionSsr } from "@config/cookie/cookie";
-import { MyTheme } from "@config/theme/MyTheme";
+import { NAVBAR_HEIGHT_COMPACT } from "@config/layout";
 import { useFetch } from "@libs/hooks/useFetch";
 import axios from "axios";
 import Head from "next/head";
@@ -58,7 +57,7 @@ export default function SavedItems({ user }) {
 					position="sticky"
 					top="0"
 					zIndex="20"
-					height={MyTheme.size.navbarHeightCompact}
+					height={NAVBAR_HEIGHT_COMPACT}
 					px={{ base: 4, md: 8, xl: 12 }}
 					alignItems="center"
 					boxShadow="0 12px 34px rgba(4,16,19,.18)"
@@ -98,19 +97,13 @@ export default function SavedItems({ user }) {
 							data.items.map((savedItem) => (
 								<Item
 									key={savedItem.id}
+									canManage={false}
 									id={savedItem.item.id}
 									title={savedItem.item.title}
 									status={savedItem.item.status}
-									date={savedItem.item.createdAt}
 									itemType={savedItem.item.itemType}
-									featured={savedItem.item.featured}
-									ownerPhoto={savedItem.item.user.profile_url}
-									ownerName={savedItem.item.user.firstName + " " + savedItem.item.user.lastName}
 									photoURL={savedItem.item.images?.[0]}
-									price={savedItem.item.price}
-									priceFrequency={savedItem.item.BusinessSpace?.priceFrequency}
 									listingIntent={savedItem.item.House?.type || savedItem.item.BusinessSpace?.type}
-									serviceCategory={savedItem.item.Service?.category}
 								/>
 							))
 						) : (

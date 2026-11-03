@@ -13,32 +13,16 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { MdArrowForward, MdMiscellaneousServices, MdSearch, MdSearchOff, MdStorefront } from "react-icons/md";
 import { FilterNav } from "@components/explore/FilterNav";
-import { Navbar } from "@components/explore/Navbar";
+import { SiteNavbar } from "@components/shared/SiteNavbar";
 import { HomeMotionSystem } from "@components/home/HomeMotion";
 import { ItemCard, ItemLoader } from "@components/explore/ItemCard";
-import type { SearchMatchField } from "@components/explore/ItemCard";
 import { withSessionSsr } from "@config/cookie/cookie";
 
 const SERVICE_CATEGORIES = ["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"] as const;
 // Keep the Explore category card ready for a later relaunch; enable it here when needed.
 const SHOW_LOCAL_HELP_CARD = true;
-const LOCATION_FIELDS = ["region", "city", "subcity", "neighborhood", "landmark"] as const;
 
-const getSearchMatchFields = (item: any, keyword: string): SearchMatchField[] => {
-	const term = keyword.trim().toLocaleLowerCase();
-	if (!term) return [];
-	const matches = (...values: unknown[]) => values.some((value) => typeof value === "string" && value.toLocaleLowerCase().includes(term));
-	const fields: SearchMatchField[] = [];
-	if (matches(item.title)) fields.push("title");
-	if (matches(item.Car?.manufacturer)) fields.push("manufacturer");
-	if (matches(item.Car?.model)) fields.push("model");
-	const locationValues = [item.House, item.Car, item.BusinessSpace, item.Service].flatMap((details) => LOCATION_FIELDS.map((field) => details?.[field]));
-	if (matches(...locationValues)) fields.push("location");
-	if (matches(item.Service?.serviceArea)) fields.push("serviceArea");
-	return fields;
-};
-
-const ExploreThreeScene = dynamic(() => import("@components/explore/ExploreCityScene"), {
+const ExploreThreeScene = dynamic(() => import("@components/explore/ExploreCinematicScene"), {
 	ssr: false,
 	loading: () => <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 76% 48%, rgba(233,183,92,.16), transparent 42%)" }} />,
 });
@@ -58,19 +42,19 @@ export default function ExplorePage({ user, keyword }) {
 	const lang = useLang();
 	const filter = useFilter();
 	const router = useRouter();
-	const canvas = useColorModeValue("#f3f2ed", "#000000");
-	const surface = useColorModeValue("white", "#111111");
-	const searchSurface = useColorModeValue("white", "#111111");
-	const searchText = useColorModeValue("#243b40", "#e7eff0");
-	const searchIconColor = useColorModeValue("#788588", "#aebdc1");
-	const titleColor = useColorModeValue("#21383e", "#e7eff0");
-	const bodyColor = useColorModeValue("gray.600", "gray.300");
-	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
-	const accentSurface = useColorModeValue("#fbede4", "rgba(198,107,54,.18)");
-	const accentText = useColorModeValue("#bc6332", "#f0b078");
+	const canvas = useColorModeValue("#f4efe8", "#000000");
+	const surface = useColorModeValue("#fffdfa", "#111111");
+	const searchSurface = useColorModeValue("#fffdfa", "#111111");
+	const searchText = useColorModeValue("#292725", "#f5f0ea");
+	const searchIconColor = useColorModeValue("#746c66", "#b7afaa");
+	const titleColor = useColorModeValue("#292725", "#f5f0ea");
+	const bodyColor = useColorModeValue("#655e58", "#c7c0bb");
+	const borderColor = useColorModeValue("#d8d0c6", "whiteAlpha.200");
+	const accentSurface = useColorModeValue("#f4ebe2", "rgba(190,110,76,.2)");
+	const accentText = useColorModeValue("#a96145", "#e5a783");
 	const errorSurface = useColorModeValue("#fff5f1", "#321f1d");
 	const errorText = useColorModeValue("#783e32", "#f3c1b5");
-	const badgeSurface = useColorModeValue("#e8efec", "#191919");
+	const badgeSurface = useColorModeValue("#eee6dc", "#191919");
 	const moveCategorySpotlight = (event: ReactPointerEvent<HTMLButtonElement>) => {
 		if (event.pointerType !== "mouse") return;
 		const bounds = event.currentTarget.getBoundingClientRect();
@@ -179,7 +163,7 @@ export default function ExplorePage({ user, keyword }) {
 				<meta name="description" content={lang.explore.metaDescription} />
 			</Head>
 			<Box lang={router.locale || "en"} minH="100dvh" bg={canvas} pb={{ base: 12, md: 20 }}>
-				<Navbar user={user} />
+				<SiteNavbar mode="public" user={user} />
 				<Box maxW="1480px" mx="auto" px={{ base: 4, md: 8, xl: 12 }} pt={{ base: 5, md: 8 }}>
 					<Box
 						as="section"
@@ -187,31 +171,29 @@ export default function ExplorePage({ user, keyword }) {
 						position="relative"
 						overflow="hidden"
 						isolation="isolate"
-						minH={{ base: "690px", sm: "650px", md: "570px", xl: "600px" }}
+						minH={{ base: "800px", sm: "760px", lg: "570px", xl: "600px" }}
 						borderRadius={{ base: "2xl", md: "3xl" }}
-						bg="#16383c"
-						boxShadow="0 30px 80px rgba(9, 26, 25, .24), inset 0 0 0 1px rgba(255,255,255,.12)"
+						bg="#1d1b1c"
+						boxShadow="0 30px 80px rgba(34, 25, 25, .2), inset 0 0 0 1px rgba(255,255,255,.12)"
 					>
-						<Box aria-hidden="true" position="absolute" inset="0" zIndex="-1" bgGradient="linear(128deg, #1b4649 0%, #17363d 43%, #304653 100%)" />
-						<Box aria-hidden="true" position="absolute" top="-32%" right="-12%" w={{ base: "90%", md: "68%" }} h="95%" zIndex="-1" bg="radial-gradient(ellipse, rgba(239,190,105,.24), transparent 66%)" />
-						<Box aria-hidden="true" position="absolute" bottom="-45%" left="-12%" w="65%" h="85%" zIndex="-1" bg="radial-gradient(ellipse, rgba(91,177,173,.25), transparent 70%)" />
-						<Box aria-hidden="true" position="absolute" top="12%" left="46%" w="38%" h="75%" zIndex="-1" bg="radial-gradient(ellipse, rgba(111,122,177,.17), transparent 72%)" />
-						<Box position="absolute" inset="0" zIndex="0" aria-label="Interactive 3D apartment and car scene">
+						<Box aria-hidden="true" position="absolute" inset="0" zIndex="-1" bgGradient="linear(125deg, #1d1b1c 0%, #2b2828 52%, #55483f 100%)" />
+						<Box aria-hidden="true" position="absolute" top="-32%" right="-12%" w={{ base: "90%", md: "68%" }} h="95%" zIndex="-1" bg="radial-gradient(ellipse, rgba(251,205,139,.32), transparent 66%)" />
+						<Box aria-hidden="true" position="absolute" bottom="-45%" left="-12%" w="65%" h="85%" zIndex="-1" bg="radial-gradient(ellipse, rgba(128,82,66,.25), transparent 70%)" />
+						<Box aria-hidden="true" position="absolute" top="12%" left="46%" w="38%" h="75%" zIndex="-1" bg="radial-gradient(ellipse, rgba(187,137,92,.18), transparent 72%)" />
+						<Box position="absolute" inset="0" zIndex="0" aria-hidden="true">
 							<ExploreThreeScene />
 						</Box>
-						<Box aria-hidden="true" position="absolute" inset="0" zIndex="0" pointerEvents="none" opacity=".16" backgroundImage="linear-gradient(rgba(245,220,165,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(245,220,165,.12) 1px, transparent 1px)" backgroundSize="62px 62px" />
-						<Box aria-hidden="true" position="absolute" right={{ base: "6%", md: "4%" }} top={{ base: "9%", md: "12%" }} zIndex="0" w={{ base: "180px", md: "320px" }} h={{ base: "180px", md: "320px" }} border="1px solid rgba(239,203,135,.14)" borderRadius="full" pointerEvents="none" />
-						<Flex position="relative" zIndex="2" minH={{ base: "690px", sm: "650px", md: "570px", xl: "600px" }} align="center" px={{ base: 5, sm: 7, md: 10, xl: 14 }} py={{ base: 9, md: 12 }}>
-							<Box maxW={{ base: "full", md: "650px", xl: "690px" }} w="full">
+						<Flex position="relative" zIndex="2" minH={{ base: "800px", sm: "760px", lg: "570px", xl: "600px" }} align={{ base: "flex-start", lg: "center" }} px={{ base: 5, sm: 7, md: 10, xl: 14 }} pt={{ base: "270px", sm: "250px", lg: 12 }} pb={{ base: 9, lg: 12 }}>
+							<Box maxW={{ base: "full", md: "500px", xl: "560px" }} w="full">
 								<Flex align="center" gap="3" mb={{ base: 5, md: 6 }}><Box w="9" h="1px" bg="#e9b75c" /><Badge bg="rgba(255,255,255,.10)" color="whiteAlpha.900" border="1px solid rgba(255,255,255,.2)" borderRadius="full" px="4" py="2" letterSpacing=".16em" fontSize="10px">{lang.explore.kicker}</Badge></Flex>
-								<Heading mt="0" color="white" fontSize={{ base: "4xl", sm: "5xl", xl: "6xl" }} lineHeight=".99" letterSpacing="-.055em" maxW="650px" textShadow="0 4px 28px rgba(0,0,0,.24)">
+								<Heading mt="0" color="white" fontSize={{ base: "4xl", sm: "5xl", xl: "6xl" }} lineHeight=".99" letterSpacing="-.055em" maxW="560px" textShadow="0 4px 28px rgba(0,0,0,.24)">
 									{lang.explore.heroTitleLead}{" "}<Box as="span" color="#f2b64e">{lang.explore.heroTitleAccent}</Box>
 								</Heading>
 								<Text color="rgba(255,255,255,.82)" mt="5" maxW="540px" fontSize={{ base: "md", md: "lg" }} lineHeight="1.7">
 									{lang.explore.heroDescription}
 								</Text>
 								<form onSubmit={handleSearch}>
-									<Flex mt={{ base: 7, md: 8 }} maxW="660px" bg={searchSurface} border="1px solid rgba(255,255,255,.4)" p="2" gap="2" borderRadius="2xl" boxShadow="0 22px 60px rgba(0,0,0,.3)" backdropFilter="blur(16px)" direction={{ base: "column", sm: "row" }}>
+									<Flex mt={{ base: 7, md: 8 }} maxW="560px" bg={searchSurface} border="1px solid rgba(255,255,255,.4)" p="2" gap="2" borderRadius="2xl" boxShadow="0 22px 60px rgba(0,0,0,.3)" backdropFilter="blur(16px)" direction={{ base: "column", sm: "row" }}>
 										<Flex flex="1" minW="0" align="center" px={{ base: 3, sm: 4 }}>
 											<MdSearch size="22" color={searchIconColor} />
 											<Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} variant="unstyled" px="3" py="3" color={searchText} placeholder={lang.explore.searchPlaceholder} aria-label={lang.explore.searchAria} />
@@ -222,10 +204,6 @@ export default function ExplorePage({ user, keyword }) {
 									</Flex>
 								</form>
 							</Box>
-						</Flex>
-						<Flex position="absolute" right={{ base: 5, md: 10, xl: 14 }} bottom={{ base: 5, md: 8 }} display={{ base: "none", md: "flex" }} align="center" gap="3" bg="rgba(9,24,23,.72)" color="white" border="1px solid rgba(255,255,255,.16)" backdropFilter="blur(16px)" borderRadius="2xl" px="5" py="4" boxShadow="0 18px 40px rgba(0,0,0,.22)" zIndex="2">
-							<Box w="2" h="2" borderRadius="full" bg="#e9b75c" boxShadow="0 0 18px rgba(233,183,92,.8)" />
-							<Box><Text color="white" fontSize="sm" fontWeight="bold">{lang.explore.heroCardTitle}</Text><Text color="whiteAlpha.700" fontSize="xs" mt="1">{lang.explore.heroCardSubtitle}</Text></Box>
 						</Flex>
 					</Box>
 
@@ -248,12 +226,12 @@ export default function ExplorePage({ user, keyword }) {
 								onPointerMove={moveCategorySpotlight} onPointerLeave={clearCategorySpotlight}
 								onClick={() => selectCategory("HOUSE")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bg="#10262b"
-								boxShadow={filter.itemType === "HOUSE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
-								_hover={{ boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
+								bg="#272323"
+								boxShadow={filter.itemType === "HOUSE" ? "0 0 0 3px #b86b4d, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
+								_hover={{ boxShadow: "0 20px 42px rgba(34,25,25,.22)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Box className="explore-category-media" position="absolute" inset="0" bgImage="url('/assets/images/apartment-interior-showcase.jpg')" bgSize="cover" bgPosition="center 52%" />
-								<Box className="explore-category-scrim" position="absolute" inset="0" bgGradient="linear(90deg, rgba(14,34,38,.78), rgba(14,34,38,.12))" />
+								<Box className="explore-category-scrim" position="absolute" inset="0" bgGradient="linear(90deg, rgba(25,20,20,.78), rgba(25,20,20,.12))" />
 								<Box className="explore-category-spotlight" position="absolute" inset="0" pointerEvents="none" />
 								<Flex position="relative" zIndex="1" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
 									<Text className="explore-category-label" color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.propertyLabel}</Text>
@@ -270,12 +248,12 @@ export default function ExplorePage({ user, keyword }) {
 								onPointerMove={moveCategorySpotlight} onPointerLeave={clearCategorySpotlight}
 								onClick={() => selectCategory("CAR")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bg="#10262b"
-								boxShadow={filter.itemType === "CAR" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
-								_hover={{ boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
+								bg="#272323"
+								boxShadow={filter.itemType === "CAR" ? "0 0 0 3px #b86b4d, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
+								_hover={{ boxShadow: "0 20px 42px rgba(34,25,25,.22)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Box className="explore-category-media" position="absolute" inset="0" bgImage="url('/assets/images/supercar-showcase.jpg')" bgSize="cover" bgPosition="center 55%" />
-								<Box className="explore-category-scrim" position="absolute" inset="0" bgGradient="linear(90deg, rgba(14,34,38,.82), rgba(14,34,38,.08))" />
+								<Box className="explore-category-scrim" position="absolute" inset="0" bgGradient="linear(90deg, rgba(25,20,20,.82), rgba(25,20,20,.08))" />
 								<Box className="explore-category-spotlight" position="absolute" inset="0" pointerEvents="none" />
 								<Flex position="relative" zIndex="1" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
 									<Text className="explore-category-label" color="#f5c579" textTransform="uppercase" fontSize="xs" letterSpacing=".18em" fontWeight="bold">{lang.explore.vehicleCardLabel}</Text>
@@ -292,12 +270,12 @@ export default function ExplorePage({ user, keyword }) {
 								onPointerMove={moveCategorySpotlight} onPointerLeave={clearCategorySpotlight}
 								onClick={() => selectCategory("BUSINESS_SPACE")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bg="#10262b"
-								boxShadow={filter.itemType === "BUSINESS_SPACE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
-								_hover={{ boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
+								bg="#272323"
+								boxShadow={filter.itemType === "BUSINESS_SPACE" ? "0 0 0 3px #b86b4d, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
+								_hover={{ boxShadow: "0 20px 42px rgba(34,25,25,.22)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Box className="explore-category-media" position="absolute" inset="0" bgImage="url('/assets/images/apartment-showcase.jpg')" bgSize="cover" bgPosition="center" />
-								<Box className="explore-category-scrim" position="absolute" inset="0" bgGradient="linear(90deg, rgba(14,34,38,.86), rgba(14,34,38,.22))" />
+								<Box className="explore-category-scrim" position="absolute" inset="0" bgGradient="linear(90deg, rgba(25,20,20,.86), rgba(25,20,20,.22))" />
 								<Box className="explore-category-spotlight" position="absolute" inset="0" pointerEvents="none" />
 								<Flex position="absolute" zIndex="1" inset="0" align="center" justify="center" color="whiteAlpha.200" pointerEvents="none"><MdStorefront size="150" /></Flex>
 								<Flex position="relative" zIndex="2" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
@@ -316,12 +294,12 @@ export default function ExplorePage({ user, keyword }) {
 								onPointerMove={moveCategorySpotlight} onPointerLeave={clearCategorySpotlight}
 								onClick={() => selectCategory("SERVICE")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bg="#10262b"
-								boxShadow={filter.itemType === "SERVICE" ? "0 0 0 3px #d7783f, 0 18px 36px rgba(27,47,48,.18)" : "0 14px 34px rgba(27,47,48,.12)"}
-								_hover={{ boxShadow: "0 20px 42px rgba(27,47,48,.2)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
+								bg="#272323"
+								boxShadow={filter.itemType === "SERVICE" ? "0 0 0 3px #b86b4d, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
+								_hover={{ boxShadow: "0 20px 42px rgba(34,25,25,.22)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Box className="explore-category-media" position="absolute" inset="0" bgImage="url('https://images.unsplash.com/photo-1741388222137-c0d3007ec173?auto=format&fit=crop&crop=faces&w=1200&h=800&q=80')" bgSize="cover" bgPosition="center 52%" />
-								<Box className="explore-category-scrim" position="absolute" inset="0" bgGradient="linear(90deg, rgba(14,34,38,.84), rgba(14,34,38,.20))" />
+								<Box className="explore-category-scrim" position="absolute" inset="0" bgGradient="linear(90deg, rgba(25,20,20,.84), rgba(25,20,20,.20))" />
 								<Box className="explore-category-spotlight" position="absolute" inset="0" pointerEvents="none" />
 								<Flex position="absolute" zIndex="1" inset="0" align="center" justify="center" color="whiteAlpha.200" pointerEvents="none"><MdMiscellaneousServices size="150" /></Flex>
 								<Flex position="relative" zIndex="2" h="full" direction="column" align="flex-start" justify="flex-end" p={{ base: 6, md: 8 }}>
@@ -338,12 +316,12 @@ export default function ExplorePage({ user, keyword }) {
 							<Box><Text color={accentText} textTransform="uppercase" letterSpacing=".15em" fontWeight="bold" fontSize="xs">{lang.home.services_txt}</Text><Heading mt="2" color={titleColor} fontSize={{ base: "xl", md: "2xl" }}>{lang.explore.serviceCategoryHeading}</Heading></Box>
 							<Text color={bodyColor} maxW="520px" fontSize="sm" lineHeight="1.7">{lang.explore.serviceCategoryDescription}</Text>
 						</Flex>
-						<Flex wrap="wrap" gap="3" mb="5"><Button variant={filter.Service?.some?.category ? "outline" : "solid"} color={filter.Service?.some?.category ? titleColor : "white"} bg={filter.Service?.some?.category ? surface : "maingray"} borderColor={borderColor} onClick={() => selectServiceCategory()}>{lang.explore.allServices}</Button></Flex>
+						<Flex wrap="wrap" gap="3" mb="5"><Button variant={filter.Service?.some?.category ? "outline" : "solid"} color={filter.Service?.some?.category ? titleColor : "white"} bg={filter.Service?.some?.category ? surface : "#292725"} _hover={{ bg: filter.Service?.some?.category ? badgeSurface : "#453a34", color: filter.Service?.some?.category ? titleColor : "white" }} borderColor={borderColor} onClick={() => selectServiceCategory()}>{lang.explore.allServices}</Button></Flex>
 						<SimpleGrid id="explore-service-categories" columns={{ base: 1, sm: 2, xl: 3 }} spacing="4">
 							{SERVICE_CATEGORIES.map((category, index) => {
 								const card = lang.home.service_cards[index];
 								const selected = filter.Service?.some?.category === category;
-								return <Box as="button" type="button" key={category} className="explore-service-card home-motion-visible" data-home-stagger style={{ "--home-stagger-delay": Math.min(index, 4) * 90 + "ms" } as CSSProperties} onClick={() => selectServiceCategory(category)} aria-pressed={selected} textAlign="left" p="5" minH="130px" bg={surface} border="1px solid" borderColor={selected ? "#d7783f" : borderColor} borderRadius="xl" boxShadow={selected ? "0 0 0 2px #d7783f" : "sm"} transition="all 160ms ease" _hover={{ transform: "translateY(-2px)", boxShadow: "md" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "2px" }}><Flex align="center" gap="3"><Box flexShrink={0} w="10" h="10" display="grid" placeItems="center" borderRadius="xl" bg={accentSurface} color={accentText}><MdMiscellaneousServices size="21" /></Box><Text color={titleColor} fontWeight="bold" lineHeight="1.4">{lang.serviceListing.categories[category]}</Text></Flex><Text mt="3" color={bodyColor} fontSize="sm" lineHeight="1.6">{card.description}</Text></Box>;
+								return <Box as="button" type="button" key={category} className="explore-service-card home-motion-visible" data-home-stagger style={{ "--home-stagger-delay": Math.min(index, 4) * 90 + "ms" } as CSSProperties} onClick={() => selectServiceCategory(category)} aria-pressed={selected} textAlign="left" p="5" minH="130px" bg={surface} border="1px solid" borderColor={selected ? "#b86b4d" : borderColor} borderRadius="xl" boxShadow={selected ? "0 0 0 2px #b86b4d" : "sm"} transition="all 160ms ease" _hover={{ transform: "translateY(-2px)", boxShadow: "md" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "2px" }}><Flex align="center" gap="3"><Box flexShrink={0} w="10" h="10" display="grid" placeItems="center" borderRadius="xl" bg={accentSurface} color={accentText}><MdMiscellaneousServices size="21" /></Box><Text color={titleColor} fontWeight="bold" lineHeight="1.4">{lang.serviceListing.categories[category]}</Text></Flex><Text mt="3" color={bodyColor} fontSize="sm" lineHeight="1.6">{card.description}</Text></Box>;
 							})}
 						</SimpleGrid>
 					</Box>}
@@ -367,7 +345,7 @@ export default function ExplorePage({ user, keyword }) {
 										<AlertIcon color="#bd5d43" />
 										<Flex w="full" align={{ base: "flex-start", sm: "center" }} justify="space-between" direction={{ base: "column", sm: "row" }} gap="4">
 						<Box><Text color={errorText} fontWeight="bold">{lang.explore.errorTitle}</Text><AlertDescription color={bodyColor} fontSize="sm" mt="1">{lang.explore.errorDescription}</AlertDescription></Box>
-											<Button type="button" size="sm" bg="#21383e" color="white" _hover={{ bg: "#142a30" }} onClick={() => setRetryCount((count) => count + 1)} isLoading={loading}>{lang.explore.retry}</Button>
+											<Button type="button" size="sm" bg="#292725" color="white" _hover={{ bg: "#453a34", color: "white" }} onClick={() => setRetryCount((count) => count + 1)} isLoading={loading}>{lang.explore.retry}</Button>
 										</Flex>
 									</Alert>
 								) : loading || !data ? (
@@ -385,18 +363,9 @@ export default function ExplorePage({ user, keyword }) {
 													id={item.id}
 													title={item.title}
 													searchTerm={search.trim()}
-													matchedFields={getSearchMatchFields(item, search)}
-													date={item.createdAt}
 													photoURL={item.images?.[0]}
-													ownerName={[item.user?.firstName, item.user?.lastName].filter(Boolean).join(" ")}
-													ownerPhoto={item?.user?.profile_url}
-													price={item.price}
 													itemType={item.itemType}
-													priceFrequency={item.BusinessSpace?.priceFrequency}
-													featured={item.featured}
 													status={item.status}
-													listingIntent={item.House?.type || item.BusinessSpace?.type}
-													serviceCategory={item.Service?.category}
 												/>
 											</Box>
 										))}
@@ -411,7 +380,7 @@ export default function ExplorePage({ user, keyword }) {
 								{!loading && data?.total > 30 && <Flex align="center" justify="space-between" direction={{ base: "column", sm: "row" }} gap="3" mt="6" p="4" bg={surface} border="1px solid" borderColor={borderColor} borderRadius="xl">
 									<Button w={{ base: "full", sm: "auto" }} size="sm" variant="outline" isDisabled={pageIndex === 0} onClick={() => setPageIndex((page) => Math.max(0, page - 1))}>{lang.explore.previousPage}</Button>
 									<Text color={bodyColor} fontSize="sm" textAlign="center">{lang.explore.pageCounter.replace("{page}", String(pageIndex + 1)).replace("{pages}", String(Math.ceil(data.total / 30)))}</Text>
-									<Button w={{ base: "full", sm: "auto" }} size="sm" colorScheme="orange" isDisabled={(pageIndex + 1) * 30 >= data.total} onClick={() => setPageIndex((page) => page + 1)}>{lang.explore.nextPage}</Button>
+									<Button w={{ base: "full", sm: "auto" }} size="sm" bg="#ae5d43" color="white" _hover={{ bg: "#92503a", color: "white" }} isDisabled={(pageIndex + 1) * 30 >= data.total} onClick={() => setPageIndex((page) => page + 1)}>{lang.explore.nextPage}</Button>
 								</Flex>}
 							</Box>
 						</Grid>

@@ -25,6 +25,13 @@ The application now targets PostgreSQL. Existing data in a MongoDB Atlas cluster
 
 API routes live under `pages/api`. The catch-all JSON route implements account, listing, save, contact, activity, and admin operations. `/api/blob/upload` authorizes browser-to-Blob uploads for listing photos, house videos, and profile photos. The listing API only accepts Blob URLs owned by the signed-in user. `/api` is a small health endpoint.
 
+## Code map
+
+- `pages` defines URLs and assembles the page interface; `components` contains reusable interface sections.
+- `components/dashboard/forms` keeps the four category-specific listing steps. `ListingPhotos.ts` owns their common photo limits, validation, preview URLs, and cleanup.
+- `libs/server/api.ts` dispatches catch-all requests and handles admin operations. `listingRoutes.ts` handles listing operations, `accountRoutes.ts` handles accounts and provider sign-in, and `serviceRequestRoutes.ts` handles service requests. `apiShared.ts` contains common access checks, and `itemSearch.ts` builds listing search filters.
+- `libs/store/useFilter.ts` holds Explore filter state and creates the request payload. `libs/hooks/useFetch.tsx` handles request loading and stale-response cleanup.
+
 ## Uploaded media
 
 Images and optional home videos upload directly from the browser to Vercel Blob. They are stored independently of the application deployment, so listings keep working across serverless invocations and new deployments. The Vercel Blob store must be connected to the same Vercel project and to each environment where uploads are expected.
@@ -44,3 +51,7 @@ Add the public provider identifiers to your local `.env` and Vercel project envi
 - `NEXT_PUBLIC_APPLE_REDIRECT_URI`: the exact HTTPS return URL registered for that Services ID. Apple web sign-in requires the website domain and return URL to be configured in Apple Developer; localhost is not a supported Apple web return URL.
 
 Apply the new Prisma migration before using either provider. The sign-in buttons stay unavailable until their provider configuration is present. Provider identities are linked by their stable account ID; only verified provider emails are accepted.
+
+## Explore showroom asset
+
+The Explore page uses the Ferrari 458 Italia 3D model by [vicent091036](https://sketchfab.com/models/57bf6cc56931426e87494f554df1dab6), distributed in the [official Three.js car example](https://threejs.org/examples/webgl_materials_car). The model is used under CC BY 4.0. Its paint, glass, lighting, and scene presentation were adapted for Habesha Brokers. The bundled Draco decoder comes from the installed Three.js package; its MIT license is included with the decoder files.

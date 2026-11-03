@@ -12,4 +12,7 @@ module.exports = {
 	images: {
 		formats: ["image/webp"],
 	},
+	async redirects() {
+		return [{ source: "/items", destination: "/explore", permanent: true }];
+	},
 };

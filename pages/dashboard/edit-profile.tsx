@@ -7,7 +7,7 @@ import { PersonalInfoUpdate } from "@components/dashboard/editProfile/ProfileInf
 import { ProfileUpdate } from "@components/dashboard/editProfile/ProfileUpdate";
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 import { withSessionSsr } from "@config/cookie/cookie";
-import { MyTheme } from "@config/theme/MyTheme";
+import { NAVBAR_HEIGHT_COMPACT, PAGE_PADDING } from "@config/layout";
 import Head from "next/head";
 import { useRouter } from "next/router";
 
@@ -44,10 +44,10 @@ export default function EditProfilePage({ user }) {
 				bg={surface}
 				borderBottom="1px solid"
 				borderColor={border}
-				height={MyTheme.size.navbarHeightCompact}
+				height={NAVBAR_HEIGHT_COMPACT}
 				alignItems="center"
 				boxShadow="md"
-				px={MyTheme.paddings.pagePadding}
+				px={PAGE_PADDING}
 				color={textColor}
 			>
 				<IconButton
@@ -68,7 +68,7 @@ export default function EditProfilePage({ user }) {
 				minH="calc(100dvh - 70px)"
 				mx="auto"
 				bg={pageBg}
-				px={MyTheme.paddings.pagePadding}
+				px={PAGE_PADDING}
 				py={{ base: 6, md: 10 }}
 				gap={{ base: 6, lg: 8 }}
 				columns={{ base: 1, lg: 2 }}

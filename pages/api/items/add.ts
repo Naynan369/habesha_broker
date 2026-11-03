@@ -12,7 +12,11 @@ type SessionRequest = NextApiRequest & {
 };
 
 function parseNumber(value: unknown, field: string, optional = false) {
-	if (optional && (value === undefined || value === "")) return undefined;
+	const missing = value === undefined || value === null || (typeof value === "string" && !value.trim());
+	if (missing && optional) return undefined;
+	if (missing || (typeof value !== "string" && typeof value !== "number")) {
+		throw new ListingInputError("Invalid " + field);
+	}
 	const number = Number(value);
 	if (!Number.isFinite(number)) throw new ListingInputError("Invalid " + field);
 	return number;
@@ -34,7 +38,7 @@ function parseFeatures(value: unknown, allowed: string[]) {
 }
 
 function parseOptionalInteger(value: unknown, field: string, minimum = 0) {
-	const number = parseNumber(value || "", field, true);
+	const number = parseNumber(value, field, true);
 	if (number === undefined) return undefined;
 	if (!Number.isInteger(number) || number < minimum) throw new ListingInputError("Invalid " + field);
 	return number;

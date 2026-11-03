@@ -26,18 +26,16 @@ import { InputField } from "@components/dashboard/forms/InputField";
 import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizardProgress";
 import { SellerContactStep, useSellerContact } from "@components/dashboard/forms/SellerContactStep";
 import { SellerTypeField } from "@components/dashboard/forms/SellerTypeField";
+import { MAX_PHOTOS, PHOTO_ACCEPT, photoSchema, useListingPhotos } from "@components/dashboard/forms/ListingPhotos";
 import { useLang } from "@libs/hooks/useLang";
 import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import axios from "axios";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { MdArrowBack, MdArrowForward, MdClose, MdSave } from "react-icons/md";
 import * as yup from "yup";
 
-const MAX_PHOTOS = 10;
-const MAX_PHOTO_SIZE = 8 * 1024 * 1024;
-const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const CATEGORIES = ["BROKER_SUPPORT", "PROPERTY_PHOTOGRAPHY", "MOVING", "CLEANING", "REPAIRS", "PROPERTY_MANAGEMENT"];
 
 export const AddService = ({ user }: { user?: { id: string } }) => {
@@ -52,13 +50,9 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 	const muted = useColorModeValue("gray.600", "gray.400");
 	const panelBorder = useColorModeValue("gray.200", "whiteAlpha.200");
 	const [uploadProgress, setUploadProgress] = useState(0);
-	const [previews, setPreviews] = useState<string[]>([]);
-	const [step, setStep] = useState(0);
+		const [step, setStep] = useState(0);
+	const { previews, photoInputRef, choosePhotos, removePhoto } = useListingPhotos({ required: common.photosRequired, tooMany: common.wizard.maxPhotos, tooLarge: common.photoSizeError, wrongType: common.photoTypeError });
 	const sellerContact = useSellerContact(user?.id || "");
-	const previewsRef = useRef(previews);
-	const photoInputRef = useRef<HTMLInputElement>(null);
-	useEffect(() => { previewsRef.current = previews; }, [previews]);
-	useEffect(() => () => previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview)), []);
 
 	const schema = yup.object().shape({
 		title: yup.string().trim().min(5, "Use at least 5 characters").max(300, "Keep the title under 300 characters").required("A listing title is required"),
@@ -72,9 +66,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 		serviceArea: yup.string().max(240),
 		availability: yup.string().max(240),
 		description: yup.string().max(10000, "Keep the description under 10,000 characters"),
-		files: yup.array().of(yup.mixed()).min(1, common.photosRequired).max(MAX_PHOTOS, common.wizard.maxPhotos)
-			.test("photo-size", common.photoSizeError, (files: File[]) => !files || files.every((file) => file.size <= MAX_PHOTO_SIZE))
-			.test("photo-type", common.photoTypeError, (files: File[]) => !files || files.every((file) => ALLOWED_PHOTO_TYPES.includes(file.type))),
+		files: photoSchema({ required: common.photosRequired, tooMany: common.wizard.maxPhotos, tooLarge: common.photoSizeError, wrongType: common.photoTypeError }),
 	});
 
 	const steps = common.wizard.steps as string[];
@@ -118,42 +110,6 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 			}
 		}
 		setStep((current) => Math.min(current + 1, steps.length - 1));
-	};
-
-	const choosePhotos = (event: ChangeEvent<HTMLInputElement>, formik: any) => {
-		const chosen = Array.from(event.currentTarget.files || []);
-		if (chosen.length > MAX_PHOTOS) {
-			event.currentTarget.value = "";
-			formik.setFieldError("files", common.wizard.maxPhotos);
-			formik.setFieldTouched("files", true, false);
-			return;
-		}
-		if (chosen.some((file) => file.size > MAX_PHOTO_SIZE)) {
-			event.currentTarget.value = "";
-			formik.setFieldError("files", common.photoSizeError);
-			formik.setFieldTouched("files", true, false);
-			return;
-		}
-		if (chosen.some((file) => !ALLOWED_PHOTO_TYPES.includes(file.type))) {
-			event.currentTarget.value = "";
-			formik.setFieldError("files", common.photoTypeError);
-			formik.setFieldTouched("files", true, false);
-			return;
-		}
-		previews.forEach((preview) => URL.revokeObjectURL(preview));
-		setPreviews(chosen.map((file) => URL.createObjectURL(file)));
-		formik.setFieldValue("files", chosen);
-		formik.setFieldTouched("files", true, false);
-	};
-
-	const removePhoto = (index: number, formik: any) => {
-		const nextFiles = formik.values.files.filter((_file: File, fileIndex: number) => fileIndex !== index);
-		const nextPreviews = previews.filter((_preview, previewIndex) => previewIndex !== index);
-		if (previews[index]) URL.revokeObjectURL(previews[index]);
-		setPreviews(nextPreviews);
-		if (photoInputRef.current) photoInputRef.current.value = "";
-		formik.setFieldValue("files", nextFiles);
-		formik.setFieldTouched("files", true, false);
 	};
 
 	return (
@@ -238,7 +194,7 @@ export const AddService = ({ user }: { user?: { id: string } }) => {
 								<Text fontSize="xs" color={muted}>{formik.values.files.length}/{MAX_PHOTOS} {common.wizard.photosCount}</Text>
 							</Flex>
 							<Text color={muted} fontSize="sm" mt="2" mb="3">{common.wizard.photoHelp}</Text>
-								<Input ref={photoInputRef} id="service-photos" type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} onChange={(event) => choosePhotos(event, formik)} />
+								<Input ref={photoInputRef} id="service-photos" type="file" name="files" accept={PHOTO_ACCEPT} multiple variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} onChange={(event) => choosePhotos(event, formik)} />
 							<FormErrorMessage>{String(formik.errors.files || "")}</FormErrorMessage>
 						</FormControl>
 						<Grid templateColumns="repeat(auto-fill, minmax(145px, 1fr))" gap="4">

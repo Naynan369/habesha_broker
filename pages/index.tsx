@@ -46,7 +46,7 @@ export const getServerSideProps = withSessionSsr(async ({ req }) => {
 });
 
 export default function Home({ user, featuredListings }) {
-	const canvas = useColorModeValue("#f5f5f1", "#000000");
+	const canvas = useColorModeValue("#f4efe8", "#000000");
 
 	return (
 		<Box id="pageContainer" minH="100dvh" overflowX="hidden" bg={canvas}>

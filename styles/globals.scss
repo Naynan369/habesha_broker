@@ -98,7 +98,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 #categories .home-card-title,
 #categories .home-card-description,
 #categories .home-card-action,
-#featured-listings .listing-card-featured-badge,
+#featured-listings .listing-card-status,
 #featured-listings .listing-card-title,
 #featured-listings .listing-card-date,
 #featured-listings .listing-card-category,
@@ -115,7 +115,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 #categories .home-card-label,
 #categories .home-card-arrow,
-#featured-listings .listing-card-featured-badge {
+#featured-listings .listing-card-status {
 	transform: translate3d(0, -12px, 0) scale(.92);
 }
 
@@ -124,7 +124,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 #categories .home-category-card.home-motion-visible .home-card-title,
 #categories .home-category-card.home-motion-visible .home-card-description,
 #categories .home-category-card.home-motion-visible .home-card-action,
-#featured-listings .home-featured-card.home-motion-visible .listing-card-featured-badge,
+#featured-listings .home-featured-card.home-motion-visible .listing-card-status,
 #featured-listings .home-featured-card.home-motion-visible .listing-card-title,
 #featured-listings .home-featured-card.home-motion-visible .listing-card-date,
 #featured-listings .home-featured-card.home-motion-visible .listing-card-category,
@@ -137,7 +137,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 #categories .home-card-label,
 #categories .home-card-arrow,
-#featured-listings .listing-card-featured-badge {
+#featured-listings .listing-card-status {
 	transition-delay: calc(var(--home-stagger-delay, 0ms) + 280ms);
 }
 
@@ -294,7 +294,7 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 	filter: saturate(1) brightness(1);
 }
 
-#explore-listings .explore-listing-card .listing-card-featured-badge,
+#explore-listings .explore-listing-card .listing-card-status,
 #explore-listings .explore-listing-card .listing-card-title,
 #explore-listings .explore-listing-card .listing-card-date,
 #explore-listings .explore-listing-card .listing-card-category,
@@ -306,7 +306,7 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 		filter 780ms cubic-bezier(.22,1,.36,1);
 }
 
-html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-visible) .listing-card-featured-badge,
+html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-visible) .listing-card-status,
 html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-visible) .listing-card-title,
 html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-visible) .listing-card-date,
 html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-visible) .listing-card-category,
@@ -317,11 +317,11 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 	filter: blur(5px);
 }
 
-#explore-listings .explore-listing-card .listing-card-featured-badge {
+#explore-listings .explore-listing-card .listing-card-status {
 	transition-delay: calc(var(--home-stagger-delay, 0ms) + 360ms);
 }
 
-html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-visible) .listing-card-featured-badge {
+html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-visible) .listing-card-status {
 	transform: translate3d(0, -10px, 0) scale(.94);
 }
 
@@ -339,7 +339,7 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 	transition-delay: calc(var(--home-stagger-delay, 0ms) + 760ms);
 }
 
-#explore-listings .explore-listing-card.home-motion-visible .listing-card-featured-badge,
+#explore-listings .explore-listing-card.home-motion-visible .listing-card-status,
 #explore-listings .explore-listing-card.home-motion-visible .listing-card-title,
 #explore-listings .explore-listing-card.home-motion-visible .listing-card-date,
 #explore-listings .explore-listing-card.home-motion-visible .listing-card-category,
@@ -420,7 +420,7 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 	#categories .home-card-title,
 	#categories .home-card-description,
 	#categories .home-card-action,
-	#featured-listings .listing-card-featured-badge,
+	#featured-listings .listing-card-status,
 	#featured-listings .listing-card-title,
 	#featured-listings .listing-card-date,
 	#featured-listings .listing-card-category,
@@ -447,7 +447,7 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 	#explore-category-cards .explore-category-description,
 	#explore-listings .explore-listing-card,
 	#explore-listings .explore-listing-card .listing-card-media,
-	#explore-listings .explore-listing-card .listing-card-featured-badge,
+	#explore-listings .explore-listing-card .listing-card-status,
 	#explore-listings .explore-listing-card .listing-card-title,
 	#explore-listings .explore-listing-card .listing-card-date,
 	#explore-listings .explore-listing-card .listing-card-category,
@@ -475,7 +475,7 @@ html.home-motion-ready #explore-listings .explore-listing-card:not(.home-motion-
 	#categories .home-card-title,
 	#categories .home-card-description,
 	#categories .home-card-action,
-	#featured-listings .listing-card-featured-badge,
+	#featured-listings .listing-card-status,
 	#featured-listings .listing-card-title,
 	#featured-listings .listing-card-date,
 	#featured-listings .listing-card-category,

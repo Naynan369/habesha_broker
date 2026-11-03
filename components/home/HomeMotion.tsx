@@ -12,6 +12,11 @@ export const HomeMotionSystem = ({ showProgress = true }: { showProgress?: boole
 		const selector = "[data-home-reveal], [data-home-stagger]";
 		const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 		const registeredTargets = new WeakSet<HTMLElement>();
+		const revealedTargets = new WeakSet<HTMLElement>();
+		const markVisible = (target: HTMLElement) => {
+			revealedTargets.add(target);
+			target.classList.add("home-motion-visible");
+		};
 		const updateProgress = () => {
 			if (!showProgress) return;
 			if (frame) window.cancelAnimationFrame(frame);
@@ -26,7 +31,7 @@ export const HomeMotionSystem = ({ showProgress = true }: { showProgress?: boole
 			observer = new IntersectionObserver((entries) => {
 				entries.forEach((entry) => {
 					if (!entry.isIntersecting) return;
-					entry.target.classList.add("home-motion-visible");
+					markVisible(entry.target as HTMLElement);
 					observer?.unobserve(entry.target);
 				});
 			}, { threshold: 0.12, rootMargin: "0px 0px -5% 0px" });
@@ -37,7 +42,7 @@ export const HomeMotionSystem = ({ showProgress = true }: { showProgress?: boole
 			const bounds = target.getBoundingClientRect();
 			const alreadyVisible = bounds.top < window.innerHeight * 0.92 && bounds.bottom > 0;
 			if (alreadyVisible || reducedMotion || !observer) {
-				target.classList.add("home-motion-visible");
+				markVisible(target);
 				return;
 			}
 			registeredTargets.add(target);
@@ -53,9 +58,15 @@ export const HomeMotionSystem = ({ showProgress = true }: { showProgress?: boole
 		document.querySelectorAll<HTMLElement>(selector).forEach(registerTarget);
 		if ("MutationObserver" in window) {
 			mutationObserver = new MutationObserver((mutations) => {
-				mutations.forEach((mutation) => mutation.addedNodes.forEach(registerNode));
+				mutations.forEach((mutation) => {
+					if (mutation.type === "childList") mutation.addedNodes.forEach(registerNode);
+					if (mutation.type === "attributes" && mutation.target instanceof HTMLElement) {
+						const target = mutation.target;
+						if (revealedTargets.has(target) && !target.classList.contains("home-motion-visible")) markVisible(target);
+					}
+				});
 			});
-			mutationObserver.observe(document.documentElement, { childList: true, subtree: true });
+			mutationObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
 		}
 
 		document.documentElement.classList.add("home-motion-ready");

@@ -21,9 +21,9 @@ interface FeaturedListing {
 export const FeaturedListings = ({ items = [] }: { items?: FeaturedListing[] }) => {
 	const lang = useLang();
 	const copy = lang.home;
-	const background = useColorModeValue("#f5f5f1", "#050505");
-	const heading = useColorModeValue("#143a45", "#edf2f2");
-	const muted = useColorModeValue("gray.600", "gray.400");
+	const background = useColorModeValue("#f4efe8", "#000000");
+	const heading = useColorModeValue("#292725", "#f5f0ea");
+	const muted = useColorModeValue("#655e58", "gray.400");
 	const moveCard = (event: ReactPointerEvent<HTMLDivElement>) => {
 		if (event.pointerType !== "mouse") return;
 		const bounds = event.currentTarget.getBoundingClientRect();

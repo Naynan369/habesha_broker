@@ -40,12 +40,12 @@ import {
 	useDisclosure,
 	useColorModeValue,
 } from "@chakra-ui/react";
-import { ContactInfo } from "@components/ContactInfo";
+import { ContactInfo } from "@components/shared/ContactInfo";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { getListingPaymentConfig, LISTING_CURRENCY, LISTING_FEE } from "@config/listingPayment";
 import { useListingCheckout } from "@libs/hooks/useListingCheckout";
 import { dayjs } from "@config/dayjs";
-import { MyTheme } from "@config/theme/MyTheme";
+import { PAGE_PADDING } from "@config/layout";
 import { prisma } from "@config/prisma";
 import axios from "axios";
 import Link from "next/link";
@@ -380,7 +380,6 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, serviceRat
 			return { key, label, value: displayValue };
 		});
 	const statusLabels: Record<string, string> = {
-		APPROVED: listingText.approved,
 		PENDING: listingText.pending,
 		DECLINED: listingText.declined,
 		SOLD: listingText.sold,
@@ -495,7 +494,7 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, serviceRat
 											{isAvailableRental && <Badge colorScheme="green" variant="solid" borderRadius="full" px="3" py="1.5">{listingText.available}</Badge>}
 							{data.sellerType && sellerTypeText.options[data.sellerType] && <Badge colorScheme="purple" variant="subtle" borderRadius="full" px="3" py="1.5">{detailText.sellerTypeLabel}: {sellerTypeText.options[data.sellerType]}</Badge>}
 											{data.featured && <Badge colorScheme="orange" variant="subtle" borderRadius="full" px="3" py="1.5">{detailText.featured}</Badge>}
-											{data.status && <Badge colorScheme={data.status === "APPROVED" ? "green" : data.status === "DECLINED" ? "red" : data.status === "SOLD" || data.status === "RENTED" ? "purple" : data.status === "CLOSED" ? "gray" : "orange"} borderRadius="full" px="3" py="1.5">{statusLabels[data.status] || data.status}</Badge>}
+											{data.status && data.status !== "APPROVED" && <Badge colorScheme={data.status === "DECLINED" ? "red" : data.status === "SOLD" || data.status === "RENTED" ? "purple" : data.status === "CLOSED" ? "gray" : "orange"} borderRadius="full" px="3" py="1.5">{statusLabels[data.status] || data.status}</Badge>}
 										</Flex>
 										<Box minW="0">
 											<Heading as="h1" color={headingText} fontSize={{ base: "2xl", md: "3xl" }} lineHeight="1.12" letterSpacing="-.04em" wordBreak="break-word">{data.title}</Heading>
@@ -517,11 +516,6 @@ const ItemDetail = ({ itemId, user, item, paymentFee, paymentEnabled, serviceRat
 									</Flex>
 								</Box></Box>
 	</Grid>
-	{data.status === "APPROVED" && <Alert status="info" borderRadius="2xl" alignItems="flex-start" bg={elevatedSurface} color={mutedText} border="1px solid" borderColor={subtleBorder}>
-		<AlertIcon />
-		<Box minW="0"><AlertDescription>{detailText.marketplaceNotice}</AlertDescription><Link legacyBehavior href="/policies" passHref><Text as="a" display="inline-block" mt="2" color={headingText} fontWeight="bold" textDecoration="underline">{lang.policies.heading}</Text></Link></Box>
-	</Alert>}
-
 	<Grid
 		w="full"
 		templateColumns={{ base: "minmax(0, 1fr)", lg: "minmax(0, 1.2fr) minmax(340px, .8fr)" }}
@@ -656,7 +650,7 @@ export const ItemDetailLoading = () => {
 	return (
 		<SimpleGrid
 			columns={[1, null, 2]}
-			px={MyTheme.paddings.pagePadding}
+			px={PAGE_PADDING}
 			py="10"
 			spacing={"16"}
 		>
@@ -745,7 +739,7 @@ export const ItemDetailLoading = () => {
 
 export const ItemDetailErrorMessage = () => {
 	return (
-		<Flex px={MyTheme.paddings.pagePadding} py="10">
+		<Flex px={PAGE_PADDING} py="10">
 			<Alert
 				borderRadius="md"
 				flexDirection={"column"}

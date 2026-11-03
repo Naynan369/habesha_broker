@@ -23,8 +23,8 @@ export const ServicesSection = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
 	const cards = lang.home.service_cards;
-	const sectionBackground = useColorModeValue("maingray", "#000000");
-	const imageFallback = useColorModeValue("#29464b", "#0c0c0c");
+	const sectionBackground = useColorModeValue("#282427", "#000000");
+	const imageFallback = useColorModeValue("#3a3432", "#0c0c0c");
 
 	const renderCards = (isDuplicate: boolean) => cards.map((card, index) => {
 		const photo = servicePhotos[index];
@@ -76,7 +76,7 @@ export const ServicesSection = () => {
 						loading="lazy"
 						transition="transform 700ms cubic-bezier(.2,.7,.2,1)"
 					/>
-					<Box position="absolute" inset="0" pointerEvents="none" bgGradient="linear(to-t, rgba(14,35,38,.34), transparent 72%)" />
+					<Box position="absolute" inset="0" pointerEvents="none" bgGradient="linear(to-t, rgba(23,19,20,.34), transparent 72%)" />
 				</Box>
 				<Heading as="h3" noOfLines={2} textAlign="center" w="full" mt="3" color="white" fontSize={{ base: "xs", sm: "sm" }} fontWeight="semibold" lineHeight="1.3" letterSpacing="-.01em">
 						{card.title}

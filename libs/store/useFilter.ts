@@ -85,24 +85,21 @@ const useFilter = create<FilterState>((set) => ({
 }));
 
 export const organizeFilters = (filter: FilterState) => {
-	const filterCopy: any = { ...filter };
-	const relations = ["House", "Car", "BusinessSpace", "Service"];
-	const selectedRelation = filterCopy.itemType === "HOUSE"
+	const selectedRelation = filter.itemType === "HOUSE"
 		? "House"
-		: filterCopy.itemType === "CAR"
+		: filter.itemType === "CAR"
 			? "Car"
-			: filterCopy.itemType === "BUSINESS_SPACE"
+			: filter.itemType === "BUSINESS_SPACE"
 				? "BusinessSpace"
-				: filterCopy.itemType === "SERVICE"
+				: filter.itemType === "SERVICE"
 					? "Service"
 					: undefined;
-
-	for (const relation of relations) {
-		if (relation !== selectedRelation) delete filterCopy[relation];
-	}
-
-	const newFilter = Object.fromEntries(Object.entries(filterCopy).filter(([, value]) => value != null));
-	return JSON.parse(JSON.stringify(newFilter));
+	const payload: Record<string, unknown> = { status: filter.status };
+	if (filter.itemType) payload.itemType = filter.itemType;
+	if (filter.price) payload.price = filter.price;
+	if (filter.priceType) payload.priceType = filter.priceType;
+	if (selectedRelation && filter[selectedRelation]) payload[selectedRelation] = filter[selectedRelation];
+	return payload;
 };
 
 export default useFilter;

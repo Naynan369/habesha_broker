@@ -28,12 +28,13 @@ import { ListingWizardProgress } from "@components/dashboard/forms/ListingWizard
 import { InputField } from "@components/dashboard/forms/InputField";
 import { SellerContactStep, useSellerContact } from "@components/dashboard/forms/SellerContactStep";
 import { SellerTypeField } from "@components/dashboard/forms/SellerTypeField";
+import { MAX_PHOTOS, PHOTO_ACCEPT, photoSchema, useListingPhotos } from "@components/dashboard/forms/ListingPhotos";
 import { useLang } from "@libs/hooks/useLang";
 import { uploadMediaFiles } from "@libs/helpers/uploadMedia.client";
 import axios from "axios";
 import { Formik } from "formik";
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { MdArrowBack, MdArrowForward, MdClose, MdSave } from "react-icons/md";
 import * as yup from "yup";
 
@@ -41,21 +42,20 @@ const CAR_FEATURES = [
 	"AIR_CONDITIONING", "AIRBAGS", "ABS", "REAR_CAMERA", "PARKING_SENSORS", "SUNROOF",
 	"ALLOY_WHEELS", "CRUISE_CONTROL", "POWER_WINDOWS", "POWER_STEERING", "BLUETOOTH", "SPARE_TIRE",
 ];
-const MAX_PHOTO_SIZE = 8 * 1024 * 1024;
 
 const optionalNumber = () => yup.number()
 	.transform((value, originalValue) => originalValue === "" || originalValue == null ? undefined : value)
 	.nullable()
 	.notRequired();
 
-const CarSchema = yup.object().shape({
+const createCarSchema = (copy: ReturnType<typeof useLang>["businessListing"]) => yup.object().shape({
 	title: yup.string().trim().min(5, "Use at least 5 characters").max(300, "Keep the title under 300 characters").required("A listing title is required"),
 	sellerType: yup.string().oneOf(["OWNER", "DEALER_RETAILER", "BROKER"]).required("Choose your role for this listing"),
 	sellerAttested: yup.boolean().oneOf([true], "Confirm that you are authorized to post this listing"),
 	description: yup.string().max(10000, "Keep the description under 10,000 characters"),
 	price: yup.number().typeError("Enter a valid price").min(1, "Price must be greater than zero").required("A price is required"),
 	priceType: yup.string().oneOf(["FIXED", "NEGOTIABLE"]).required("Choose a price type"),
-	files: yup.array().of(yup.mixed()).min(1, "Add at least one photo before submitting").max(10, "You can add up to 10 photos").test("photo-size", "Each photo must be 8 MB or smaller", (files: any[]) => !files || files.every((file) => file.size <= MAX_PHOTO_SIZE)),
+	files: photoSchema({ required: copy.photosRequired, tooMany: copy.wizard.maxPhotos, tooLarge: copy.photoSizeError, wrongType: copy.photoTypeError }),
 	status: yup.string().oneOf(["USED", "NEW", "NEW_ETH"]).required("Choose the vehicle condition"),
 	manufacturer: yup.string().trim().max(100).required("Manufacturer is required"),
 	model: yup.string().trim().max(100).required("Model is required"),
@@ -91,13 +91,9 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 	const panelBg = useColorModeValue("gray.50", "whiteAlpha.50");
 	const panelBorder = useColorModeValue("gray.200", "whiteAlpha.200");
 	const [uploadProgress, setUploadProgress] = useState(0);
-	const [previews, setPreviews] = useState<string[]>([]);
-	const [step, setStep] = useState(0);
+		const [step, setStep] = useState(0);
+	const { previews, photoInputRef, choosePhotos, removePhoto } = useListingPhotos({ required: common.photosRequired, tooMany: common.wizard.maxPhotos, tooLarge: common.photoSizeError, wrongType: common.photoTypeError });
 	const sellerContact = useSellerContact(user?.id || "");
-	const previewsRef = useRef(previews);
-	const photoInputRef = useRef<HTMLInputElement>(null);
-	useEffect(() => { previewsRef.current = previews; }, [previews]);
-	useEffect(() => () => previewsRef.current.forEach((preview) => URL.revokeObjectURL(preview)), []);
 
 	const steps = common.wizard.steps as string[];
 	const hints = common.wizard.hints as string[];
@@ -143,43 +139,13 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 		setStep((current) => Math.min(current + 1, steps.length - 1));
 	};
 
-	const choosePhotos = (event: ChangeEvent<HTMLInputElement>, formik: any) => {
-		const chosen = Array.from(event.currentTarget.files || []);
-		if (chosen.some((file) => file.size > MAX_PHOTO_SIZE)) {
-			event.currentTarget.value = "";
-			formik.setFieldError("files", "Each photo must be 8 MB or smaller");
-			formik.setFieldTouched("files", true, false);
-			return;
-		}
-		if (chosen.length > 10) {
-			event.currentTarget.value = "";
-			formik.setFieldError("files", common.wizard.maxPhotos);
-			formik.setFieldTouched("files", true, false);
-			return;
-		}
-		previews.forEach((preview) => URL.revokeObjectURL(preview));
-		const files = chosen.slice(0, 10);
-		setPreviews(files.map((file) => URL.createObjectURL(file)));
-		formik.setFieldValue("files", files);
-		formik.setFieldTouched("files", true, false);
-	};
-
-	const removePhoto = (index: number, formik: any) => {
-		const nextFiles = formik.values.files.filter((_file: File, fileIndex: number) => fileIndex !== index);
-		const nextPreviews = previews.filter((_preview, previewIndex) => previewIndex !== index);
-		if (previews[index]) URL.revokeObjectURL(previews[index]);
-		setPreviews(nextPreviews);
-		if (photoInputRef.current) photoInputRef.current.value = "";
-		formik.setFieldValue("files", nextFiles);
-	};
-
 	return (
 		<Formik initialValues={{
 			title: "", sellerType: "", sellerAttested: false, description: "", price: "", priceType: "FIXED", itemType: "CAR", files: [],
 			model: "", status: "USED", manufacturer: "", year: "", transmition: "AUTO", color: "",
 			cylinder: "", fuel: "", fuelType: "", bodyType: "", driveType: "", mileage: "", seats: "", doors: "",
 			region: "", city: "", subcity: "", neighborhood: "", landmark: "", features: [],
-		}} validationSchema={CarSchema} onSubmit={onSubmit} validateOnBlur>
+		}} validationSchema={createCarSchema(common)} onSubmit={onSubmit} validateOnBlur>
 			{(formik) => (
 				<form className="dashboard-listing-form" onSubmit={formik.handleSubmit}>
 					<Modal closeOnOverlayClick={false} closeOnEsc={false} onClose={() => {}} isOpen={formik.isSubmitting}>
@@ -272,10 +238,10 @@ export const AddCar = ({ user }: { user?: { id: string } }) => {
 						<FormControl isRequired isInvalid={Boolean(formik.touched.files && formik.errors.files)}>
 							<Flex align="center" justify="space-between" gap="3" wrap="wrap">
 								<FormLabel htmlFor="car-photos" mb="0">{common.photos}</FormLabel>
-								<Text fontSize="xs" color={muted}>{formik.values.files.length}/10 {common.wizard.photosCount}</Text>
+								<Text fontSize="xs" color={muted}>{formik.values.files.length}/{MAX_PHOTOS} {common.wizard.photosCount}</Text>
 							</Flex>
 							<Text color={muted} fontSize="sm" mt="2" mb="3">{common.wizard.photoHelp}</Text>
-								<Input ref={photoInputRef} id="car-photos" onChange={(event) => choosePhotos(event, formik)} variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} type="file" name="files" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+								<Input ref={photoInputRef} id="car-photos" onChange={(event) => choosePhotos(event, formik)} variant="filled" h="auto" minH="12" py="2" sx={{ "&::file-selector-button": { mr: 3, px: 3, py: 2, border: 0, borderRadius: "md", bg: uploadButtonBg, color: uploadButtonText, fontWeight: 600, cursor: "pointer" } }} type="file" name="files" accept={PHOTO_ACCEPT} multiple />
 							<FormErrorMessage>{String(formik.errors.files || "")}</FormErrorMessage>
 						</FormControl>
 						<Grid templateColumns="repeat(auto-fill, minmax(145px, 1fr))" gap="4">

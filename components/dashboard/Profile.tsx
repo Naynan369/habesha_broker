@@ -7,7 +7,7 @@ import {
 	Text,
 	useColorModeValue,
 } from "@chakra-ui/react";
-import { ContactInfo } from "@components/ContactInfo";
+import { ContactInfo } from "@components/shared/ContactInfo";
 import { IUser } from "@libs/types/user";
 import { FC } from "react";
 import { useLang } from "@libs/hooks/useLang";

@@ -21,7 +21,7 @@ import { getSellerTypeOptions } from "@components/dashboard/forms/SellerTypeFiel
 import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 import { ListingImage } from "@components/shared/ListingImage";
 import { withSessionSsr } from "@config/cookie/cookie";
-import { MyTheme } from "@config/theme/MyTheme";
+import { NAVBAR_HEIGHT_COMPACT } from "@config/layout";
 import { prisma } from "@config/prisma";
 import { useLang } from "@libs/hooks/useLang";
 import { getMediaUrl } from "@libs/helpers/media";
@@ -304,8 +304,8 @@ export default function EditItemPage({ item, sellerPhone = "" }) {
 		</>
 	);
 
-	const statusTone = item.status === "DECLINED" ? "error" : item.status === "APPROVED" ? "success" : item.status === "RENTED" || item.status === "SOLD" ? "info" : item.status === "CLOSED" ? "info" : "warning";
-	const statusColor = item.status === "APPROVED" ? "green" : item.status === "DECLINED" ? "red" : item.status === "RENTED" || item.status === "SOLD" ? "purple" : item.status === "CLOSED" ? "gray" : "orange";
+	const statusTone = item.status === "DECLINED" ? "error" : item.status === "APPROVED" ? "info" : item.status === "RENTED" || item.status === "SOLD" ? "info" : item.status === "CLOSED" ? "info" : "warning";
+	const statusColor = item.status === "DECLINED" ? "red" : item.status === "RENTED" || item.status === "SOLD" ? "purple" : item.status === "CLOSED" ? "gray" : "orange";
 	const statusCopy = item.status === "APPROVED"
 		? "This listing is public. Saving any change sends it back for admin review."
 		: item.status === "DECLINED"
@@ -322,7 +322,7 @@ export default function EditItemPage({ item, sellerPhone = "" }) {
 		<>
 			<Head><title>Edit listing - Habesha Brokers</title></Head>
 			<Flex direction="column" minH="100dvh" bg={pageBg}>
-				<Flex bg={surface} borderBottom="1px solid" borderColor={border} minH={MyTheme.size.navbarHeightCompact} alignItems="center" px={{ base: 4, sm: 6, md: 8 }} gap="3">
+				<Flex bg={surface} borderBottom="1px solid" borderColor={border} minH={NAVBAR_HEIGHT_COMPACT} alignItems="center" px={{ base: 4, sm: 6, md: 8 }} gap="3">
 					<Button variant="outline" onClick={() => router.push(`/items/${item.id}`)}>Back to listing</Button>
 					<Heading size="md" display={{ base: "none", sm: "block" }}>Edit listing</Heading>
 					<Box flex="1" />
@@ -336,7 +336,7 @@ export default function EditItemPage({ item, sellerPhone = "" }) {
 							<Heading mt="3" size="lg">Update your listing</Heading>
 							<Text mt="2" color={muted}>Make your changes, then save once when you are ready.</Text>
 						</Box>
-						<Badge colorScheme={statusColor} px="3" py="2" borderRadius="full">{item.status}</Badge>
+						{item.status !== "APPROVED" && <Badge colorScheme={statusColor} px="3" py="2" borderRadius="full">{item.status}</Badge>}
 					</Flex>
 
 					<Alert status={statusTone} borderRadius="xl" mb="6" alignItems="flex-start">

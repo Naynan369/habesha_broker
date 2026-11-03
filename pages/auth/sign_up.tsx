@@ -1,5 +1,5 @@
 import { Box, Heading, Text, useColorModeValue } from "@chakra-ui/react";
-import { SignUpForm } from "@components/auth/SignUpForm";
+import { SignUpForm } from "@components/auth/AuthForms";
 import { AuthPageLayout } from "@components/auth/AuthPageLayout";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { useLang } from "@libs/hooks/useLang";

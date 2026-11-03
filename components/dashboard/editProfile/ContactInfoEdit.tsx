@@ -13,7 +13,7 @@ import {
 	Text,
 	useColorModeValue,
 } from "@chakra-ui/react";
-import { CONTACTTYPE } from "@components/ContactInfo";
+import { CONTACTTYPE } from "@components/shared/ContactInfo";
 import { useFetch } from "@libs/hooks/useFetch";
 import axios from "axios";
 import { useState } from "react";

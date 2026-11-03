@@ -1,23 +1,20 @@
 import {
 	Box,
 	Flex,
+	Grid,
 	Heading,
 	Button,
 	Container,
 	IconButton,
 	Input,
-	Menu,
-	MenuButton,
-	MenuItem,
-	MenuList,
-	Stack,
+	Select,
 	Text,
 	useColorModeValue,
 } from "@chakra-ui/react";
-import { MyTheme } from "@config/theme/MyTheme";
+import { NAVBAR_HEIGHT_COMPACT } from "@config/layout";
 import { Dispatch, SetStateAction, useState } from "react";
-import { MdAdd, MdArrowDownward, MdSearch } from "react-icons/md";
-import { ItemList } from "@components/dashboard/itemList/itemList";
+import { MdAdd, MdSearch } from "react-icons/md";
+import { ItemList } from "@components/dashboard/Listings";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { getListingPaymentConfig, LISTING_FEE } from "@config/listingPayment";
 import { useRouter } from "next/router";
@@ -52,9 +49,7 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 	const [search, setSearch] = useState("");
 	const [keyword, setKeyword] = useState("");
 	const [filters, setFilters] = useState(["HOUSE", "CAR", "BUSINESS_SPACE", "SERVICE"]);
-	const [orderBy, setOrderBy] = useState({
-		createdAt: "desc",
-	} as any);
+	const [orderBy, setOrderBy] = useState<{ title?: "asc" | "desc"; createdAt?: "asc" | "desc" }>({ createdAt: "desc" });
 	const router = useRouter();
 	const pageBg = useColorModeValue("#f4f5f2", "#050707");
 	const surface = useColorModeValue("#ffffff", "#101415");
@@ -62,11 +57,9 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 	const headingColor = useColorModeValue("#20383d", "#eef2f1");
 	const muted = useColorModeValue("#637278", "#a5b1b4");
 	const controlBg = useColorModeValue("#f7f8f6", "#090c0d");
-	const sortLabel = orderBy.title === "asc"
-		? text.titleAsc
-		: orderBy.title === "desc"
-			? text.titleDesc
-			: orderBy.createdAt === "asc" ? text.oldest : text.newest;
+	const sortValue = orderBy.title === "asc" ? "title-asc"
+		: orderBy.title === "desc" ? "title-desc"
+		: orderBy.createdAt === "asc" ? "oldest" : "newest";
 
 
 	return (
@@ -80,7 +73,7 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 					top="0"
 					zIndex="20"
 					alignItems="center"
-					minH={MyTheme.size.navbarHeightCompact}
+					minH={NAVBAR_HEIGHT_COMPACT}
 					px={{ base: 4, md: 8, xl: 12 }}
 					background="#102f37"
 					color={"white"}
@@ -145,31 +138,29 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 							</Button>
 						</Flex>
 
-						<Flex align="flex-start" justify="space-between" gap="5" mt={{ base: 5, md: 7 }} pt={{ base: 5, md: 6 }} borderTop="1px solid" borderColor={border} direction={{ base: "column", lg: "row" }}>
-							<Flex direction="column" flex="1" minW="0">
+						<Grid templateColumns={{ base: "minmax(0, 1fr)", lg: "minmax(0, 1fr) 220px" }} gap={{ base: 5, lg: 8 }} mt={{ base: 5, md: 7 }} pt={{ base: 5, md: 6 }} borderTop="1px solid" borderColor={border} alignItems="start">
+							<Box minW="0">
 								<Text mb="3" fontSize="xs" color={muted} fontWeight="bold" letterSpacing=".12em" textTransform="uppercase">{text.filterTitle}</Text>
-								<Stack direction="row" wrap="wrap" spacing="2">
+								<Flex wrap="wrap" gap="2">
 									<FilterButton setFilters={setFilters} filters={filters} value="HOUSE" text={text} />
 									<FilterButton setFilters={setFilters} filters={filters} value="CAR" text={text} />
 									<FilterButton setFilters={setFilters} filters={filters} value="BUSINESS_SPACE" text={text} />
 									<FilterButton setFilters={setFilters} filters={filters} value="SERVICE" text={text} />
-								</Stack>
-							</Flex>
-							<Flex direction="column" align={{ base: "stretch", lg: "flex-end" }} w={{ base: "full", lg: "auto" }}>
-								<Text mb="3" fontSize="xs" color={muted} fontWeight="bold" letterSpacing=".12em" textTransform="uppercase">{text.sortTitle}</Text>
-								<Menu>
-									<MenuButton as={Button} w={{ base: "full", lg: "auto" }} size="sm" h="11" px="4" rightIcon={<MdArrowDownward />} variant="outline" borderRadius="xl" borderColor={border} bg={controlBg}>
-										{sortLabel}
-									</MenuButton>
-									<MenuList borderRadius="xl" boxShadow="xl" borderColor={border} bg={surface}>
-										<MenuItem onClick={() => setOrderBy({ title: "asc" })}>{text.titleAsc}</MenuItem>
-										<MenuItem onClick={() => setOrderBy({ title: "desc" })}>{text.titleDesc}</MenuItem>
-										<MenuItem onClick={() => setOrderBy({ createdAt: "desc" })}>{text.newest}</MenuItem>
-										<MenuItem onClick={() => setOrderBy({ createdAt: "asc" })}>{text.oldest}</MenuItem>
-									</MenuList>
-								</Menu>
-							</Flex>
-						</Flex>
+								</Flex>
+							</Box>
+							<Box minW="0">
+								<Text as="label" htmlFor="listing-sort" display="block" mb="3" fontSize="xs" color={muted} fontWeight="bold" letterSpacing=".12em" textTransform="uppercase">{text.sortTitle}</Text>
+								<Select id="listing-sort" value={sortValue} h="11" minH="44px" w="full" px="2" borderRadius="xl" borderColor={border} bg={controlBg} color={headingColor} fontSize="sm" fontWeight="semibold" _hover={{ borderColor: "mainorange" }} _focusVisible={{ borderColor: "mainorange", boxShadow: "0 0 0 1px #C66B36" }} onChange={(event) => {
+									const value = event.target.value;
+									setOrderBy(value === "title-asc" ? { title: "asc" } : value === "title-desc" ? { title: "desc" } : value === "oldest" ? { createdAt: "asc" } : { createdAt: "desc" });
+								}}>
+									<option value="newest">{text.newest}</option>
+									<option value="oldest">{text.oldest}</option>
+									<option value="title-asc">{text.titleAsc}</option>
+									<option value="title-desc">{text.titleDesc}</option>
+								</Select>
+							</Box>
+						</Grid>
 					</Flex>
 
 					<Flex className="dashboard-listings-panel" mt={{ base: 5, md: 7 }} p={{ base: 4, md: 6, xl: 7 }} bg={surface} border="1px solid" borderColor={border} borderRadius={{ base: "2xl", md: "3xl" }} boxShadow="0 16px 40px rgba(21,42,44,.06)" direction="column">

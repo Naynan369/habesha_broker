@@ -13,12 +13,12 @@ const SHOW_SERVICE_CATEGORY_CARD = true;
 export const CategoriesSection = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
-	const sectionBg = useColorModeValue("#f3f2ed", "#000000");
-	const titleColor = useColorModeValue("#20383d", "#e7eff0");
-	const bodyColor = useColorModeValue("gray.600", "gray.300");
+	const sectionBg = useColorModeValue("#f9f5ef", "#000000");
+	const titleColor = useColorModeValue("#292725", "#f5f0ea");
+	const bodyColor = useColorModeValue("#655e58", "gray.300");
 	const surface = useColorModeValue("white", "#111111");
-	const border = useColorModeValue("gray.200", "whiteAlpha.200");
-	const kickerColor = useColorModeValue("#a84c3d", "#e6a17c");
+	const border = useColorModeValue("#ded5cb", "whiteAlpha.200");
+	const kickerColor = useColorModeValue("#a65d45", "#e6a17c");
 
 	return (
 		<Box id="categories" as="section" scrollMarginTop="96px" bg={sectionBg} px={{ base: 5, md: 10, xl: 14 }} py={{ base: 14, md: 20 }}>
@@ -36,7 +36,7 @@ export const CategoriesSection = () => {
 						</Text>
 					</Box>
 					<Flex align="center" gap="3" bg={surface} border="1px solid" borderColor={border} borderRadius="full" px="4" py="2.5" color={bodyColor} fontSize="sm" fontWeight="medium" boxShadow="0 5px 18px rgba(27,47,48,.05)">
-						<Box w="2" h="2" borderRadius="full" bg="#bd6748" />
+						<Box w="2" h="2" borderRadius="full" bg="#b66b4d" />
 						{lang.home.category_hint}
 					</Flex>
 				</Flex>
@@ -54,7 +54,7 @@ export const CategoriesSection = () => {
 
 const Category = ({ title, categoryLabel, image, description, action, href, motionDelay = 0 }) => {
 	const router = useRouter();
-	const imageFallback = useColorModeValue("#183238", "#0a0a0a");
+	const imageFallback = useColorModeValue("#2a2727", "#0a0a0a");
 	const handleSelect = () => void router.push(href);
 	const moveSpotlight = (event: ReactPointerEvent<HTMLButtonElement>) => {
 		if (event.pointerType !== "mouse") return;
@@ -120,7 +120,7 @@ const Category = ({ title, categoryLabel, image, description, action, href, moti
 					_groupHover={{ transform: "scale(1.045)" }}
 				/>
 			</Box>
-			<Box className="home-card-scrim" position="absolute" inset="0" bgGradient="linear(to-t, rgba(8,25,29,.96) 0%, rgba(8,25,29,.65) 43%, rgba(8,25,29,.12) 100%)" />
+			<Box className="home-card-scrim" position="absolute" inset="0" bgGradient="linear(to-t, rgba(25,22,21,.96) 0%, rgba(25,22,21,.65) 43%, rgba(25,22,21,.12) 100%)" />
 			<Box position="absolute" inset="0" zIndex="1" pointerEvents="none" opacity="0" transition="opacity 180ms ease" background="radial-gradient(420px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(255,255,255,.22), transparent 48%)" _groupHover={{ opacity: 0.82 }} />
 			<Flex position="relative" zIndex="2" direction="column" justify="space-between" align="stretch" w="full" minH={{ base: "300px", md: "340px" }} p={{ base: 5, md: 6 }}>
 				<Flex align="center" justify="space-between" gap="3">

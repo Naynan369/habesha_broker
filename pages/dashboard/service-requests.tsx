@@ -107,7 +107,6 @@ export default function ServiceRequestsPage({ user }: { user: { id: string } }) 
 	const statusLabel: Record<string, string> = { NEW: text.statusNew, QUOTED: text.statusQuoted, ACCEPTED: text.statusAccepted, SCHEDULED: text.statusScheduled, DECLINED: text.statusDeclined, COMPLETED: text.statusCompleted, CANCELLED: text.statusCancelled };
 	const listingStatus: Record<string, { label: string; color: string }> = {
 		PENDING: { label: listingText.pending, color: "yellow" },
-		APPROVED: { label: listingText.approved, color: "green" },
 		DECLINED: { label: listingText.declined, color: "red" },
 		SOLD: { label: listingText.sold, color: "gray" },
 		CLOSED: { label: listingText.closed, color: "gray" },
@@ -142,7 +141,7 @@ export default function ServiceRequestsPage({ user }: { user: { id: string } }) 
 							const category = service?.category ? serviceText.categories[service.category] || text.unknownCategory : text.unknownCategory;
 							const location = [service?.city, service?.region].filter(Boolean).join(", ");
 							return <Box key={listing.id} overflow="hidden" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 8px 28px rgba(10,20,30,.05)">
-								<Box position="relative" h="180px"><ListingImage src={listing.images?.[0]} alt={listing.title} itemType="SERVICE" /><Badge position="absolute" top="3" left="3" colorScheme={status.color} borderRadius="full" px="3" py="1">{status.label}</Badge></Box>
+								<Box position="relative" h="180px"><ListingImage src={listing.images?.[0]} alt={listing.title} itemType="SERVICE" />{listing.status !== "APPROVED" && <Badge position="absolute" top="3" left="3" colorScheme={status.color} borderRadius="full" px="3" py="1">{status.label}</Badge>}</Box>
 								<Stack p={{ base: 4, md: 5 }} spacing="3"><Box><Text color="mainorange" fontSize="xs" fontWeight="bold" letterSpacing=".08em" textTransform="uppercase">{category}</Text><Heading mt="1" size="sm" noOfLines={2}>{listing.title}</Heading></Box>
 									{location && <Text color={muted} fontSize="sm">{location}</Text>}
 									{service?.serviceArea && <Text color={muted} fontSize="sm" noOfLines={2}>{text.areasServed}: {service.serviceArea}</Text>}

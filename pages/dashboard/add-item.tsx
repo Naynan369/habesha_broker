@@ -16,7 +16,7 @@ import { ColorModeToggle } from "@components/shared/ColorModeToggle";
 import { BrandLogo } from "@components/shared/BrandLogo";
 import { useLang } from "@libs/hooks/useLang";
 import { withSessionSsr } from "@config/cookie/cookie";
-import { MyTheme } from "@config/theme/MyTheme";
+import { NAVBAR_HEIGHT_COMPACT } from "@config/layout";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { FC, ReactNode, useState } from "react";
@@ -81,7 +81,7 @@ export default function AddItem({ user }) {
 					position="sticky"
 					top="0"
 					zIndex="20"
-					height={MyTheme.size.navbarHeightCompact}
+					height={NAVBAR_HEIGHT_COMPACT}
 					px={{ base: 4, md: 8, xl: 12 }}
 					boxShadow="0 12px 34px rgba(4,16,19,.18)"
 					background={navBackground}

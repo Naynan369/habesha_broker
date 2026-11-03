@@ -1,42 +1,33 @@
-import { Avatar, Badge, Box, Button, Flex, Heading, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Text, Textarea, useColorModeValue, useDisclosure, useToast } from "@chakra-ui/react";
+import { Alert, AlertDescription, AlertIcon, AlertTitle, Badge, Box, Button, Flex, Grid, Heading, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Skeleton, Text, Textarea, useColorModeValue, useDisclosure, useToast } from "@chakra-ui/react";
 import { ListingImage } from "@components/shared/ListingImage";
-import { getMediaUrl } from "@libs/helpers/media";
-import { dayjs } from "@config/dayjs";
+import { useFetch } from "@libs/hooks/useFetch";
+import { useListingCheckout } from "@libs/hooks/useListingCheckout";
+import { useLang } from "@libs/hooks/useLang";
+import { IUser } from "@libs/types/user";
 import Link from "next/link";
 import { FC, useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { useLang } from "@libs/hooks/useLang";
-import { useListingCheckout } from "@libs/hooks/useListingCheckout";
-import { LISTING_CURRENCY } from "@config/listingPayment";
+import { MdAdd } from "react-icons/md";
 
 export interface IItem {
 	id: string;
 	title: string;
-	price: string;
 	photoURL: string;
-	date: string;
-	ownerPhoto?: string;
 	status?: string;
 	paymentStatus?: string;
 	paymentFee?: number;
 	paymentEnabled?: boolean;
 	listingPayment?: any;
 	itemType: string;
-	ownerName: string;
-	featured?: boolean;
-	priceFrequency?: string;
-	serviceCategory?: string;
 	listingIntent?: string;
-	sellerType?: string;
+	canManage?: boolean;
 }
 
-export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, ownerName, itemType, featured, status, paymentStatus, paymentFee, paymentEnabled, listingPayment, priceFrequency, serviceCategory, listingIntent, sellerType }) => {
+export const Item: FC<IItem> = ({ id, title, photoURL, itemType, status, paymentStatus, paymentFee, paymentEnabled, listingPayment, listingIntent, canManage = true }) => {
 	const router = useRouter();
-	const { locale } = router;
 	const lang = useLang();
 	const copy = lang.listingManagementPage;
-	const sellerTypeText = lang.sellerType;
 	const paymentLabels = lang.payments;
 	const { startCheckout, isLoading } = useListingCheckout(id, paymentLabels);
 	const { isOpen, onOpen, onClose } = useDisclosure();
@@ -55,23 +46,15 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 	const imageFallback = useColorModeValue("#e7ecea", "#151b1c");
 	const divider = useColorModeValue("#e7ecea", "whiteAlpha.200");
 	const paymentSurface = useColorModeValue("#f7f5f0", "rgba(255,255,255,.035)");
-	const priceSurface = useColorModeValue("#f5f7f6", "rgba(255,255,255,.035)");
-	const priceBorder = useColorModeValue("#e4e9e7", "whiteAlpha.100");
 	const hoverBorder = useColorModeValue("#c8d4d1", "whiteAlpha.300");
-	const featuredTextColor = useColorModeValue("#f4e8ce", "#e4d2ad");
 	const inputBg = useColorModeValue("#ffffff", "#080b0c");
-	const accentText = useColorModeValue("mainorange", "#f0c978");
 	const isRentalListing = (itemType === "HOUSE" || itemType === "BUSINESS_SPACE") && listingIntent === "RENT";
-	const statusColor = status === "CLOSED" ? "gray" : status === "SOLD" || status === "RENTED" ? "purple" : paymentStatus === "DUE" || paymentStatus === "NOT_REQUIRED" ? "orange" : paymentStatus === "PROCESSING" ? "blue" : status === "APPROVED" ? "green" : status === "DECLINED" ? "red" : "orange";
-	const prominentStatus = status === "SOLD" || status === "RENTED" || (paymentStatus === "PROCESSING" && status !== "SOLD");
-	const statusLabel = status === "CLOSED" ? copy.closed : status === "SOLD" ? copy.sold : status === "RENTED" ? copy.rented : paymentStatus === "DUE" || paymentStatus === "NOT_REQUIRED" ? copy.paymentDue : paymentStatus === "PROCESSING" ? copy.paymentProcessing : paymentStatus === "PAID" && status === "PENDING" ? copy.paidPending : status === "APPROVED" ? isRentalListing ? copy.available : copy.approved : status === "DECLINED" ? copy.declined : copy.pending;
+	const statusColor = status === "CLOSED" ? "#aeb7b9" : status === "SOLD" || status === "RENTED" ? "#cdb0ea" : paymentStatus === "DUE" || paymentStatus === "NOT_REQUIRED" ? "#f0c58a" : paymentStatus === "PROCESSING" ? "#9ec7ee" : status === "APPROVED" ? "#a4e0b6" : status === "DECLINED" ? "#efaca5" : "#f0c58a";
+	const statusLabel = status === "CLOSED" ? copy.closed : status === "SOLD" ? copy.sold : status === "RENTED" ? copy.rented : paymentStatus === "DUE" || paymentStatus === "NOT_REQUIRED" ? copy.paymentDue : paymentStatus === "PROCESSING" ? copy.paymentProcessing : paymentStatus === "PAID" && status === "PENDING" ? copy.paidPending : status === "APPROVED" ? copy.available : status === "DECLINED" ? copy.declined : copy.pending;
 	const canMarkSold = itemType === "CAR" || (itemType === "HOUSE" || itemType === "BUSINESS_SPACE") && listingIntent === "FORSALE";
-	const itemTypeLabel = itemType === "SERVICE"
-		? lang.serviceListing.categories[serviceCategory] || copy.categoryServices
-		: itemType === "BUSINESS_SPACE" ? copy.categoryBusinessSpaces : itemType === "CAR" ? copy.categoryVehicles : copy.categoryHomes;
-	const needsPayment = typeof paymentFee === "number" && status !== "APPROVED" && status !== "SOLD" && status !== "RENTED" && status !== "CLOSED" && paymentStatus !== "PAID";
+	const needsPayment = canManage && typeof paymentFee === "number" && status !== "APPROVED" && status !== "SOLD" && status !== "RENTED" && status !== "CLOSED" && paymentStatus !== "PAID";
 	const eligibleForRefundRequest = paymentRecord?.status === "PAID" && paymentRecord?.refundStatus === "NOT_REFUNDED" && paymentRecord?.txRef?.startsWith("HB-STRIPE-") && paymentRecord?.providerRef?.startsWith("cs_test_");
-	const canRequestRefund = eligibleForRefundRequest && !["PENDING", "APPROVED"].includes(paymentRecord?.refundRequestStatus);
+	const canRequestRefund = canManage && eligibleForRefundRequest && !["PENDING", "APPROVED"].includes(paymentRecord?.refundRequestStatus);
 	const refundNotice = paymentRecord?.refundStatus === "REFUNDED"
 		? copy.refundCompleted
 		: paymentRecord?.refundStatus === "PROCESSING"
@@ -148,65 +131,30 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 	};
 
 	return (
-		<Flex className="dashboard-listing-card" direction="column" h="full" minW="0" bg={surface} border="1px solid" borderColor={border} borderRadius="3xl" overflow="hidden" boxShadow="0 10px 28px rgba(21,42,44,.07)" transition="transform 320ms cubic-bezier(.2,.8,.2,1), box-shadow 320ms ease, border-color 320ms ease" _hover={{ boxShadow: "0 18px 40px rgba(16,47,55,.13)", transform: "translateY(-8px) scale(1.012)", borderColor: hoverBorder }}>
+		<Flex className="dashboard-listing-card" direction="column" alignSelf="start" minW="0" bg={surface} border="1px solid" borderColor={border} borderRadius="3xl" overflow="hidden" boxShadow="0 10px 28px rgba(21,42,44,.07)" transition="transform 320ms cubic-bezier(.2,.8,.2,1), box-shadow 320ms ease, border-color 320ms ease" _hover={{ boxShadow: "0 18px 40px rgba(16,47,55,.13)", transform: "translateY(-8px) scale(1.012)", borderColor: hoverBorder }}>
 			<Link legacyBehavior href={"/items/" + id} passHref>
-				<Flex as="a" role="group" direction="column" flex="1" minW="0" cursor="pointer" textDecoration="none" _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "-3px" }}>
-					<Box className="dashboard-listing-image" position="relative" h={{ base: "210px", md: "250px" }} flexShrink={0} bg={imageFallback} overflow="hidden">
+				<Flex as="a" role="group" direction="column" minW="0" cursor="pointer" textDecoration="none" _focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "-3px" }}>
+					<Box className="dashboard-listing-image" position="relative" h={{ base: "205px", md: "235px" }} flexShrink={0} bg={imageFallback} overflow="hidden">
 						<ListingImage src={photoURL} alt={title} itemType={itemType} fill />
-						<Box position="absolute" inset="0" bgGradient="linear(to-b, rgba(7,23,27,.18), transparent 35%, rgba(7,23,27,.78))" pointerEvents="none" />
-						{featured && <Badge position="absolute" top="4" left="4" zIndex="3" color={featuredTextColor} bg="rgba(24,38,40,.82)" border="1px solid" borderColor="whiteAlpha.200" borderRadius="full" px="3.5" py="1.5" letterSpacing=".04em">✦ {copy.featured}</Badge>}
-						{status && <Badge position="absolute" top="4" right="4" zIndex="3" colorScheme={statusColor} variant={prominentStatus ? "solid" : "subtle"} fontWeight={prominentStatus ? "extrabold" : "semibold"} boxShadow={prominentStatus ? "0 4px 12px rgba(0,0,0,.2)" : "none"} borderRadius="full" px="3.5" py="1.5">{statusLabel}</Badge>}
-						<Flex position="absolute" left="5" right="5" bottom="4" align="center" justify="space-between" gap="3" color="white" zIndex="3">
-							<Flex align="center" gap="2.5" minW="0" px="3.5" py="2.5" border="1px solid" borderColor="whiteAlpha.300" borderRadius="full" bg="rgba(7,23,27,.46)" backdropFilter="blur(12px)">
-								<Box w="2" h="2" flexShrink={0} borderRadius="full" bg="#d6bd87" />
-								<Text noOfLines={1} fontSize="10px" fontWeight="bold" letterSpacing=".11em" textTransform="uppercase">{itemTypeLabel}</Text>
-							</Flex>
-							<Text fontSize="xs" color="whiteAlpha.800" fontWeight="semibold">{copy.posted} {dayjs(date).locale(locale === "am" ? "am" : "en").fromNow()}</Text>
+						<Flex position="absolute" top="4" left="4" zIndex="3" align="center" gap="2" maxW="calc(100% - 2rem)" px="3" py="1.5" bg="rgba(14,22,24,.84)" color="#fff" border="1px solid" borderColor="whiteAlpha.300" borderRadius="full" boxShadow="0 6px 18px rgba(0,0,0,.2)" fontSize="xs" fontWeight="bold" lineHeight="1.2">
+							<Box as="span" flexShrink={0} w="2" h="2" bg={statusColor} borderRadius="full" />
+							{statusLabel}
 						</Flex>
 					</Box>
-					<Flex direction="column" flex="1" p={{ base: 4, md: 5.5 }}>
-						<Flex align="flex-start" justify="space-between" gap="3">
-							<Box minW="0">
-								<Heading size="md" color={headingColor} noOfLines={2} lineHeight="1.3" letterSpacing="-.035em">{title}</Heading>
-								{sellerType && sellerTypeText.options[sellerType] && <Badge mt="2" colorScheme="purple" variant="subtle" borderRadius="full" px="3">{lang.itemDetailPage.sellerTypeLabel}: {sellerTypeText.options[sellerType]}</Badge>}
-							</Box>
-						</Flex>
-						<Flex className="dashboard-listing-price" align="center" justify="space-between" gap="3" mt="5" p={{ base: 4, md: 4.5 }} border="1px solid" borderColor={priceBorder} borderRadius="2xl" bg={priceSurface}>
-							<Box minW="0">
-								<Text color={muted} fontSize="9px" fontWeight="bold" letterSpacing=".14em" textTransform="uppercase">{lang.itemDetailPage.askingPrice}</Text>
-								<Flex align="baseline" gap="2" mt="1">
-									<Heading fontSize={{ base: "lg", md: "xl" }} color={headingColor} letterSpacing="-.045em">{Intl.NumberFormat("en-US").format(Number(price) || 0)}</Heading>
-									<Text color={muted} fontSize="xs" fontWeight="bold">ETB</Text>
-								</Flex>
-							</Box>
-							{itemType === "BUSINESS_SPACE" && priceFrequency && <Text flexShrink={0} px="3" py="2" color={muted} fontSize="xs" fontWeight="semibold" borderLeft="1px solid" borderColor={border}>/ {lang.businessListing.frequencies[priceFrequency]}</Text>}
-						</Flex>
-						<Flex mt="auto" pt="5" align="center" gap="3">
-							<Avatar size="sm" name={ownerName || "Habesha Brokers seller"} src={getMediaUrl(ownerPhoto, "profile")} border="2px solid" borderColor={surface} />
-							<Box minW="0"><Text fontSize="9px" color={muted} fontWeight="bold" letterSpacing=".08em" textTransform="uppercase">{copy.listedBy}</Text><Text noOfLines={1} fontSize="sm" fontWeight="semibold" color={headingColor}>{ownerName || copy.seller}</Text></Box>
-							<Box flex="1" />
-							<Flex aria-hidden="true" align="center" justify="center" flexShrink={0} w="10" h="10" borderRadius="full" bg={paymentSurface} color={accentText} transition="transform 240ms ease, background 240ms ease" _groupHover={{ transform: "translate(2px,-2px)", bg: "rgba(198,107,54,.16)" }}>
-								<Text fontSize="xl" fontWeight="bold">↗</Text>
-							</Flex>
-						</Flex>
-					</Flex>
+					<Box p={{ base: 4, md: 5 }}>
+						<Heading size="md" color={headingColor} noOfLines={2} lineHeight="1.35" letterSpacing="-.035em">{title}</Heading>
+					</Box>
 				</Flex>
 			</Link>
 			{needsPayment && (
-				<Flex direction="column" gap="3" p={{ base: 4, md: 5 }} pt="4" borderTop="1px solid" borderColor={divider} bg={paymentSurface}>
-					<Flex align="center" justify="space-between" gap="3" wrap="wrap">
-						<Box>
-							<Text fontSize="9px" color={muted} fontWeight="bold" letterSpacing="wide" textTransform="uppercase">{paymentLabels.oneTime}</Text>
-							<Text mt="1" fontSize="sm" fontWeight="bold" color={headingColor}>{LISTING_CURRENCY} {paymentFee!.toLocaleString("en-US")}</Text>
-						</Box>
-						<Button size="sm" h="10" px="4" colorScheme="orange" borderRadius="lg" boxShadow="0 6px 16px rgba(198,107,54,.18)" onClick={startCheckout} isLoading={isLoading} isDisabled={!paymentEnabled || isLoading}>
-							{paymentStatus === "PROCESSING" ? paymentLabels.continueCheckout : paymentLabels.payButton}
-						</Button>
-					</Flex>
+				<Flex direction="column" gap="2" p={{ base: 4, md: 5 }} pt="4" borderTop="1px solid" borderColor={divider} bg={paymentSurface}>
+					<Button w="full" size="sm" h="10" px="4" colorScheme="orange" borderRadius="lg" onClick={startCheckout} isLoading={isLoading} isDisabled={!paymentEnabled || isLoading}>
+						{paymentStatus === "PROCESSING" ? paymentLabels.continueCheckout : paymentLabels.payButton}
+					</Button>
 					{!paymentEnabled && <Text fontSize="xs" color={muted}>{paymentLabels.notConfigured}</Text>}
 				</Flex>
 			)}
-			{paymentRecord?.status === "PAID" && refundNotice && (
+			{canManage && paymentRecord?.status === "PAID" && refundNotice && (
 				<Flex direction="column" gap="2" px={{ base: 4, md: 5 }} pb="4" bg={surface}>
 					<Flex align="center" justify="space-between" gap="3" wrap="wrap" p="3" border="1px solid" borderColor={border} borderRadius="lg">
 						<Flex align="center" gap="2" minW="0">
@@ -217,14 +165,11 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 					</Flex>
 				</Flex>
 			)}
-			{(status === "APPROVED" || status === "CLOSED" || status === "RENTED") && <Flex align={{ base: "stretch", sm: "center" }} justify="space-between" gap="3" wrap="wrap" px={{ base: 4, md: 5 }} pb="4">
-				<Text fontSize="xs" color={muted}>{status === "RENTED" ? copy.rentedDescription : status === "CLOSED" ? copy.listingClosedHelp : isRentalListing ? copy.rentalListingHelp : canMarkSold ? copy.saleListingHelp : copy.closeListingHelp}</Text>
-				<Flex gap="2" wrap="wrap" justify="flex-end">
+			{canManage && (status === "APPROVED" || status === "CLOSED" || status === "RENTED") && <Flex gap="2" wrap="wrap" px={{ base: 4, md: 5 }} py="4" borderTop="1px solid" borderColor={divider}>
 					{status === "APPROVED" && canMarkSold && <Button size="sm" variant="outline" colorScheme="purple" onClick={soldDisclosure.onOpen} isLoading={updatingListingStatus} borderRadius="lg">{copy.markAsSold}</Button>}
 					{status === "APPROVED" && isRentalListing && <Button size="sm" variant="outline" colorScheme="purple" onClick={rentedDisclosure.onOpen} isLoading={updatingListingStatus} borderRadius="lg">{copy.markAsRented}</Button>}
 					{status === "RENTED" && <Button size="sm" colorScheme="green" onClick={markRentalAvailable} isLoading={updatingListingStatus} borderRadius="lg">{copy.markAsAvailable}</Button>}
 					{status !== "RENTED" && <Button size="sm" variant={status === "CLOSED" ? "solid" : "outline"} colorScheme={status === "CLOSED" ? "green" : "gray"} onClick={updateListingStatus} isLoading={updatingListingStatus} borderRadius="lg">{status === "CLOSED" ? copy.reopenListing : copy.closeListing}</Button>}
-				</Flex>
 			</Flex>}
 			<Modal isOpen={soldDisclosure.isOpen} onClose={() => { if (!updatingListingStatus) soldDisclosure.onClose(); }} isCentered size="md">
 				<ModalOverlay />
@@ -267,5 +212,105 @@ export const Item: FC<IItem> = ({ id, title, price, photoURL, date, ownerPhoto, 
 				</ModalContent>
 			</Modal>
 		</Flex>
+	);
+};
+
+export const ItemLoader = () => (
+	<Flex className="dashboard-listing-card" direction="column" h="full" minH="300px" border="1px solid" borderColor={useColorModeValue("gray.200", "whiteAlpha.200")} borderRadius="2xl" overflow="hidden" bg={useColorModeValue("white", "#0c0c0c")}>
+		<Skeleton h={{ base: "205px", md: "235px" }} borderRadius="0" />
+		<Box p={{ base: 4, md: 5 }}><Skeleton h="5" w="70%" /></Box>
+	</Flex>
+);
+
+interface IItemsList {
+	user: IUser;
+	paymentFee: number;
+	paymentEnabled: boolean;
+	filters: string[];
+	keyword: string;
+	orderBy: any;
+	copy: any;
+}
+
+export const ItemList: FC<IItemsList> = ({ user, paymentFee, paymentEnabled, filters, keyword = "", orderBy, copy }) => {
+	const [page, setPage] = useState(0);
+	const pageText = useLang().explore;
+	const filterKey = filters.join("|");
+	const sortKey = JSON.stringify(orderBy);
+	const muted = useColorModeValue("gray.500", "gray.400");
+	const surface = useColorModeValue("white", "#0c0c0c");
+	const border = useColorModeValue("gray.200", "whiteAlpha.200");
+	const heading = useColorModeValue("maingray", "gray.100");
+	const emptyIconBg = useColorModeValue("orange.50", "rgba(233,183,92,.14)");
+	const emptyIconColor = useColorModeValue("orange.700", "orange.200");
+	useEffect(() => setPage(0), [filterKey, keyword, sortKey]);
+	const [data, loading, error] = useFetch({
+		fetchFunction: () => axios.post(`/api/items?page=${page}`, {
+			orderBy,
+			keyword,
+			userId: user.id,
+			itemType: { in: filters },
+		}),
+		dependencies: [...filters, orderBy, keyword, page],
+	});
+
+	if (error) {
+		return (
+			<Alert status="error" p={{ base: 6, md: 10 }} flexDirection="column" borderRadius="2xl" border="1px solid" borderColor="red.200" boxShadow="0 12px 30px rgba(137,46,38,.08)">
+				<AlertIcon boxSize="40px" />
+				<AlertTitle mt="5" mb="2">Problem loading your listings</AlertTitle>
+				<AlertDescription>Check your connection and try again.</AlertDescription>
+			</Alert>
+		);
+	}
+
+	return (
+		<Grid className="dashboard-listings-grid" justifyContent="center" columnGap={{ base: 4, md: 6 }} rowGap={{ base: 4, md: 6 }} templateColumns={{ base: "minmax(0, 1fr)", sm: "repeat(auto-fill, minmax(18rem, 1fr))" }} w="full">
+			{loading || !data ? (
+				[...Array(6)].map((_, index) => <ItemLoader key={index} />)
+			) : data.items?.length ? (
+				data.items.map((item) => (
+					<Item
+						key={item.id}
+						id={item.id}
+						title={item.title}
+						photoURL={item.images?.[0]}
+						itemType={item.itemType}
+						listingIntent={item.House?.type || item.BusinessSpace?.type}
+						status={item.status}
+						paymentStatus={item.paymentStatus}
+						paymentFee={paymentFee}
+						paymentEnabled={paymentEnabled}
+						listingPayment={item.ListingPayments?.[0]}
+					/>
+				))
+			) : (
+				<Flex gridColumn="1 / -1" minH={{ base: "280px", md: "340px" }} align="center" justify="center" direction="column" textAlign="center" px="6" py="12" bg={surface} border="1px dashed" borderColor={border} borderRadius="2xl" boxShadow="inset 0 0 0 6px rgba(128,145,145,.025)">
+					<Box w="16" h="16" display="grid" placeItems="center" borderRadius="2xl" bg={emptyIconBg} color={emptyIconColor} boxShadow="0 10px 24px rgba(198,107,54,.10)">
+						<MdAdd size="22" />
+					</Box>
+					<Heading mt="5" size="md" color={heading}>
+						{keyword ? copy.noMatchTitle : filters.length ? copy.noListingsTitle : copy.chooseCategoryTitle}
+					</Heading>
+					<Text mt="2" maxW="sm" color={muted}>
+						{keyword
+							? copy.noMatchDescription
+							: filters.length
+								? copy.noListingsDescription
+								: copy.chooseCategoryDescription}
+					</Text>
+					{!keyword && filters.length > 0 && (
+						<Link legacyBehavior href="/dashboard/add-item" passHref>
+							<Button as="a" mt="6" colorScheme="orange" borderRadius="xl" leftIcon={<MdAdd />}>{copy.createListing}</Button>
+						</Link>
+					)}
+				</Flex>
+			)}
+			{!loading && data?.total > 30 && <Flex gridColumn="1 / -1" align="center" justify="space-between" gap="3" mt="2">
+				<Button size="sm" variant="outline" isDisabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>{pageText.previousPage}</Button>
+				<Text color={muted} fontSize="sm">{pageText.pageCounter.replace("{page}", String(page + 1)).replace("{pages}", String(Math.ceil(data.total / 30)))}</Text>
+				<Button size="sm" colorScheme="orange" isDisabled={(page + 1) * 30 >= data.total} onClick={() => setPage((current) => current + 1)}>{pageText.nextPage}</Button>
+			</Flex>}
+		</Grid>
 	);
 };

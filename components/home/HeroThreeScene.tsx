@@ -1,325 +1,149 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
-type Feature = "HOME" | "CAR";
-const CAR_TRACK = { centerX: -0.05, centerZ: 0, radiusX: 4.05, radiusZ: 3.0 };
-
-function setCarOnTrack(car: THREE.Group, angle: number) {
-	car.position.set(
-		CAR_TRACK.centerX + CAR_TRACK.radiusX * Math.cos(angle),
-		0.34,
-		CAR_TRACK.centerZ - CAR_TRACK.radiusZ * Math.sin(angle),
-	);
-	// The sedan faces local +X; aim its nose along the track tangent.
-	const tangentX = -CAR_TRACK.radiusX * Math.sin(angle);
-	const tangentZ = -CAR_TRACK.radiusZ * Math.cos(angle);
-	// The car model reads as nose-forward when flipped relative to the track tangent.
-	car.rotation.y = Math.atan2(-tangentZ, tangentX) + Math.PI;
+function ease(value: number) {
+	const t = THREE.MathUtils.clamp(value, 0, 1);
+	return t * t * (3 - 2 * t);
 }
 
-const makeToon = (color: string, extra: Partial<THREE.MeshToonMaterialParameters> = {}) =>
-	new THREE.MeshToonMaterial({ color, ...extra });
+function setCarArrival(car: THREE.Group, progress: number, mobile = false) {
+	const t = ease(progress);
+	car.position.set((mobile ? 3.35 : 3.7) - 0.6 * t, 0.34, -1.8 + 1.5 * t);
+	car.rotation.y = 2.18 - t * 0.08;
+}
+
+const makeSurface = (color: string, extra: Partial<THREE.MeshStandardMaterialParameters> = {}) =>
+	new THREE.MeshStandardMaterial({ color, roughness: 0.72, metalness: 0.05, ...extra });
 
 function addBox(
 	parent: THREE.Object3D,
 	geometry: [number, number, number],
 	position: [number, number, number],
 	material: THREE.Material,
-	feature: Feature = "HOME",
+	assemblyStage = 0,
 ) {
 	const mesh = new THREE.Mesh(new THREE.BoxGeometry(...geometry), material);
 	mesh.position.set(...position);
 	mesh.castShadow = true;
 	mesh.receiveShadow = true;
-	mesh.userData.feature = feature;
+	mesh.userData.feature = "HOME";
+	mesh.userData.assemblyStage = assemblyStage;
 	parent.add(mesh);
 	return mesh;
 }
 
-function addEdges(parent: THREE.Object3D, mesh: THREE.Mesh, color = "#26464a", opacity = 0.55) {
-	const geometry = new THREE.EdgesGeometry(mesh.geometry, 22);
-	geometry.setDrawRange(0, 0);
-	const outline = new THREE.LineSegments(
-		geometry,
-		new THREE.LineBasicMaterial({ color, transparent: true, opacity: Math.min(0.98, opacity * 1.8) }),
-	);
-	outline.userData.progressiveDrawing = true;
-	outline.userData.feature = mesh.userData.feature;
-	mesh.add(outline);
-	return outline;
-}
-
-function addCylinder(
-	parent: THREE.Object3D,
-	radiusTop: number,
-	radiusBottom: number,
-	height: number,
-	position: [number, number, number],
-	material: THREE.Material,
-	segments = 18,
-) {
-	const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments), material);
+function addShrub(parent: THREE.Object3D, position: [number, number, number], material: THREE.Material, assemblyStage: number) {
+	const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.18, 1), material);
 	mesh.position.set(...position);
+	mesh.scale.set(1.2, 0.7, 0.8);
 	mesh.castShadow = true;
 	mesh.receiveShadow = true;
 	mesh.userData.feature = "HOME";
+	mesh.userData.assemblyStage = assemblyStage;
 	parent.add(mesh);
 	return mesh;
 }
 
-function buildApartment(scene: THREE.Scene) {
+function buildApartment(scene: THREE.Scene, plasterTexture: THREE.Texture) {
 	const building = new THREE.Group();
-	building.name = "Habesha illustrated apartment";
-	building.position.set(-1.55, 0.34, -0.05);
-	const cream = makeToon("#d8dde0");
-	const lightCream = makeToon("#f2efe8");
-	const shadowCream = makeToon("#738b98");
-	const darkTeal = makeToon("#1b3442");
-	const glass = makeToon("#4e8398", { transparent: true, opacity: 0.78 });
-	const warmGlass = makeToon("#f0bd75", { emissive: "#db8d55", emissiveIntensity: 0.38 });
-	const metal = makeToon("#c7a96c");
-	const foliage = makeToon("#829274");
-	const terra = makeToon("#60778a");
-	const frameColor = "#e8d4ad";
+	building.name = "Contemporary apartment residence";
+	building.position.set(-0.96, 0.34, -0.18);
+	building.scale.setScalar(1.1);
 
-	// The wide oval plinth and street form one clean architectural illustration.
-	const platform = new THREE.Mesh(new THREE.CylinderGeometry(5.05, 5.05, 0.3, 96), makeToon("#253946"));
-	platform.scale.z = 0.72;
-	platform.position.set(-0.05, 0.16, 0);
-	platform.receiveShadow = true;
-	platform.userData.feature = "HOME";
-	addEdges(scene, platform, frameColor, 0.84);
-	scene.add(platform);
-	const platformEdge = new THREE.Mesh(new THREE.TorusGeometry(5.02, 0.025, 10, 100), new THREE.MeshToonMaterial({ color: "#b98f61", transparent: true, opacity: 0.62 }));
-	platformEdge.rotation.x = Math.PI / 2;
-	platformEdge.scale.set(1, 0.72, 1);
-	platformEdge.position.set(-0.05, 0.31, 0);
-	scene.add(platformEdge);
+	const stone = makeSurface("#35444b", { roughness: 0.93 });
+	const stoneBand = makeSurface("#56676a", { roughness: 0.85 });
+	const charcoal = makeSurface("#171b1e", { roughness: 0.82 });
+	const sideWall = makeSurface("#766b66", { map: plasterTexture, roughness: 0.94 });
+	const frame = makeSurface("#111b1e", { metalness: 0.35, roughness: 0.42 });
+	const bronze = makeSurface("#815e42", { metalness: 0.48, roughness: 0.46 });
+	const rail = new THREE.MeshPhysicalMaterial({ color: "#24434a", metalness: 0.34, roughness: 0.2, transparent: true, opacity: 0.72, depthWrite: false });
+	const planter = makeSurface("#3b332e", { roughness: 0.94 });
+	const foliage = makeSurface("#293f35", { roughness: 0.95 });
+	const glass = new THREE.MeshPhysicalMaterial({ color: "#142b32", metalness: 0.48, roughness: 0.16, clearcoat: 0.74, clearcoatRoughness: 0.12 });
+	const litGlass = new THREE.MeshPhysicalMaterial({ color: "#282b2a", metalness: 0.15, roughness: 0.28, emissive: "#70482e", emissiveIntensity: 0.14, clearcoat: 0.3 });
 
-	// Open-front shell shows real interior details; glazing can be toggled on demand.
-	const shell = new THREE.Group();
-	building.add(shell);
-	addBox(building, [3.08, 0.16, 2.6], [0, 0.04, 0], terra);
-	const back = addBox(shell, [2.82, 3.83, 0.13], [0, 2.02, -1.06], cream);
-	addEdges(shell, back, frameColor, 0.5);
-	const rightWall = addBox(shell, [0.13, 3.83, 0.78], [1.36, 2.02, -0.68], shadowCream);
-	addEdges(shell, rightWall, frameColor, 0.5);
-	const leftWall = addBox(shell, [0.13, 3.83, 2.18], [-1.36, 2.02, 0], lightCream);
-	addEdges(shell, leftWall, frameColor, 0.5);
-	const glassGroup = new THREE.Group();
-	building.add(glassGroup);
-	const balconyGroup = new THREE.Group();
-	building.add(balconyGroup);
-	const interior = new THREE.Group();
-	building.add(interior);
+	const box = (size: [number, number, number], position: [number, number, number], material: THREE.Material, stage: number) => {
+		const mesh = addBox(building, size, position, material, stage);
+		return mesh;
+	};
+	const window = (x: number, y: number, z: number, width: number, lit = false) => {
+		box([width + 0.11, 0.73, 0.09], [x, y, z], frame, 4);
+		box([width, 0.63, 0.025], [x, y, z + 0.058], lit ? litGlass : glass, 4);
+		box([0.023, 0.65, 0.035], [x, y, z + 0.078], bronze, 4);
+		box([width + 0.13, 0.035, 0.15], [x, y - 0.39, z + 0.02], charcoal, 4);
+	};
+	const terrace = (x: number, y: number, z: number, width: number, plant: boolean) => {
+		box([width, 0.12, 0.7], [x, y, z], charcoal, 5);
+		box([width - 0.1, 0.27, 0.045], [x, y + 0.2, z + 0.32], rail, 5);
+		box([width, 0.025, 0.06], [x, y + 0.35, z + 0.32], bronze, 5);
+		for (const edge of [-1, 1]) box([0.045, 0.34, 0.055], [x + edge * (width / 2 - 0.04), y + 0.19, z + 0.32], frame, 5);
+		if (!plant) return;
+		const plantX = x + width * 0.3;
+		box([0.31, 0.14, 0.22], [plantX, y + 0.15, z + 0.06], planter, 5);
+		addShrub(building, [plantX, y + 0.32, z + 0.06], foliage, 5);
+	};
 
-	// Floor slabs, fine fascia, windows and balconies establish the building scale.
+	// Two unequal volumes make a clear silhouette without the repeated slab stack.
+	box([3.7, 0.18, 2.74], [0.02, 0.09, -0.08], charcoal, 0);
+	box([2.42, 3.98, 1.96], [-0.55, 2.18, -0.28], stone, 1);
+	box([1.3, 3.02, 1.76], [1.08, 1.7, -0.47], sideWall, 1);
+	box([0.26, 4.18, 2.08], [-1.67, 2.2, -0.24], charcoal, 1);
+	box([0.17, 3.15, 0.15], [0.44, 1.7, 0.41], charcoal, 3);
+	box([0.055, 3.8, 0.11], [0.52, 2.17, 0.73], bronze, 3);
 	for (let floor = 0; floor < 4; floor += 1) {
-		const level = 0.2 + floor * 0.92;
-		const slab = addBox(building, [2.92, 0.14, 2.42], [0, level, 0], floor === 0 ? terra : lightCream);
-		addEdges(building, slab, frameColor, 0.45);
-		for (const x of [-1.38, 0, 1.38]) {
-			if (floor === 0 && x === 0) continue;
-			addBox(building, [0.11, 0.78, 0.12], [x, level + 0.47, 1.06], floor === 0 ? cream : lightCream);
+		const y = 0.66 + floor * 0.97;
+		if (floor > 0) {
+			box([2.54, 0.09, 2.06], [-0.55, y - 0.51, -0.25], stoneBand, 2);
+			box([2.4, 0.1, 0.11], [-0.55, y - 0.43, 0.76], charcoal, 2);
 		}
-
-		const y = level + 0.48;
-		for (let bay = 0; bay < 3; bay += 1) {
-			const x = -0.92 + bay * 0.92;
-			const softlyLitWindow = (floor === 2 && bay === 1) || (floor === 0 && bay === 0) || (floor === 3 && bay === 2);
-			const pane = addBox(glassGroup, [0.68, 0.62, 0.035], [x, y, 1.095], softlyLitWindow ? warmGlass : glass);
-			addEdges(glassGroup, pane, frameColor, 0.64);
-			addBox(glassGroup, [0.035, 0.64, 0.055], [x, y, 1.128], metal);
-			addBox(glassGroup, [0.7, 0.035, 0.055], [x, y, 1.128], metal);
-			if (floor < 3 && bay !== 1) {
-				const balcony = addBox(balconyGroup, [0.78, 0.09, 0.56], [x, level + 0.12, 1.34], shadowCream);
-				addEdges(balconyGroup, balcony, frameColor, 0.5);
-				addBox(balconyGroup, [0.79, 0.035, 0.035], [x, level + 0.51, 1.59], metal);
-				for (const postX of [x - 0.36, x - 0.12, x + 0.12, x + 0.36]) {
-					addBox(balconyGroup, [0.025, 0.37, 0.025], [postX, level + 0.31, 1.59], metal);
-				}
-				addCylinder(balconyGroup, 0.12, 0.14, 0.16, [x + 0.23, level + 0.25, 1.43], terra, 12);
-				addCylinder(balconyGroup, 0.035, 0.07, 0.27, [x + 0.23, level + 0.45, 1.43], foliage, 7);
-			}
+		if (floor > 0) {
+			window(-1.14, y, 0.75, 0.73, floor === 2);
+			window(-0.19, y, 0.75, 0.73, floor === 1);
 		}
-
-		// Rugs, sofas, beds and plants make the cutaway feel occupied and tangible.
-		const room = new THREE.Group();
-		interior.add(room);
-		addBox(room, [1.48, 0.025, 1.18], [0, level + 0.17, 0.04], makeToon(floor % 2 === 0 ? "#c9b598" : "#6e919e"));
-		if (floor === 0 || floor === 2) {
-			addBox(room, [0.83, 0.34, 0.32], [-0.43, level + 0.42, 0.16], makeToon("#8e4a62"));
-			addBox(room, [0.83, 0.11, 0.36], [-0.43, level + 0.62, 0.16], makeToon("#c38379"));
-			addBox(room, [0.48, 0.28, 0.42], [0.52, level + 0.32, -0.34], lightCream);
-			addBox(room, [0.28, 0.11, 0.25], [0.52, level + 0.5, -0.34], terra);
-		} else {
-			addBox(room, [0.83, 0.16, 0.53], [-0.38, level + 0.28, -0.28], makeToon("#f2efe8"));
-			addBox(room, [0.17, 0.08, 0.57], [-0.71, level + 0.39, -0.28], lightCream);
-			addBox(room, [0.48, 0.42, 0.3], [0.55, level + 0.38, 0.14], makeToon("#637d8d"));
-			addBox(room, [0.52, 0.055, 0.36], [0.55, level + 0.61, 0.14], makeToon("#d1b57f"));
+		if (floor < 3) {
+			if (floor > 0) box([1.39, 0.08, 1.84], [1.08, y - 0.51, -0.46], stoneBand, 2);
+			window(1.08, y, 0.46, 0.86, floor === 1);
 		}
-		addCylinder(room, 0.11, 0.13, 0.19, [1.02, level + 0.27, -0.63], terra, 12);
-		addCylinder(room, 0.075, 0.09, 0.28, [1.02, level + 0.49, -0.63], foliage, 8);
 	}
-
-	// Roof pergola, entry canopy and warm doorway complete the architectural model.
-	const roof = addBox(building, [3.06, 0.18, 2.52], [0, 4.0, 0], terra);
-	addEdges(building, roof, frameColor, 0.6);
-	for (const x of [-0.84, 0.84]) {
-		addBox(building, [0.055, 0.63, 0.055], [x, 4.4, -0.35], metal);
-		addBox(building, [0.055, 0.63, 0.055], [x, 4.4, 0.4], metal);
+	// Bronze fins and deep side glazing keep the façades legible at hero size.
+	for (const x of [-1.59, -0.67, 0.28]) box([0.055, 3.78, 0.15], [x, 2.18, 0.83], bronze, 3);
+	for (const x of [0.57, 1.6]) box([0.075, 2.85, 0.1], [x, 1.7, 0.54], charcoal, 3);
+	for (let floor = 0; floor < 3; floor += 1) {
+		box([0.03, 0.58, 0.72], [1.76, 0.66 + floor * 0.97, -0.4], frame, 4);
+		box([0.026, 0.52, 0.65], [1.79, 0.66 + floor * 0.97, -0.4], floor === 2 ? litGlass : glass, 4);
 	}
-	addBox(building, [1.82, 0.055, 0.9], [0, 4.73, 0.02], metal);
-	addBox(building, [1.0, 0.11, 0.26], [0, 0.55, 1.34], terra);
-	addBox(building, [0.52, 0.73, 0.055], [0, 0.91, 1.13], darkTeal);
-	addBox(building, [0.09, 0.12, 0.06], [0.17, 0.91, 1.18], makeToon("#c7a96c"));
+	terrace(-0.99, 1.14, 0.99, 1.47, false);
+	terrace(-0.08, 3.09, 0.99, 1.45, true);
+	terrace(1.08, 2.12, 0.71, 1.36, true);
+	// Ground-floor lobby and a shallow canopy anchor the building to the street.
+	box([1.82, 0.84, 0.11], [-0.55, 0.6, 0.79], frame, 3);
+	box([1.71, 0.74, 0.025], [-0.55, 0.6, 0.86], glass, 4);
+	box([0.05, 0.78, 0.04], [-0.55, 0.6, 0.9], bronze, 4);
+	box([0.08, 0.16, 0.07], [-0.38, 0.59, 0.94], bronze, 4);
+	box([1.74, 0.1, 0.72], [-0.55, 1.1, 1.04], charcoal, 5);
+	box([1.62, 0.026, 0.07], [-0.55, 1.11, 1.42], bronze, 5);
+	box([1.4, 0.06, 0.43], [-0.55, 0.05, 1.56], stoneBand, 0);
+	// A recessed roof deck replaces the bright floating canopy.
+	box([2.58, 0.14, 2.18], [-0.55, 4.23, -0.25], charcoal, 6);
+	box([1.55, 0.24, 0.1], [-0.85, 4.38, 0.77], charcoal, 6);
+	box([1.55, 0.025, 0.065], [-0.85, 4.51, 0.8], bronze, 6);
+	box([0.85, 0.2, 0.08], [0.17, 4.36, 0.77], rail, 6);
+	box([1.35, 0.12, 0.24], [1.05, 3.31, 0.26], charcoal, 6);
+	box([1.0, 0.19, 0.19], [1.05, 3.45, 0.3], planter, 6);
+	for (const x of [0.76, 1.1, 1.43]) addShrub(building, [x, 3.61, 0.29], foliage, 6);
 
 	building.traverse((object) => { object.userData.feature = "HOME"; });
 	scene.add(building);
-	return { building, glassGroup };
+	return { building };
 }
 
 function buildCar(scene: THREE.Scene) {
 	const car = new THREE.Group();
-	car.name = "Illustrated premium sedan";
-	car.position.set(2.02, 0.34, 0.55);
-	const paint = makeToon("#a82c63");
-	const deepPaint = makeToon("#4c2540");
-	const glass = makeToon("#183949", { emissive: "#347584", emissiveIntensity: 0.16 });
-	const rubber = new THREE.MeshStandardMaterial({ color: "#1e2829", roughness: 0.84 });
-	const chrome = makeToon("#d7dfe2");
-	const lamp = makeToon("#fff0cd", { emissive: "#ffd58a", emissiveIntensity: 0.38 });
-
-	// A shaped, bevelled body and side glazing read as a compact premium car.
-	const bodyShape = new THREE.Shape();
-	bodyShape.moveTo(-1.54, 0.2);
-	bodyShape.lineTo(-1.5, 0.43);
-	bodyShape.quadraticCurveTo(-1.46, 0.58, -1.25, 0.62);
-	bodyShape.lineTo(-0.74, 0.67);
-	bodyShape.lineTo(-0.27, 1.04);
-	bodyShape.quadraticCurveTo(-0.08, 1.18, 0.18, 1.17);
-	bodyShape.lineTo(0.69, 1.12);
-	bodyShape.quadraticCurveTo(0.91, 1.08, 1.07, 0.83);
-	bodyShape.lineTo(1.43, 0.66);
-	bodyShape.quadraticCurveTo(1.58, 0.59, 1.6, 0.43);
-	bodyShape.lineTo(1.56, 0.2);
-	bodyShape.lineTo(-1.54, 0.2);
-	const bodyGeometry = new THREE.ExtrudeGeometry(bodyShape, { depth: 1.13, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.055, bevelThickness: 0.055 });
-	bodyGeometry.translate(0, 0, -0.565);
-	const body = new THREE.Mesh(bodyGeometry, paint);
-	body.castShadow = true;
-	body.receiveShadow = true;
-	body.userData.feature = "CAR";
-	addEdges(car, body, "#eadfc8", 0.86);
-	car.add(body);
-
-	const windowShape = new THREE.Shape();
-	windowShape.moveTo(-0.66, 0.7);
-	windowShape.lineTo(-0.2, 1.04);
-	windowShape.quadraticCurveTo(-0.07, 1.11, 0.12, 1.1);
-	windowShape.lineTo(0.59, 1.06);
-	windowShape.lineTo(0.84, 0.72);
-	windowShape.lineTo(-0.66, 0.7);
-	const windows = new THREE.ShapeGeometry(windowShape);
-	const windscreen = new THREE.BufferGeometry();
-	windscreen.setAttribute("position", new THREE.Float32BufferAttribute([
-		0.7, 1.1, -0.5, 1.04, 0.85, -0.5, 1.04, 0.85, 0.5, 0.7, 1.1, 0.5,
-	], 3));
-	windscreen.setIndex([0, 1, 2, 0, 2, 3]);
-	windscreen.computeVertexNormals();
-	const windscreenMaterial = makeToon("#244c59", { emissive: "#3d7889", emissiveIntensity: 0.16, side: THREE.DoubleSide });
-	const windscreenMesh = new THREE.Mesh(windscreen, windscreenMaterial);
-	windscreenMesh.userData.feature = "CAR";
-	car.add(windscreenMesh);
-	addEdges(car, windscreenMesh, "#eadfc8", 0.72);
-
-	const rearScreen = new THREE.BufferGeometry();
-	rearScreen.setAttribute("position", new THREE.Float32BufferAttribute([
-		-0.71, 0.69, -0.5, -0.3, 1.0, -0.5, -0.3, 1.0, 0.5, -0.71, 0.69, 0.5,
-	], 3));
-	rearScreen.setIndex([0, 1, 2, 0, 2, 3]);
-	rearScreen.computeVertexNormals();
-	const rearScreenMesh = new THREE.Mesh(rearScreen, windscreenMaterial);
-	rearScreenMesh.userData.feature = "CAR";
-	car.add(rearScreenMesh);
-	addEdges(car, rearScreenMesh, "#eadfc8", 0.62);
-
-	for (const side of [-1, 1]) {
-		const pane = new THREE.Mesh(windows, glass);
-		pane.position.z = side * 0.574;
-		pane.userData.feature = "CAR";
-		car.add(pane);
-		addEdges(car, pane, "#eadfc8", 0.72);
-		const pillar = addBox(car, [0.035, 0.38, 0.035], [0.18, 0.9, side * 0.59], deepPaint, "CAR");
-		pillar.rotation.z = -0.08;
-		addBox(car, [1.32, 0.035, 0.035], [0.08, 0.69, side * 0.59], deepPaint, "CAR");
-	}
-
-	// Wheels, illustrated alloy hubs, door lines, mirrors and lamps.
-	for (const x of [-1.0, 1.03]) {
-		for (const side of [-1, 1]) {
-			const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.23, 32), rubber);
-			wheel.rotation.x = Math.PI / 2;
-			wheel.position.set(x, 0.35, side * 0.59);
-			wheel.castShadow = true;
-			wheel.userData.feature = "CAR";
-			car.add(wheel);
-			addEdges(car, wheel, "#adb9c4", 0.82);
-			for (const [radius, material] of [[0.19, chrome], [0.055, deepPaint]] as const) {
-				const hub = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 0.245, 24), material);
-				hub.rotation.x = Math.PI / 2;
-				hub.position.copy(wheel.position);
-				hub.position.z += side * 0.012;
-				hub.userData.feature = "CAR";
-				car.add(hub);
-				addEdges(car, hub, "#c4d0d8", 0.72);
-			}
-			const rimFace = new THREE.Group();
-			rimFace.position.set(x, 0.35, side * 0.726);
-			car.add(rimFace);
-			for (let spokeIndex = 0; spokeIndex < 5; spokeIndex += 1) {
-				const spoke = addBox(rimFace, [0.038, 0.16, 0.022], [0, 0.105, 0], chrome, "CAR");
-				spoke.rotation.z = (spokeIndex / 5) * Math.PI * 2;
-				addEdges(rimFace, spoke, "#c4d0d8", 0.48);
-			}
-		}
-	}
-	for (const side of [-1, 1]) {
-		addBox(car, [1.24, 0.035, 0.025], [-0.02, 0.48, side * 0.598], deepPaint, "CAR");
-		addBox(car, [0.04, 0.34, 0.03], [0.62, 0.53, side * 0.599], deepPaint, "CAR");
-		addBox(car, [0.23, 0.09, 0.12], [-0.42, 0.69, side * 0.63], chrome, "CAR");
-		addBox(car, [0.2, 0.11, 0.06], [1.48, 0.57, side * 0.48], lamp, "CAR");
-		addBox(car, [0.17, 0.11, 0.06], [-1.43, 0.55, side * 0.48], makeToon("#ed776d", { emissive: "#8b332b", emissiveIntensity: 0.14 }), "CAR");
-	}
-	addBox(car, [0.92, 0.12, 0.12], [0.02, 0.3, 0], deepPaint, "CAR");
-	car.traverse((object) => { object.userData.feature = "CAR"; });
-
-	const trackShape = new THREE.Shape();
-	trackShape.absellipse(CAR_TRACK.centerX, 0, 4.55, 3.48, 0, Math.PI * 2, false, 0);
-	const trackInner = new THREE.Path();
-	trackInner.absellipse(CAR_TRACK.centerX, 0, 3.55, 2.55, 0, Math.PI * 2, true, 0);
-	trackShape.holes.push(trackInner);
-	const track = new THREE.Mesh(
-		new THREE.ShapeGeometry(trackShape, 128),
-		new THREE.MeshToonMaterial({ color: "#2a3f4b", side: THREE.DoubleSide }),
-	);
-	track.rotation.x = -Math.PI / 2;
-	track.position.y = 0.32;
-	track.receiveShadow = true;
-	scene.add(track);
-	for (let mark = 0; mark < 36; mark += 1) {
-		const angle = (mark / 36) * Math.PI * 2;
-		const dash = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.014, 0.045), new THREE.MeshBasicMaterial({ color: "#c7a96c", transparent: true, opacity: 0.76 }));
-		dash.position.set(
-			CAR_TRACK.centerX + CAR_TRACK.radiusX * Math.cos(angle),
-			0.335,
-			CAR_TRACK.centerZ - CAR_TRACK.radiusZ * Math.sin(angle),
-		);
-		dash.rotation.y = angle + Math.PI / 2;
-		scene.add(dash);
-	}
-	car.scale.setScalar(1.02);
-	setCarOnTrack(car, -Math.PI / 2);
+	car.name = "Cinematic arrival car";
+	setCarArrival(car, 0);
 	scene.add(car);
 	return car;
 }
@@ -344,10 +168,14 @@ export default function HeroThreeScene() {
 		renderer.domElement.setAttribute("aria-hidden", "true");
 		Object.assign(renderer.domElement.style, { width: "100%", height: "100%", display: "block", pointerEvents: "none", userSelect: "none" });
 		mount.appendChild(renderer.domElement);
+		const room = new RoomEnvironment();
+		const pmrem = new THREE.PMREMGenerator(renderer);
+		const environment = pmrem.fromScene(room, 0.035);
+		scene.environment = environment.texture;
 
-		const ambient = new THREE.HemisphereLight("#f7f1e7", "#465b6c", 1.58);
+		const ambient = new THREE.HemisphereLight("#f7eee4", "#29343b", 0.92);
 		scene.add(ambient);
-		const keyLight = new THREE.DirectionalLight("#ffe7c4", 2.05);
+		const keyLight = new THREE.DirectionalLight("#ffe5c5", 1.75);
 		keyLight.position.set(-5, 10, 7);
 		keyLight.castShadow = true;
 		keyLight.shadow.mapSize.set(1024, 1024);
@@ -357,23 +185,105 @@ export default function HeroThreeScene() {
 		keyLight.shadow.camera.bottom = -9;
 		keyLight.shadow.bias = -0.0003;
 		scene.add(keyLight);
-		const fillLight = new THREE.DirectionalLight("#a7d7e4", 1.02);
+		const fillLight = new THREE.DirectionalLight("#9bc3cf", 0.54);
 		fillLight.position.set(7, 5, -6);
 		scene.add(fillLight);
-		const { building } = buildApartment(scene);
+		// CC0 photographed plaster from https://polyhaven.com/a/modular_urban_apartments_facade.
+		const plasterTexture = new THREE.TextureLoader().load("/assets/3d/apartment-plaster.jpg");
+		plasterTexture.colorSpace = THREE.SRGBColorSpace;
+		const { building } = buildApartment(scene, plasterTexture);
+		building.updateMatrixWorld(true);
+		const apartmentParts: Array<{ mesh: THREE.Mesh; position: THREE.Vector3; scale: THREE.Vector3; stage: number; delay: number }> = [];
+		let apartmentPartIndex = 0;
+		building.traverse((object) => {
+			if (!(object instanceof THREE.Mesh)) return;
+			const stage = Number(object.userData.assemblyStage ?? 0);
+			apartmentParts.push({
+				mesh: object,
+				position: object.position.clone(),
+				scale: object.scale.clone(),
+				stage,
+				delay: stage * 480 + (apartmentPartIndex++ % 5) * 32,
+			});
+			object.visible = false;
+		});
 		const car = buildCar(scene);
+		const portalMaterials: THREE.MeshBasicMaterial[] = [];
+		for (let index = 0; index < 3; index += 1) {
+			const width = 1.95 + index * 0.15;
+			const height = 5.18 + index * 0.12;
+			const path = new THREE.CatmullRomCurve3([
+				new THREE.Vector3(-width, 0.3, 0),
+				new THREE.Vector3(-width, height - 0.72, 0),
+				new THREE.Vector3(-width + 0.68, height, 0),
+				new THREE.Vector3(width - 0.68, height, 0),
+				new THREE.Vector3(width, height - 0.72, 0),
+				new THREE.Vector3(width, 0.3, 0),
+			], false, "centripetal", 0.5);
+			const material = new THREE.MeshBasicMaterial({ color: index % 2 ? "#7fc0c2" : "#d7a27a", transparent: true, opacity: 0, depthWrite: false, toneMapped: false });
+			const arch = new THREE.Mesh(new THREE.TubeGeometry(path, 72, 0.025, 6, false), material);
+			arch.position.set(-1.55, 0, -2.65 - index * 1.2);
+			portalMaterials.push(material);
+			scene.add(arch);
+		}
+		const floorCanvas = document.createElement("canvas");
+		floorCanvas.width = floorCanvas.height = 128;
+		const floorContext = floorCanvas.getContext("2d");
+		if (floorContext) {
+			const fade = floorContext.createRadialGradient(64, 64, 10, 64, 64, 64);
+			fade.addColorStop(0, "#ffffff");
+			fade.addColorStop(0.58, "#b4b4b4");
+			fade.addColorStop(1, "#000000");
+			floorContext.fillStyle = fade;
+			floorContext.fillRect(0, 0, 128, 128);
+		}
+		const floorAlpha = new THREE.CanvasTexture(floorCanvas);
+		const floor = new THREE.Mesh(
+			new THREE.PlaneGeometry(13, 9),
+			new THREE.MeshStandardMaterial({ color: "#17252d", roughness: 0.78, alphaMap: floorAlpha, transparent: true, opacity: 0.48, depthWrite: false }),
+		);
+		floor.rotation.x = -Math.PI / 2;
+		floor.position.set(0, 0.30, 0);
+		floor.receiveShadow = true;
+		scene.add(floor);
+		const contactShadow = new THREE.Mesh(
+			new THREE.PlaneGeometry(3.5, 1.7),
+			new THREE.MeshBasicMaterial({ color: "#080c13", alphaMap: floorAlpha, transparent: true, opacity: 0.34, depthWrite: false }),
+		);
+		contactShadow.rotation.x = -Math.PI / 2;
+		contactShadow.position.y = 0.325;
+		scene.add(contactShadow);
+		const lightPath = new THREE.Group();
+		const lightMaterial = new THREE.MeshBasicMaterial({ color: "#e7b274", transparent: true, opacity: 0.28, depthWrite: false, toneMapped: false });
+		for (const offset of [-0.8, 0.8]) {
+			const path = new THREE.CatmullRomCurve3([
+				new THREE.Vector3(3.0 + offset, 0.33, -2.2),
+				new THREE.Vector3(2.8 + offset, 0.33, -1.8),
+				new THREE.Vector3(2.6 + offset, 0.33, -1.0),
+				new THREE.Vector3(2.4 + offset, 0.33, -0.3),
+			]);
+			lightPath.add(new THREE.Mesh(new THREE.TubeGeometry(path, 40, 0.018, 5, false), lightMaterial));
+		}
+		scene.add(lightPath);
+		const carLight = new THREE.SpotLight("#d5e8f0", 24, 12, Math.PI / 3.5, 0.72, 1.2);
+		carLight.position.set(3.8, 5.8, 3.6);
+		carLight.target.position.set(2.4, 0.7, -0.3);
+		scene.add(carLight, carLight.target);
 		const cameraTarget = new THREE.Vector3(-4.5, 2.0, 0.05);
 		const viewDirection = new THREE.Vector3(7.75, 6.1, 13.55).normalize();
-		let cameraConfigured = false;
+		const cameraBase = new THREE.Vector3();
+		let mobile = false;
 		const resize = () => {
 			const width = mount.clientWidth;
 			const height = mount.clientHeight;
 			if (!width || !height) return;
 			camera.aspect = width / height;
-			if (!cameraConfigured) {
-				camera.position.copy(cameraTarget).addScaledVector(viewDirection, width < 640 ? 25.5 : 17.2);
-				cameraConfigured = true;
-			}
+			mobile = width < 768;
+			building.position.x = mobile ? -1.16 : -0.96;
+			building.scale.setScalar(mobile ? 0.88 : 1.1);
+			cameraTarget.set(mobile ? 0.05 : -4.5, mobile ? -3.4 : 2.0, 0.05);
+			cameraBase.copy(cameraTarget).addScaledVector(viewDirection, mobile ? 31 : width < 900 ? 20 : 17.2);
+			camera.position.copy(cameraBase);
 			camera.lookAt(cameraTarget);
 			camera.updateProjectionMatrix();
 			renderer.setSize(width, height, false);
@@ -382,105 +292,150 @@ export default function HeroThreeScene() {
 		resizeObserver.observe(mount);
 		resize();
 
-		const drawings: Record<Feature, THREE.LineSegments[]> = { HOME: [], CAR: [] };
-		const drawingVertexCounts: Record<Feature, number> = { HOME: 0, CAR: 0 };
-		const fillMaterials: Record<Feature, Set<THREE.Material>> = { HOME: new Set(), CAR: new Set() };
-		const materialStates = new Map<THREE.Material, { opacity: number; transparent: boolean; depthWrite: boolean }>();
-		scene.traverse((object) => {
-			const feature = object.userData.feature as Feature | undefined;
-			if (feature && object instanceof THREE.LineSegments && object.userData.progressiveDrawing) {
-				drawings[feature].push(object);
-				drawingVertexCounts[feature] += object.geometry.attributes.position.count;
-			} else if (feature && object instanceof THREE.Mesh) {
+		const carMaterials = new Map<THREE.Material, { opacity: number; transparent: boolean; depthWrite: boolean }>();
+		const carOutlines: Array<{ geometry: THREE.EdgesGeometry; material: THREE.LineBasicMaterial }> = [];
+		const carAssemblyParts: Array<{ object: THREE.Object3D; position: THREE.Vector3; scale: THREE.Vector3; offset: THREE.Vector3; delay: number; duration: number }> = [];
+		let carLoaded = false;
+		let carArrivalStarted = performance.now();
+		let disposed = false;
+		const draco = new DRACOLoader();
+		draco.setDecoderPath("/assets/3d/");
+		const loader = new GLTFLoader();
+		loader.setDRACOLoader(draco);
+		loader.load("/assets/3d/ferrari.glb", (gltf) => {
+			if (disposed) return;
+			const model = gltf.scene;
+			const bounds = new THREE.Box3().setFromObject(model);
+			const size = bounds.getSize(new THREE.Vector3());
+			const center = bounds.getCenter(new THREE.Vector3());
+			const scale = 2.6 / Math.max(size.x, size.z);
+			model.scale.setScalar(scale);
+			model.position.set(-center.x * scale, -bounds.min.y * scale, -center.z * scale);
+			const body = model.getObjectByName("body") as THREE.Mesh | undefined;
+			if (body) body.material = new THREE.MeshPhysicalMaterial({ color: "#7e1c33", metalness: 0.58, roughness: 0.24, clearcoat: 1, clearcoatRoughness: 0.06 });
+			for (const name of ["trim", "rim_fl", "rim_fr", "rim_rl", "rim_rr"]) {
+				const mesh = model.getObjectByName(name) as THREE.Mesh | undefined;
+				if (mesh) mesh.material = new THREE.MeshStandardMaterial({ color: "#67737a", metalness: 0.69, roughness: 0.3 });
+			}
+			const glass = model.getObjectByName("glass") as THREE.Mesh | undefined;
+			if (glass) glass.material = new THREE.MeshPhysicalMaterial({ color: "#193840", metalness: 0.22, roughness: 0.16, clearcoat: 0.45 });
+			model.traverse((object) => {
+				if (!(object instanceof THREE.Mesh)) return;
+				object.castShadow = true;
 				const materials = Array.isArray(object.material) ? object.material : [object.material];
 				materials.forEach((material) => {
-					fillMaterials[feature].add(material);
-					if (!materialStates.has(material)) {
-						materialStates.set(material, {
-							opacity: material.opacity,
-							transparent: material.transparent,
-							depthWrite: material.depthWrite,
-						});
+					if (!carMaterials.has(material)) {
+						carMaterials.set(material, { opacity: material.opacity, transparent: material.transparent, depthWrite: material.depthWrite });
+						material.transparent = true;
+						material.depthWrite = false;
+						material.opacity = 0;
+						material.needsUpdate = true;
 					}
 				});
+			});
+			for (const name of ["body", "glass", "rim_fl", "rim_fr", "rim_rl", "rim_rr"]) {
+				const part = model.getObjectByName(name) as THREE.Mesh | undefined;
+				if (!part) continue;
+				const geometry = new THREE.EdgesGeometry(part.geometry, 30);
+				const material = new THREE.LineBasicMaterial({ color: name === "body" ? "#9bdcd3" : "#e6c492", transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false });
+				const outline = new THREE.LineSegments(geometry, material);
+				outline.renderOrder = 30;
+				part.add(outline);
+				carOutlines.push({ geometry, material });
 			}
-		});
-		const revealFeature = (feature: Feature, progress: number) => {
-			let remaining = Math.floor(drawingVertexCounts[feature] * progress / 2) * 2;
-			for (const line of drawings[feature]) {
-				const count = Math.floor(line.geometry.attributes.position.count / 2) * 2;
-				const visible = Math.min(count, remaining);
-				line.geometry.setDrawRange(0, visible);
-				remaining -= visible;
+			const main = model.getObjectByName("main");
+			for (const part of main?.children || []) {
+				const name = part.name.toLowerCase();
+				const wheel = name.startsWith("wheel_");
+				const body = name === "body";
+				const glass = name === "glass";
+				const lighting = name.includes("light") || name.includes("led") || name.includes("chrome");
+				const delay = body ? 0 : wheel ? 1000 : glass ? 1450 : lighting ? 1750 : 530;
+				const offset = wheel
+					? new THREE.Vector3(name.endsWith("l") ? -0.5 : 0.5, -0.42, name.includes("_f") ? 0.3 : -0.3)
+					: new THREE.Vector3(0, body ? -0.65 : glass ? 0.7 : lighting ? 0.35 : -0.25, body ? 0 : 0.16);
+				carAssemblyParts.push({ object: part, position: part.position.clone(), scale: part.scale.clone(), offset, delay, duration: body ? 1000 : wheel ? 880 : 720 });
+				part.visible = false;
 			}
-		};
-		const revealFill = (feature: Feature, progress: number) => {
-			const amount = THREE.MathUtils.clamp(progress, 0, 1);
-			for (const material of fillMaterials[feature]) {
-				const original = materialStates.get(material);
-				if (!original) continue;
-				if (amount >= 1) {
-					const transparencyChanged = material.transparent !== original.transparent;
-					material.opacity = original.opacity;
-					material.transparent = original.transparent;
-					material.depthWrite = original.depthWrite;
-					if (transparencyChanged) material.needsUpdate = true;
-					continue;
-				}
-				if (!material.transparent) {
-					material.transparent = true;
-					material.needsUpdate = true;
-				}
-				material.depthWrite = false;
-				material.opacity = Math.max(0.025, original.opacity * amount);
-			}
-		};
+			car.add(model);
+			carLoaded = true;
+			carArrivalStarted = performance.now();
+			if (reduceMotion) animate(carArrivalStarted + 5000);
+			else renderer.render(scene, camera);
+		}, undefined, () => { carLoaded = false; });
 		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		if (reduceMotion) {
-			revealFeature("HOME", 1);
-			revealFeature("CAR", 1);
-			revealFill("HOME", 1);
-			revealFill("CAR", 1);
-		} else {
-			revealFill("HOME", 0.06);
-			revealFill("CAR", 0.06);
-		}
 
 		let frame = 0;
 		let inViewport = false;
-		let lastTime = 0;
+		let lastDraw = 0;
 		const drawingStarted = performance.now();
 		let drawingComplete = reduceMotion;
-		let carAngle = -Math.PI / 2;
 		const animate = (time: number) => {
-			frame = window.requestAnimationFrame(animate);
-			const dt = Math.min(0.05, (time - lastTime) / 1000 || 0);
-			lastTime = time;
-			if (!reduceMotion && time >= drawingStarted + 3800) {
-				carAngle = (carAngle + dt * 0.36) % (Math.PI * 2);
-				setCarOnTrack(car, carAngle);
+			if (!reduceMotion) frame = window.requestAnimationFrame(animate);
+			if (!reduceMotion && time - lastDraw < (mobile && drawingComplete && carLoaded && time - carArrivalStarted > 4000 ? 100 : 32)) return;
+			lastDraw = time;
+			const drawTime = reduceMotion ? 5000 : Math.max(0, time - drawingStarted);
+			if (!drawingComplete || reduceMotion) {
+				apartmentParts.forEach(({ mesh, position, scale, stage, delay }) => {
+					const progress = ease((drawTime - delay) / 680);
+					mesh.visible = progress > 0.005;
+					mesh.position.copy(position);
+					mesh.position.y -= (1 - progress) * (stage === 6 ? 0.82 : 0.46);
+					mesh.scale.copy(scale);
+					mesh.scale.y *= 0.14 + progress * 0.86;
+				});
 			}
-			const drawTime = Math.max(0, time - drawingStarted);
-			if (!reduceMotion && !drawingComplete && drawTime < 3800) {
-				const homeProgress = THREE.MathUtils.smoothstep(drawTime, 0, 2150);
-				const carProgress = THREE.MathUtils.smoothstep(drawTime - 1750, 0, 2050);
-				revealFeature("HOME", homeProgress);
-				revealFeature("CAR", carProgress);
-				revealFill("HOME", homeProgress);
-				revealFill("CAR", carProgress);
-			} else if (!reduceMotion && !drawingComplete && drawTime >= 3800) {
-				revealFeature("HOME", 1);
-				revealFeature("CAR", 1);
-				revealFill("HOME", 1);
-				revealFill("CAR", 1);
+			const carTime = reduceMotion ? 5000 : carLoaded ? Math.max(0, time - carArrivalStarted) : 0;
+			const carProgress = ease((carTime - 2450) / 1900);
+			setCarArrival(car, carProgress, mobile);
+			car.scale.setScalar(mobile ? 0.92 : 1);
+			carAssemblyParts.forEach(({ object, position, scale, offset, delay, duration }) => {
+				const progress = ease((carTime - delay) / duration);
+				object.visible = progress > 0.005;
+				object.position.copy(position).addScaledVector(offset, 1 - progress);
+				object.scale.copy(scale);
+				if (object.name === "body") object.scale.y *= 0.45 + progress * 0.55;
+				else object.scale.multiplyScalar(0.12 + progress * 0.88);
+			});
+			const solidProgress = ease((carTime - 120) / 1550);
+			const outlineProgress = ease(carTime / 650) * (1 - ease((carTime - 1050) / 950));
+			carMaterials.forEach((state, material) => {
+				if (solidProgress >= 1) {
+					const changed = material.transparent !== state.transparent;
+					material.opacity = state.opacity;
+					material.transparent = state.transparent;
+					material.depthWrite = state.depthWrite;
+					if (changed) material.needsUpdate = true;
+				} else {
+					material.opacity = state.opacity * solidProgress;
+				}
+			});
+			carOutlines.forEach(({ geometry, material }) => {
+				const count = geometry.getAttribute("position").count;
+				geometry.setDrawRange(0, Math.floor(count * ease((carTime - 250) / 2050) / 2) * 2);
+				material.opacity = outlineProgress * 0.85;
+			});
+			contactShadow.position.set(car.position.x, 0.325, car.position.z);
+			(contactShadow.material as THREE.MeshBasicMaterial).opacity = 0.34 * ease((carTime - 1000) / 1350);
+			lightMaterial.opacity = 0.12 + 0.19 * ease(carTime / 2700);
+			portalMaterials.forEach((material, index) => { material.opacity = 0.04 + 0.17 * ease((drawTime - index * 230) / 1800); });
+			carLight.position.x = 3.8 - 0.2 * carProgress;
+			camera.position.copy(cameraBase);
+			if (!mobile && !reduceMotion) {
+				camera.position.x += Math.sin(drawTime * 0.00028) * 0.12;
+				camera.position.z -= 0.32 * ease(drawTime / 3900);
+			}
+			camera.lookAt(cameraTarget);
+			if (!reduceMotion && !drawingComplete && drawTime >= 3800) {
 				drawingComplete = true;
 			}
 			renderer.render(scene, camera);
 		};
 		const updateAnimationState = () => {
-			const shouldAnimate = inViewport && document.visibilityState === "visible";
+			const shouldAnimate = inViewport && document.visibilityState === "visible" && !reduceMotion;
+			if (inViewport && reduceMotion) animate(drawingStarted + 5000);
 			if (shouldAnimate && !frame) {
-				lastTime = 0;
+				lastDraw = 0;
 				frame = window.requestAnimationFrame(animate);
 			} else if (!shouldAnimate && frame) {
 				window.cancelAnimationFrame(frame);
@@ -499,6 +454,7 @@ export default function HeroThreeScene() {
 		document.addEventListener("visibilitychange", updateAnimationState);
 
 		return () => {
+			disposed = true;
 			window.cancelAnimationFrame(frame);
 			visibilityObserver?.disconnect();
 			document.removeEventListener("visibilitychange", updateAnimationState);
@@ -515,6 +471,12 @@ export default function HeroThreeScene() {
 			});
 			geometries.forEach((geometry) => geometry.dispose());
 			materials.forEach((material) => material.dispose());
+			plasterTexture.dispose();
+			floorAlpha.dispose();
+			draco.dispose();
+			environment.dispose();
+			pmrem.dispose();
+			room.dispose();
 			renderer.dispose();
 			mount.removeChild(renderer.domElement);
 		};
@@ -523,8 +485,8 @@ export default function HeroThreeScene() {
 	return (
 		<div style={{ position: "relative", width: "100%", height: "100%", minHeight: 360, overflow: "hidden", background: "transparent", isolation: "isolate" }}>
 			<div ref={host} style={{ position: "absolute", inset: 0 }} />
-			<div className="scene-shade" aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(90deg,rgba(15,43,46,.82) 0%,rgba(15,43,46,.68) 34%,rgba(15,43,46,.24) 58%,rgba(15,43,46,.02) 100%)" }} />
-			<style>{`@media(max-width:900px){.scene-shade{background:linear-gradient(180deg,rgba(15,43,46,.08) 0%,rgba(15,43,46,.16) 32%,rgba(15,43,46,.48) 72%,rgba(15,43,46,.78) 100%)!important}}`}</style>
+			<div className="scene-shade" aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(90deg,rgba(27,25,25,.82) 0%,rgba(27,25,25,.68) 34%,rgba(27,25,25,.24) 58%,rgba(27,25,25,.02) 100%)" }} />
+			<style>{`@media(max-width:900px){.scene-shade{background:linear-gradient(90deg,rgba(27,25,25,.9) 0%,rgba(27,25,25,.58) 58%,rgba(27,25,25,.16) 100%)!important}}@media(max-width:767px){.scene-shade{background:linear-gradient(180deg,rgba(27,25,25,.02) 0%,rgba(27,25,25,.08) 30%,rgba(27,25,25,.86) 43%,rgba(27,25,25,.98) 100%)!important}}`}</style>
 		</div>
 	);
 }

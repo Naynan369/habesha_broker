@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 
-interface IFetch {
-	fetchFunction: () => Promise<any>;
-	dependencies?: any[];
+interface IFetch<T> {
+	fetchFunction: () => Promise<{ data: T }>;
+	dependencies?: readonly unknown[];
 }
 
-const useFetch = ({ fetchFunction, dependencies = [] }: IFetch) => {
-	const [data, setData] = useState(null);
+const useFetch = <T = any,>({ fetchFunction, dependencies = [] }: IFetch<T>) => {
+	const [data, setData] = useState<T | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState(null);
+	const [error, setError] = useState<unknown>(null);
 	const fetchRef = useRef(fetchFunction);
 	const dependencyKey = JSON.stringify(dependencies);
 
@@ -35,7 +35,7 @@ const useFetch = ({ fetchFunction, dependencies = [] }: IFetch) => {
 		};
 	}, [dependencyKey]);
 
-	return [data, loading, error];
+	return [data, loading, error] as const;
 };
 
 export { useFetch };
