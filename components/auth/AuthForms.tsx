@@ -1,4 +1,3 @@
-import { EditIcon, LockIcon } from "@chakra-ui/icons";
 import { Button, Checkbox, Flex, FormControl, FormErrorMessage, FormLabel, Input, Spinner, Text, useColorModeValue, useToast } from "@chakra-ui/react";
 import { useLang } from "@libs/hooks/useLang";
 import { useUser } from "@libs/store";
@@ -25,16 +24,16 @@ const AuthInputField: FC<IAuthInputField> = ({
 	type,
 	autoComplete,
 }) => {
-	const labelColor = useColorModeValue("gray.700", "gray.200");
-	const fieldBg = useColorModeValue("gray.50", "#101010");
-	const fieldBorder = useColorModeValue("gray.200", "whiteAlpha.300");
-	const hoverBg = useColorModeValue("white", "#111111");
+	const labelColor = useColorModeValue("#2b4246", "#d9e2e0");
+	const fieldBg = useColorModeValue("#f4f7f5", "#182123");
+	const fieldBorder = useColorModeValue("#cdd9d5", "#405053");
+	const hoverBg = useColorModeValue("#ffffff", "#1d292b");
 	return (
 		<FormControl
 			isRequired
 			isInvalid={!!formik.errors[name] && !!formik.touched[name]}
 		>
-			<FormLabel htmlFor={name} mb="2" fontSize="sm" fontWeight="600" color={labelColor}>
+			<FormLabel htmlFor={name} mb="2" fontSize="sm" fontWeight="700" color={labelColor}>
 				{label}
 			</FormLabel>
 			<Input
@@ -44,13 +43,13 @@ const AuthInputField: FC<IAuthInputField> = ({
 				type={type || "text"}
 				autoComplete={autoComplete}
 				variant="outline"
-				size="lg"
-				borderRadius="xl"
+				h="52px"
+				borderRadius="12px"
 				bg={fieldBg}
 				borderColor={fieldBorder}
 				color={labelColor}
-				_hover={{ bg: hoverBg, borderColor: "gray.400" }}
-				_focus={{ bg: hoverBg, borderColor: "mainorange", boxShadow: "0 0 0 1px #C66B36" }}
+				_hover={{ bg: hoverBg, borderColor: "#8ca29e" }}
+				_focus={{ bg: hoverBg, borderColor: "#b46c42", boxShadow: "0 0 0 2px rgba(180,108,66,.22)" }}
 				name={name}
 				id={name}
 			/>
@@ -66,6 +65,10 @@ const LoginForm = () => {
 	const toast = useToast();
 	const lang = useLang();
 	const setUser = useUser((state) => state.setUser);
+	const primaryBg = useColorModeValue("#1b4145", "#d8b479");
+	const primaryHover = useColorModeValue("#28575b", "#e6c68f");
+	const primaryText = useColorModeValue("#ffffff", "#172829");
+	const linkColor = useColorModeValue("#a4532c", "#e1b57c");
 	const loginSchema = Yup.object().shape({
 		email: Yup.string()
 			.email(lang.auth.email_invalid)
@@ -123,30 +126,24 @@ const LoginForm = () => {
 
 					<Flex mt="4" justifyContent="flex-end">
 						<Link legacyBehavior href="/auth/forget_password" passHref>
-							<Text as="a" fontSize="sm" color="mainorange" fontWeight="600" _hover={{ textDecoration: "underline" }}>
+							<Text as="a" fontSize="sm" color={linkColor} fontWeight="700" _hover={{ color: linkColor, textDecoration: "underline" }}>
 								{lang.auth.forget}
 							</Text>
 						</Link>
 					</Flex>
 
-					<Flex justifyContent="center" mt="8">
+					<Flex justifyContent="center" mt="7">
 						<Button
 							w="full"
 							type="submit"
 							alignSelf="center"
-							textTransform="uppercase"
 							h="54px"
-							borderRadius="xl"
-							leftIcon={
-								!formik.isSubmitting ? (
-									<LockIcon />
-								) : (
-									<Spinner />
-								)
-							}
-							colorScheme="orange"
-							bg="mainorange"
-							_hover={{ bg: "#ad582a" }}
+							borderRadius="12px"
+							leftIcon={formik.isSubmitting ? <Spinner /> : undefined}
+							bg={primaryBg}
+							color={primaryText}
+							fontWeight="800"
+							_hover={{ bg: primaryHover, color: primaryText }}
 							isDisabled={formik.isSubmitting}
 						>
 							{formik.isSubmitting
@@ -169,7 +166,12 @@ export const SignUpForm = () => {
 	const lang = useLang();
 	const toast = useToast();
 	const router = useRouter();
-	const mutedColor = useColorModeValue("gray.600", "gray.300");
+	const mutedColor = useColorModeValue("#617276", "#a6b5b7");
+	const linkColor = useColorModeValue("#a4532c", "#e1b57c");
+	const primaryBg = useColorModeValue("#1b4145", "#d8b479");
+	const primaryHover = useColorModeValue("#28575b", "#e6c68f");
+	const primaryText = useColorModeValue("#ffffff", "#172829");
+	const borderColor = useColorModeValue("#dce3e0", "#344044");
 	const signUpSchema = Yup.object().shape({
 		firstName: Yup
 			.string()
@@ -229,13 +231,7 @@ export const SignUpForm = () => {
 			}}
 		>
 			{(formik) => (
-				<form
-					onSubmit={formik.handleSubmit}
-					style={{
-						display: "flex",
-						flexDirection: "column",
-					}}
-				>
+				<form onSubmit={formik.handleSubmit}>
 					<Flex gap="4" direction={{ base: "column", sm: "row" }}>
 						<AuthInputField
 							formik={formik}
@@ -277,49 +273,33 @@ export const SignUpForm = () => {
 					</Flex>
 					<Flex mt="6">
 						<Checkbox
-							checked={agree}
+							size="lg"
+							sx={{ ".chakra-checkbox__control": { width: "20px", height: "20px", flexShrink: 0 } }}
+							isChecked={agree}
 							onChange={(event) => setAgree(event.target.checked)}
 							colorScheme="orange"
 							alignItems="flex-start"
 							aria-label={lang.auth.agree}
 						>
 							<Text fontSize="sm" color={mutedColor} lineHeight="1.6">
-								{lang.auth.agree} <Link href="/policies"><Text as="span" color="mainorange" fontWeight="semibold" textDecoration="underline">{lang.auth.policiesLink}</Text></Link>
+								{lang.auth.agree} <Link href="/policies"><Text as="span" color={linkColor} fontWeight="semibold" textDecoration="underline">{lang.auth.policiesLink}</Text></Link>
 							</Text>
 						</Checkbox>
 					</Flex>
 
+					<Button mt="7" leftIcon={formik.isSubmitting ? <Spinner /> : undefined} bg={primaryBg} color={primaryText} _hover={{ bg: primaryHover, color: primaryText }} borderRadius="12px" h="54px" w="full" fontWeight="800" type="submit" isDisabled={!formik.isValid || !agree || formik.isSubmitting}>
+						{formik.isSubmitting ? lang.auth.creating : lang.auth.create}
+					</Button>
+
 					<SocialAuthButtons mode="signup" termsAccepted={agree} />
 
-					<Flex
-						gap="4"
-						mt="8"
-						direction={{ base: "column", sm: "row" }}
-						alignItems="center"
-						justify="space-between"
-					>
-						<Flex gap="1" align="center" fontSize="sm" color={mutedColor}>
-							<Text>{lang.auth.have_account}</Text>
-							<Link legacyBehavior href="/auth/login" passHref>
-								<Button as="a" variant="link" size="sm" color="mainorange" fontWeight="700">
-									{lang.auth.sign_in}
-								</Button>
-							</Link>
-						</Flex>
-						<Button
-							leftIcon={formik.isSubmitting ? <Spinner /> : <EditIcon />}
-							bg="mainorange"
-							color="white"
-							_hover={{ bg: "#ad582a" }}
-							borderRadius="xl"
-							h="52px"
-							px="6"
-							type="submit"
-							isDisabled={!formik.isValid || !agree || formik.isSubmitting}
-							w={{ base: "full", sm: "auto" }}
-						>
-							{formik.isSubmitting ? lang.auth.creating : lang.auth.create}
-						</Button>
+					<Flex mt="8" pt="6" borderTop="1px solid" borderColor={borderColor} align="center" justify="center" wrap="wrap" gap="2" fontSize="sm" color={mutedColor}>
+						<Text>{lang.auth.have_account}</Text>
+						<Link legacyBehavior href="/auth/login" passHref>
+							<Button as="a" variant="link" size="sm" color={linkColor} fontWeight="700" _hover={{ color: linkColor, textDecoration: "underline" }}>
+								{lang.auth.sign_in}
+							</Button>
+						</Link>
 					</Flex>
 				</form>
 			)}

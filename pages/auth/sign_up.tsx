@@ -22,8 +22,9 @@ export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 
 export default function SignUp() {
 	const lang = useLang();
-	const headingColor = useColorModeValue("#143A45", "#e7eff0");
-	const mutedColor = useColorModeValue("gray.600", "gray.300");
+	const headingColor = useColorModeValue("#193539", "#f0f3f1");
+	const mutedColor = useColorModeValue("#617276", "#a6b5b7");
+	const accentColor = useColorModeValue("#a4532c", "#e1b57c");
 
 	return (
 		<>
@@ -32,11 +33,12 @@ export default function SignUp() {
 				<meta name="description" content={lang.auth.signup_description} />
 			</Head>
 			<AuthPageLayout>
-				<Box mb="7">
-					<Heading fontSize={{ base: "3xl", md: "4xl" }} color={headingColor} letterSpacing="-0.035em">
-						{lang.auth.signUp}
+				<Box mb="8">
+					<Text mb="3" color={accentColor} fontSize="xs" fontWeight="800" letterSpacing=".16em" textTransform="uppercase">{lang.auth.signup_eyebrow}</Text>
+					<Heading as="h1" fontSize={{ base: "2.35rem", sm: "3rem", xl: "3.4rem" }} color={headingColor} lineHeight="1.08" letterSpacing="-.055em">
+						{lang.auth.signup_heading}
 					</Heading>
-					<Text mt="3" color={mutedColor} lineHeight="1.7">
+					<Text mt="4" color={mutedColor} lineHeight="1.7" fontSize={{ base: "sm", sm: "md" }}>
 						{lang.auth.signup_description}
 					</Text>
 				</Box>

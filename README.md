@@ -36,6 +36,8 @@ API routes live under `pages/api`. The catch-all JSON route implements account, 
 
 Images and optional home videos upload directly from the browser to Vercel Blob. They are stored independently of the application deployment, so listings keep working across serverless invocations and new deployments. The Vercel Blob store must be connected to the same Vercel project and to each environment where uploads are expected.
 
+The login and signup background is an original photograph of Bole, Addis Ababa by [Bemnet Mesfin on Unsplash](https://unsplash.com/photos/busy-city-street-with-modern-buildings-and-traffic-u5UktTgW-Yw), used under the [Unsplash License](https://unsplash.com/license).
+
 ## Stripe test checkout
 
 The listing publication fee is fixed at **€40 EUR**. Checkout uses Stripe test mode only and accepts a secret key beginning with `sk_test_` or a restricted test key beginning with `rk_test_`; live Stripe keys are rejected. A restricted key must have permission to create and retrieve Checkout Sessions. Set `STRIPE_SECRET_KEY` in `.env` for local development or in the Vercel environment you want to test, then restart the local server or redeploy. No webhook secret is needed for this return-based test flow. The server verifies the Stripe Checkout session, test mode, amount, currency, and payment status before marking the listing paid. The listing remains private until an admin approves it.

@@ -16,6 +16,8 @@ declare global {
 	interface Window {
 		google?: any;
 		AppleID?: any;
+		habeshaGoogleSession?: GoogleSession;
+		habeshaGoogleSessionPending?: Promise<GoogleSession>;
 	}
 }
 
@@ -29,6 +31,13 @@ const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() || "
 const appleServiceId = process.env.NEXT_PUBLIC_APPLE_SERVICE_ID?.trim() || "";
 const appleRedirectUri = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI?.trim() || "";
 const pendingNonces = new Map<Provider, Promise<string>>();
+
+type GoogleSession = {
+	nonce: string;
+	expiresAt: number;
+	onCredential?: (identityToken: string, nonce: string) => void;
+	onError?: () => void;
+};
 
 function getNonce(provider: Provider) {
 	const pending = pendingNonces.get(provider);
@@ -47,11 +56,44 @@ async function sha256Hex(value: string) {
 	return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+async function getGoogleSession() {
+	if (window.habeshaGoogleSession) return window.habeshaGoogleSession;
+	if (window.habeshaGoogleSessionPending) return window.habeshaGoogleSessionPending;
+
+	const pending = (async () => {
+		const nonce = await getNonce("google");
+		const google = window.google?.accounts?.id;
+		if (!google || !nonce) throw new Error("Google sign-in is unavailable");
+		const session: GoogleSession = { nonce, expiresAt: Date.now() + 5 * 60 * 1000 };
+		google.initialize({
+			client_id: googleClientId,
+			nonce,
+			callback: (result: { credential?: string }) => {
+				const active = window.habeshaGoogleSession;
+				if (!active) return;
+				if (result?.credential) {
+					active.expiresAt = 0;
+					active.onCredential?.(result.credential, active.nonce);
+				} else {
+					active.onError?.();
+				}
+			},
+		});
+		window.habeshaGoogleSession = session;
+		return session;
+	})();
+	window.habeshaGoogleSessionPending = pending;
+	try {
+		return await pending;
+	} finally {
+		if (window.habeshaGoogleSessionPending === pending) window.habeshaGoogleSessionPending = undefined;
+	}
+}
+
 // Keep Google's genuine control in the dialog; the two entry buttons use our own
 // shared styles and translations. Never hide an iframe over a custom button.
-function GoogleSignInControl({ locale, attempt, loadingLabel, onCredential, onError }: {
+function GoogleSignInControl({ locale, loadingLabel, onCredential, onError }: {
 	locale: string;
-	attempt: number;
 	loadingLabel: string;
 	onCredential: (identityToken: string, nonce: string) => void;
 	onError: () => void;
@@ -67,23 +109,18 @@ function GoogleSignInControl({ locale, attempt, loadingLabel, onCredential, onEr
 		let observer: ResizeObserver | undefined;
 		let frame = 0;
 		let lastWidth = 0;
+		let session: GoogleSession | undefined;
 		setReady(false);
 
-		const initialize = async () => {
+		const renderGoogleButton = async () => {
 			try {
-				const nonce = await getNonce("google");
+				const activeSession = await getGoogleSession();
 				if (cancelled) return;
 				const google = window.google?.accounts?.id;
-				if (!google || !nonce) throw new Error("Google sign-in is unavailable");
-				google.initialize({
-					client_id: googleClientId,
-					nonce,
-					callback: (result: { credential?: string }) => {
-						if (cancelled) return;
-						if (result?.credential) onCredential(result.credential, nonce);
-						else onError();
-					},
-				});
+				if (!google || activeSession.expiresAt <= Date.now()) throw new Error("Google sign-in session expired");
+				session = activeSession;
+				session.onCredential = onCredential;
+				session.onError = onError;
 				const render = () => {
 					const width = Math.min(400, Math.floor(mount.clientWidth));
 					if (cancelled || width < 1 || width === lastWidth) return;
@@ -105,14 +142,16 @@ function GoogleSignInControl({ locale, attempt, loadingLabel, onCredential, onEr
 				if (!cancelled) onError();
 			}
 		};
-		void initialize();
+		void renderGoogleButton();
 		return () => {
 			cancelled = true;
 			observer?.disconnect();
 			cancelAnimationFrame(frame);
+			if (session?.onCredential === onCredential) session.onCredential = undefined;
+			if (session?.onError === onError) session.onError = undefined;
 			mount.replaceChildren();
 		};
-	}, [attempt, locale, onCredential, onError, theme]);
+	}, [locale, onCredential, onError, theme]);
 
 	return (
 		<Box w="full" minH="48px" aria-busy={!ready}>
@@ -129,12 +168,11 @@ export function SocialAuthButtons({ mode, termsAccepted = false }: Props) {
 	const toast = useToast();
 	const setUser = useUser((state) => state.setUser);
 	const signInPendingRef = useRef(false);
-	const [googleScriptLocale, setGoogleScriptLocale] = useState<string | null>(null);
+	const [googleScriptReady, setGoogleScriptReady] = useState(false);
 	const [googleScriptError, setGoogleScriptError] = useState(false);
 	const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
 	const [googleRenderError, setGoogleRenderError] = useState(false);
 	const [appleScriptReady, setAppleScriptReady] = useState(false);
-	const [googleAttempt, setGoogleAttempt] = useState(0);
 	const [busyProvider, setBusyProvider] = useState<Provider | null>(null);
 	const [appleOriginAllowed, setAppleOriginAllowed] = useState(false);
 	const muted = useColorModeValue("gray.600", "gray.300");
@@ -143,7 +181,6 @@ export function SocialAuthButtons({ mode, termsAccepted = false }: Props) {
 	const buttonBorder = useColorModeValue("#565b63", "#6b717b");
 	const dialogBg = useColorModeValue("white", "#17191c");
 	const focusRing = useColorModeValue("#143a45", "#e9b75c");
-	const googleScriptReady = googleScriptLocale === googleLocale;
 	const canContinue = mode === "login" || termsAccepted;
 	const sharedButtonProps: ButtonProps = {
 		type: "button", variant: "unstyled", w: "full", h: "48px", minH: "48px",
@@ -191,6 +228,7 @@ export function SocialAuthButtons({ mode, termsAccepted = false }: Props) {
 			const destination = user.role === "ADMIN" ? "/admin" : "/dashboard";
 			await router.replace(destination, destination, { locale: router.locale });
 		} catch (error: any) {
+			if (provider === "google") setGoogleRenderError(true);
 			let description = lang.auth.social_auth_failed;
 			if (error?.response?.status === 404 && mode === "login") description = lang.auth.social_account_missing;
 			else if (error?.response?.status === 503) description = lang.auth.social_setup;
@@ -204,7 +242,6 @@ export function SocialAuthButtons({ mode, termsAccepted = false }: Props) {
 		} finally {
 			signInPendingRef.current = false;
 			setBusyProvider(null);
-			if (provider === "google") setGoogleAttempt((attempt) => attempt + 1);
 		}
 	}, [lang.auth, mode, router, setUser, termsAccepted, toast]);
 
@@ -248,10 +285,9 @@ export function SocialAuthButtons({ mode, termsAccepted = false }: Props) {
 	return (
 		<>
 			{googleClientId && <Script
-				key={googleLocale}
-				src={`https://accounts.google.com/gsi/client?hl=${googleLocale}`}
+				src="https://accounts.google.com/gsi/client"
 				strategy="afterInteractive"
-				onReady={() => { setGoogleScriptLocale(googleLocale); setGoogleScriptError(false); }}
+				onReady={() => { setGoogleScriptReady(true); setGoogleScriptError(false); }}
 				onError={() => setGoogleScriptError(true)}
 			/>}
 			{appleServiceId && <Script src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js" strategy="afterInteractive" onReady={() => setAppleScriptReady(true)} />}
@@ -262,7 +298,7 @@ export function SocialAuthButtons({ mode, termsAccepted = false }: Props) {
 				</Text>
 				<Divider />
 			</Flex>
-			<Flex direction="column" w="full" maxW="400px" mx="auto" gap="3" lang={googleLocale}>
+			<Flex direction="column" w="full" gap="3" lang={googleLocale}>
 				<Button
 					{...sharedButtonProps}
 					isDisabled={!googleClientId || !canContinue || busyProvider !== null}
@@ -317,12 +353,11 @@ export function SocialAuthButtons({ mode, termsAccepted = false }: Props) {
 							) : googleRenderError ? (
 								<Flex direction="column" gap="4">
 									<Text role="alert" fontSize="sm">{lang.auth.social_auth_failed}</Text>
-									<Button {...sharedButtonProps} display="flex" onClick={() => { setGoogleRenderError(false); setGoogleAttempt((attempt) => attempt + 1); }}>{lang.auth.social_retry}</Button>
+									<Button {...sharedButtonProps} display="flex" onClick={() => window.location.reload()}>{lang.auth.social_retry}</Button>
 								</Flex>
 							) : googleScriptReady ? (
 								<GoogleSignInControl
 									locale={googleLocale}
-									attempt={googleAttempt}
 									loadingLabel={lang.auth.social_loading}
 									onCredential={handleGoogleCredential}
 									onError={handleGoogleError}
