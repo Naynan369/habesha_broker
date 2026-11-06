@@ -489,6 +489,13 @@ export const am = {
 		employment: "ሥራ",
 		contact: "ያግኙን",
 	},
+	mobileApp: {
+		status: "በቅርቡ ለiPhone",
+		title: "ቀጣዩ እርምጃዎ ወደ ሞባይል ይመጣል።",
+		previewTitle: "ቀጣዩን ቦታዎን ያግኙ",
+		previewSearch: "ቤቶችንና ሌሎችን ይፈልጉ",
+		previewCategory: "ቤቶች · ተሽከርካሪዎች · ቦታዎች",
+	},
 	home: {
 		featured_kicker: "በሐበሻ ደላሎች የተመረጡ",
 		featured_title: "ተለይተው የቀረቡ ዝርዝሮች",

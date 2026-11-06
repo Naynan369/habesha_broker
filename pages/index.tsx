@@ -7,6 +7,7 @@ import { SiteNavbar } from "@components/shared/SiteNavbar";
 import { FeaturedListings } from "@components/home/FeaturedListings";
 import { ServicesSection } from "@components/home/ServicesSection";
 import { WhyChooseSection } from "@components/home/WhyChooseSection";
+import { MobileAppShowcase } from "@components/home/MobileAppShowcase";
 import { HomeMotionSystem, HomeReveal } from "@components/home/HomeMotion";
 import { withSessionSsr } from "@config/cookie/cookie";
 import { prisma } from "@config/prisma";
@@ -59,6 +60,7 @@ export default function Home({ user, featuredListings }) {
 				<HomeReveal><ServicesSection /></HomeReveal>
 				<HomeReveal><WhyChooseSection /></HomeReveal>
 				<HomeReveal><HomeContact /></HomeReveal>
+				<HomeReveal><MobileAppShowcase /></HomeReveal>
 			</main>
 			<HomeReveal><HomeFooter /></HomeReveal>
 		</Box>

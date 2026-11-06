@@ -491,6 +491,13 @@ export const en = {
 		employment: "Employment",
 		contact: "Contact Us",
 	},
+	mobileApp: {
+		status: "Coming soon on iPhone",
+		title: "Your next move is going mobile.",
+		previewTitle: "Find your next place",
+		previewSearch: "Search homes and more",
+		previewCategory: "Homes · Vehicles · Spaces",
+	},
 	home: {
 		featured_kicker: "Curated by Habesha Brokers",
 		featured_title: "Featured listings",
