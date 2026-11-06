@@ -44,14 +44,14 @@ export const PersonalInfoUpdate: FC<IPersonalInfoUpdate> = ({ user }) => {
 					action.setSubmitting(true);
 					await axios
 						.post("/api/user/editProfile", values)
-						.then((res) => {
+						.then(() => {
 							toast({
 								title: "Updated Successfully",
 								status: "success",
 								isClosable: true,
 							});
 						})
-						.catch((err) => {
+						.catch(() => {
 							toast({
 								title: "Error",
 								description: "Check the fields, and try again",

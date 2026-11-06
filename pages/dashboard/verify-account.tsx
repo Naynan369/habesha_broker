@@ -32,7 +32,6 @@ export default function VerifyAccountPage({ user }) {
 	const [sent, setSent] = useState(false);
 	const [sending, setSending] = useState(false);
 	const [verifying, setVerifying] = useState(false);
-	const [verified, setVerified] = useState(false);
 	const text = useLang().verificationPage;
 
 	const toast = useToast();
@@ -57,9 +56,11 @@ export default function VerifyAccountPage({ user }) {
 				setSent(true);
 				toast({ title: text.emailAccepted, status: "success", isClosable: true });
 			})
-			.catch((err) => {
+			.catch(() => {
 				toast({
 					title: text.emailError,
+					status: "error",
+					isClosable: true,
 				});
 			})
 			.finally(() => {
@@ -73,11 +74,10 @@ export default function VerifyAccountPage({ user }) {
 			.post("/api/user/verifyAccount", {
 				code: value,
 			})
-			.then((res) => {
+			.then(() => {
 				router.replace("/dashboard");
-				setVerified(true);
 			})
-			.catch((err) => {
+			.catch(() => {
 				toast({
 					title: text.verifyError,
 					isClosable: true,

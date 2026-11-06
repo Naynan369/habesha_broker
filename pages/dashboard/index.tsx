@@ -9,7 +9,7 @@ import { useLang } from "@libs/hooks/useLang";
 import Link from "next/link";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import React, { FC, ReactNode } from "react";
+import { FC, ReactNode } from "react";
 import { MdAddShoppingCart, MdArrowForward, MdCheckCircle, MdEventAvailable, MdListAlt, MdSave } from "react-icons/md";
 
 export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {

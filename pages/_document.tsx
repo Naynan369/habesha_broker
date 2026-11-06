@@ -5,7 +5,7 @@ import { theme } from "@config/theme";
 class MyDocument extends Document {
 	render() {
 		return (
-			<Html lang={this.props.locale || "en"}>
+			<Html lang={this.props.locale || "en"} data-scroll-behavior="smooth">
 				<Head>
 					<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 					<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />

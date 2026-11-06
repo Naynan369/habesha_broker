@@ -76,7 +76,7 @@ export default function EditProfilePage({ user }) {
 				<ProfileUpdate user={user} />
 				<Box>
 					<PersonalInfoUpdate user={user} />
-					<ChangePassword user={user} />
+					<ChangePassword />
 					<AccountManagement user={user} />
 					<Box my="5">
 						<Heading size="md" mb="5">

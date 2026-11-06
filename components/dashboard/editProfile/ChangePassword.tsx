@@ -6,16 +6,14 @@ import {
 	SimpleGrid,
 	Button,
 	Spinner,
-	Text,
 } from "@chakra-ui/react";
-import { useUser } from "@libs/store";
 import axios from "axios";
 import { Formik } from "formik";
 import { MdPassword } from "react-icons/md";
 import { InputField } from "../forms/InputField";
 import * as yup from "yup";
 
-export const ChangePassword = ({ user }) => {
+export const ChangePassword = () => {
 	const toast = useToast();
 
 	return (
@@ -41,7 +39,7 @@ export const ChangePassword = ({ user }) => {
 					actions.setSubmitting(true);
 					await axios
 						.post("/api/user/editProfile", values)
-						.then((res) => {
+						.then(() => {
 							toast({
 								title: "Success",
 								description: "Password Updated",
@@ -49,7 +47,7 @@ export const ChangePassword = ({ user }) => {
 							});
 						})
 						.catch((err) => {
-							const e = err.response.data;
+							const e = err?.response?.data;
 							if (e?.fieldError) {
 								actions.setFieldError(e.field, e.msg);
 							}

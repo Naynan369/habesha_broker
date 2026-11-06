@@ -39,7 +39,6 @@ import { FC, useEffect, useState } from "react";
 import {
 	FaBuilding,
 	FaCarSide,
-	FaCheckCircle,
 	FaClock,
 	FaCreditCard,
 	FaHome,
@@ -154,7 +153,7 @@ export default function AdminDashboard({ user }) {
 						<StatsBar onOpenListings={openListingQueue} onOpenPayments={openPaymentQueue} />
 						<PaymentsPanel compact refreshKey={refreshKey} />
 					</Box>}
-					{activeSection === "LISTINGS" && <Flex className="admin-section-enter admin-data-panel" direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }}>
+					{activeSection === "LISTINGS" && <Flex className="admin-data-panel" direction="column" bg={surface} border="1px solid" borderColor={border} borderRadius="2xl" boxShadow="0 12px 36px rgba(21,42,44,.07)" p={{ base: 4, md: 7 }}>
 						<Flex direction={{ base: "column", lg: "row" }} align={{ base: "stretch", lg: "center" }} gap="5" mb="3">
 							<Box>
 								<Heading size="md" color={textColor}>{copy.listing.title}</Heading>
@@ -648,7 +647,7 @@ function StatsBar({ onOpenListings, onOpenPayments }: { onOpenListings: () => vo
 
 	return <Flex direction="column" gap={{ base: 4, md: 5 }}>
 		<SimpleGrid className="admin-stats-grid" spacing={{ base: 3, lg: 4 }} columns={{ base: 1, sm: 2, xl: 4 }}>
-			{cards.map((card) => <Box className="admin-stat-card" key={card.label} position="relative" overflow="hidden" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} minH="138px" boxShadow="0 4px 18px rgba(20,30,40,.045)" transition="transform .18s ease, box-shadow .18s ease" _hover={{ transform: "translateY(-2px)", boxShadow: "0 10px 24px rgba(20,30,40,.09)" }}>
+			{cards.map((card) => <Box className="admin-stat-card" key={card.label} position="relative" overflow="hidden" bg={surface} border="1px solid" borderColor={border} borderRadius="xl" p={{ base: 4, md: 5 }} minH="138px" boxShadow="0 4px 18px rgba(20,30,40,.045)">
 				<Box position="absolute" insetInline="0" top="0" h="2px" bg={`${card.tone}.400`} />
 				<Flex align="flex-start" justify="space-between" gap="3">
 					<Box minW="0">

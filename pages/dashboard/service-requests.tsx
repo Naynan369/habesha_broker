@@ -32,7 +32,6 @@ export default function ServiceRequestsPage({ user }: { user: { id: string } }) 
 	const [quoteAmounts, setQuoteAmounts] = useState<Record<string, string>>({});
 	const [quoteNotes, setQuoteNotes] = useState<Record<string, string>>({});
 	const [appointmentDrafts, setAppointmentDrafts] = useState<Record<string, string>>({});
-	const [reviewingId, setReviewingId] = useState("");
 	const [reviewRatings, setReviewRatings] = useState<Record<string, string>>({});
 	const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
 	const [page, setPage] = useState(0);
@@ -96,7 +95,6 @@ export default function ServiceRequestsPage({ user }: { user: { id: string } }) 
 		setBusyId(requestId);
 		try {
 			await axios.post("/api/serviceRequests/review", { requestId, rating: Number(reviewRatings[requestId] || 5), comment: reviewComments[requestId] || "" });
-			setReviewingId("");
 			toast({ title: text.reviewed, status: "success", duration: 3500, isClosable: true });
 			await load();
 		} catch (error: any) {

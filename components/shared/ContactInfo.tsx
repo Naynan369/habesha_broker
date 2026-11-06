@@ -88,7 +88,7 @@ export const ContactInfo: FC<IContactInfo> = ({ userID, size, appearance = "bran
 	return (
 		<VStack spacing="2" width={"full"}>
 			{loading
-				? [...Array(4)].map((v, i) => (
+				? Array.from({ length: 4 }, (_, i) => (
 						<Skeleton
 							key={i}
 							height={"8"}

@@ -13,7 +13,7 @@ import {
 	Text,
 	useColorModeValue,
 } from "@chakra-ui/react";
-import { CONTACTTYPE } from "@components/shared/ContactInfo";
+import { CONTACTTYPE, type ContactInfo } from "@components/shared/ContactInfo";
 import { useFetch } from "@libs/hooks/useFetch";
 import axios from "axios";
 import { useState } from "react";
@@ -29,9 +29,9 @@ export const ContactInfoEdit = ({ user }) => {
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const textColor = useColorModeValue("maingray", "gray.100");
 
-	const [contactInfos, contactLoading, contactError] = useFetch({
+	const [contactInfos, contactLoading, contactError] = useFetch<ContactInfo[]>({
 		fetchFunction: async () =>
-			await axios.get(`/api/user/contactInfo/${user.id}`),
+			await axios.get<ContactInfo[]>(`/api/user/contactInfo/${user.id}`),
 		dependencies: [update],
 	});
 
@@ -40,17 +40,17 @@ export const ContactInfoEdit = ({ user }) => {
 			.post("/api/user/contactInfo/add", {
 				infos: [{ contactType: type, value }],
 			})
-			.then((res) => {
+			.then(() => {
 				toast({
 					title: "Contact Info Added Successfully",
 					status: "success",
 				});
 
-				setUpdate(update + 1);
+				setUpdate((current) => current + 1);
 
 				setValue("");
 			})
-			.catch((err) => {
+			.catch(() => {
 				toast({
 					title: "Error adding contact Info",
 					description: "Check the fields and try again",
@@ -62,19 +62,18 @@ export const ContactInfoEdit = ({ user }) => {
 	const deleteContactInfo = async (id: string) => {
 		await axios
 			.post("/api/user/contactInfo/delete", { id })
-			.then((res) => {
-				const { msg } = res.data;
-				setUpdate(update + 1);
+			.then(() => {
+				setUpdate((current) => current + 1);
 				toast({
 					title: "Successfully Deleted",
 					status: "success",
 				});
 			})
 			.catch((err) => {
-				const error = err.response.data;
+				const error = err?.response?.data;
 				toast({
 					title: "Error Deleting Contact Info",
-					description: error.err,
+					description: error?.err || "Please try again.",
 					status: "error",
 				});
 			});
@@ -83,6 +82,7 @@ export const ContactInfoEdit = ({ user }) => {
 	return (
 		<Flex direction="column">
 			{contactLoading && <Spinner />}
+			{contactError && !contactLoading && <Text role="alert" color="red.500">Could not load contact information. Please refresh and try again.</Text>}
 			{!contactLoading &&
 				contactInfos &&
 				contactInfos.map((info) => {
@@ -142,7 +142,7 @@ export const ContactInfoEdit = ({ user }) => {
 							onChange={(e) => setValue(e.target.value)}
 							variant="filled"
 						></Input>
-						<IconButton onClick={addContactInfo} aria-label="add">
+						<IconButton onClick={addContactInfo} aria-label="add" isDisabled={!value.trim()}>
 							<MdAddCircleOutline />
 						</IconButton>
 					</HStack>

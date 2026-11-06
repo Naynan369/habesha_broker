@@ -130,7 +130,7 @@ export default function AddItem({ user }) {
 				<Box position="relative" flex="1" overflow="hidden" color={textColor}>
 					<Box aria-hidden="true" position="absolute" w="520px" h="520px" top="-260px" right={{ base: "-220px", md: "-100px" }} borderRadius="full" bg={ambientGlow} filter="blur(2px)" pointerEvents="none" />
 					<Container position="relative" maxW="7xl" py={{ base: 6, md: 10, xl: 12 }} px={{ base: 4, sm: 6, lg: 8 }}>
-						<Flex className="dashboard-create-hero dashboard-page-enter" position="relative" overflow="hidden" align={{ base: "flex-start", lg: "center" }} justify="space-between" gap={{ base: 5, lg: 8 }} direction={{ base: "column", lg: "row" }} p={{ base: 6, sm: 8, lg: 10 }} border="1px solid" borderColor="whiteAlpha.200" borderRadius={{ base: "2xl", md: "3xl" }} color="white" bgImage="radial-gradient(circle at 82% 15%, rgba(233,183,92,.24), transparent 28%), linear-gradient(125deg, #102f37 0%, #163d46 58%, #1b4449 100%)" boxShadow="0 26px 70px rgba(9,31,35,.22)">
+						<Flex className="dashboard-create-hero" position="relative" overflow="hidden" align={{ base: "flex-start", lg: "center" }} justify="space-between" gap={{ base: 5, lg: 8 }} direction={{ base: "column", lg: "row" }} p={{ base: 6, sm: 8, lg: 10 }} border="1px solid" borderColor="whiteAlpha.200" borderRadius={{ base: "2xl", md: "3xl" }} color="white" bgImage="radial-gradient(circle at 82% 15%, rgba(233,183,92,.24), transparent 28%), linear-gradient(125deg, #102f37 0%, #163d46 58%, #1b4449 100%)" boxShadow="0 26px 70px rgba(9,31,35,.22)">
 							<Box aria-hidden="true" position="absolute" w={{ base: "180px", md: "260px" }} h={{ base: "180px", md: "260px" }} right={{ base: "-70px", md: "10%" }} top={{ base: "-100px", md: "-120px" }} border="1px solid" borderColor="whiteAlpha.100" borderRadius="full" boxShadow="0 0 0 28px rgba(255,255,255,.025), 0 0 0 58px rgba(255,255,255,.02)" />
 							<Box position="relative" maxW="760px">
 								<Flex align="center" gap="2" color="#f0c978" fontSize="xs" fontWeight="bold" letterSpacing=".16em" textTransform="uppercase">
@@ -156,7 +156,7 @@ export default function AddItem({ user }) {
 						</Box>
 
 						{type && (
-							<Box className="dashboard-create-form-panel dashboard-page-enter" mt={{ base: 6, md: 8 }} bg={formSurface} border="1px solid" borderColor={formBorder} borderRadius={{ base: "2xl", md: "3xl" }} p={{ base: 4, sm: 6, md: 8, xl: 10 }} boxShadow={formShadow}>
+							<Box className="dashboard-create-form-panel" mt={{ base: 6, md: 8 }} bg={formSurface} border="1px solid" borderColor={formBorder} borderRadius={{ base: "2xl", md: "3xl" }} p={{ base: 4, sm: 6, md: 8, xl: 10 }} boxShadow={formShadow}>
 								<Flex align="center" gap="4" mb={{ base: 5, md: 7 }} pb={{ base: 5, md: 6 }} borderBottom="1px solid" borderColor={formBorder}>
 									<Flex flexShrink={0} w={{ base: 11, md: 12 }} h={{ base: 11, md: 12 }} align="center" justify="center" borderRadius="xl" bg={detailIconBg} color={detailIconColor} fontSize="23px"><MdCheckCircle /></Flex>
 									<Box minW="0">

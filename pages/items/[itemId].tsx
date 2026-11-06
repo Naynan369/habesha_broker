@@ -89,7 +89,7 @@ const SaveButton = () => {
 	const saveItem = async () => {
 		return await axios
 			.post("/api/items/save", { itemId })
-			.then((res) => {
+			.then(() => {
 				setData({ saved: true });
 				toast({
 					title: lang.itemDetailPage.savedToast,
@@ -112,7 +112,7 @@ const SaveButton = () => {
 					itemId,
 				},
 			})
-			.then((res) => {
+			.then(() => {
 				setData({ saved: false });
 				toast({
 					title: lang.itemDetailPage.unsavedToast,
@@ -663,7 +663,7 @@ export const ItemDetailLoading = () => {
 					boxShadow={"xl"}
 				/>
 				<SimpleGrid columns={[2, 3]} spacing="5">
-					{[...Array(3)].map((img, i) => {
+					{Array.from({ length: 3 }, (_, i) => {
 						return (
 							<Skeleton
 								key={i}
@@ -721,7 +721,7 @@ export const ItemDetailLoading = () => {
 						size="md"
 					></Skeleton>
 					<SimpleGrid p="4" spacing={"5"} columns={[1, 2, 3]}>
-						{[...Array(5)].map((v, i) => (
+						{Array.from({ length: 5 }, (_, i) => (
 							<Skeleton
 								key={i}
 								width={"full"}

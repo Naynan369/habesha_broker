@@ -41,11 +41,11 @@ export default function ForgetPassword() {
 			.post("/api/user/forgotPassword/requestLink", {
 				email,
 			})
-			.then((res) => {
+			.then(() => {
 				setSent(true);
 			})
 			.catch((error) => {
-				const e = error.response.data;
+				const e = error?.response?.data;
 				if (e?.email) {
 					setErr(e.err);
 				} else {

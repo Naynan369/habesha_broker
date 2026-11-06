@@ -227,7 +227,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 								<InputField formik={formik} label={common.bathrooms} name="bathrooms" type="number" placeholder="e.g. 2" />
 								<InputField formik={formik} label={common.floor} name="floor" type="number" placeholder="e.g. 2" />
 								<InputField formik={formik} label={common.totalFloors} name="totalFloors" type="number" placeholder="e.g. 4" />
-								<SelectField formik={formik} name="furnishing" label={common.furnishing} options={Object.entries(common.furnishingTypes)} allowBlank />
+								<SelectField formik={formik} name="furnishing" label={common.furnishing} options={Object.entries(common.furnishingTypes)} />
 							</>}
 						</SimpleGrid>
 						<Box>
@@ -328,7 +328,7 @@ export const HouseAddForm = ({ user }: { user?: { id: string } }) => {
 	);
 };
 
-function SelectField({ formik, name, label, options, allowBlank = false, required = false }: { formik: any; name: string; label: string; options: Array<[string, string]>; allowBlank?: boolean; required?: boolean }) {
+function SelectField({ formik, name, label, options, required = false }: { formik: any; name: string; label: string; options: Array<[string, string]>; required?: boolean }) {
 	return <FormControl isRequired={required} isInvalid={Boolean(formik.touched[name] && formik.errors[name])}>
 		<FormLabel htmlFor={name} mb="2" fontSize="sm" fontWeight="semibold">{label}</FormLabel>
 		<Select id={name} name={name} value={formik.values[name]} onChange={formik.handleChange} onBlur={formik.handleBlur} variant="filled" h="12" placeholder="—">

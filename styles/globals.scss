@@ -4,8 +4,9 @@ body {
 	margin: 0;
 	min-height: 100%;
 	font-family: var(--font-space-grotesk), var(--font-noto-sans-ethiopic), "Kefa III", Kefa, "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-	scroll-behavior: smooth;
 }
+
+html { scroll-behavior: smooth; }
 
 body {
 	width: 100%;
@@ -21,7 +22,6 @@ a { color: inherit; text-decoration: none; }
 	box-sizing: border-box;
 	transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
 }
-button, a { -webkit-tap-highlight-color: transparent; }
 .cardImage { object-fit: cover; }
 
 .home-motion-ready [data-home-reveal]:not(.home-motion-visible),

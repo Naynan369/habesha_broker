@@ -24,14 +24,10 @@ export const getServerSideProps = withSessionSsr(async ({ req, locale }) => {
 			props: {},
 		};
 	}
-	return {
-		props: {
-			user,
-		},
-	};
+	return { props: {} };
 });
 
-export default function SavedItems({ user }) {
+export default function SavedItems() {
 	const router = useRouter();
 	const copy = useLang().savedPage;
 	const [page, setPage] = React.useState(0);

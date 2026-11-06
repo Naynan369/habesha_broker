@@ -12,7 +12,7 @@ import {
 	useColorModeValue,
 } from "@chakra-ui/react";
 import { NAVBAR_HEIGHT_COMPACT } from "@config/layout";
-import { Dispatch, SetStateAction, useState } from "react";
+import { useState } from "react";
 import { MdAdd, MdSearch } from "react-icons/md";
 import { ItemList } from "@components/dashboard/Listings";
 import { withSessionSsr } from "@config/cookie/cookie";
@@ -184,13 +184,6 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 			</Flex>
 		</>
 	);
-}
-
-interface IFilterButton {
-	value: string;
-	filters: string[];
-	setFilters: Dispatch<SetStateAction<string[]>>;
-	text: any;
 }
 
 function FilterButton({ filters, setFilters, value, text }) {
