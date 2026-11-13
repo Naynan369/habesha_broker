@@ -51,7 +51,7 @@ export default function ExplorePage({ user, keyword }) {
 	const bodyColor = useColorModeValue("#655e58", "#c7c0bb");
 	const borderColor = useColorModeValue("#d8d0c6", "whiteAlpha.200");
 	const accentSurface = useColorModeValue("#f4ebe2", "rgba(190,110,76,.2)");
-	const accentText = useColorModeValue("#a96145", "#e5a783");
+	const accentText = useColorModeValue("#6c4c37", "#e4c29a");
 	const errorSurface = useColorModeValue("#fff5f1", "#321f1d");
 	const errorText = useColorModeValue("#783e32", "#f3c1b5");
 	const badgeSurface = useColorModeValue("#eee6dc", "#191919");
@@ -173,10 +173,10 @@ export default function ExplorePage({ user, keyword }) {
 						isolation="isolate"
 						minH={{ base: "800px", sm: "760px", lg: "570px", xl: "600px" }}
 						borderRadius={{ base: "2xl", md: "3xl" }}
-						bg="#1d1b1c"
+						bg="#211811"
 						boxShadow="0 30px 80px rgba(34, 25, 25, .2), inset 0 0 0 1px rgba(255,255,255,.12)"
 					>
-						<Box aria-hidden="true" position="absolute" inset="0" zIndex="-1" bgGradient="linear(125deg, #1d1b1c 0%, #2b2828 52%, #55483f 100%)" />
+						<Box aria-hidden="true" position="absolute" inset="0" zIndex="-1" bgGradient="linear(125deg, #211811 0%, #3d2b21 52%, #6c4c37 100%)" />
 						<Box aria-hidden="true" position="absolute" top="-32%" right="-12%" w={{ base: "90%", md: "68%" }} h="95%" zIndex="-1" bg="radial-gradient(ellipse, rgba(251,205,139,.32), transparent 66%)" />
 						<Box aria-hidden="true" position="absolute" bottom="-45%" left="-12%" w="65%" h="85%" zIndex="-1" bg="radial-gradient(ellipse, rgba(128,82,66,.25), transparent 70%)" />
 						<Box aria-hidden="true" position="absolute" top="12%" left="46%" w="38%" h="75%" zIndex="-1" bg="radial-gradient(ellipse, rgba(187,137,92,.18), transparent 72%)" />
@@ -198,7 +198,7 @@ export default function ExplorePage({ user, keyword }) {
 											<MdSearch size="22" color={searchIconColor} />
 											<Input value={searchInput} onChange={(event) => setSearchInput(event.target.value)} variant="unstyled" px="3" py="3" color={searchText} placeholder={lang.explore.searchPlaceholder} aria-label={lang.explore.searchAria} />
 										</Flex>
-										<Button type="submit" bg="#861657" color="white" boxShadow="0 10px 28px rgba(134,22,87,.34)" _hover={{ bg: "#9a1b66", boxShadow: "0 12px 32px rgba(154,27,102,.4)" }} _active={{ bg: "#701246", transform: "translateY(1px)" }} h={{ base: "48px", sm: "54px" }} px={{ base: 5, md: 7 }} borderRadius="xl" leftIcon={<MdSearch size="18" />}>
+										<Button type="submit" bg="#6c4c37" color="white" boxShadow="0 10px 28px rgba(43,30,23,.34)" _hover={{ bg: "#52392a", boxShadow: "0 12px 32px rgba(43,30,23,.4)" }} _active={{ bg: "#3d2b21", transform: "translateY(1px)" }} h={{ base: "48px", sm: "54px" }} px={{ base: 5, md: 7 }} borderRadius="xl" leftIcon={<MdSearch size="18" />}>
 									{lang.explore.searchButton}
 								</Button>
 									</Flex>
@@ -226,8 +226,8 @@ export default function ExplorePage({ user, keyword }) {
 								onPointerMove={moveCategorySpotlight} onPointerLeave={clearCategorySpotlight}
 								onClick={() => selectCategory("HOUSE")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bg="#272323"
-								boxShadow={filter.itemType === "HOUSE" ? "0 0 0 3px #b86b4d, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
+								bg="#2b1e17"
+								boxShadow={filter.itemType === "HOUSE" ? "0 0 0 3px #6c4c37, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
 								_hover={{ boxShadow: "0 20px 42px rgba(34,25,25,.22)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Box className="explore-category-media" position="absolute" inset="0" bgImage="url('/assets/images/apartment-interior-showcase.jpg')" bgSize="cover" bgPosition="center 52%" />
@@ -248,8 +248,8 @@ export default function ExplorePage({ user, keyword }) {
 								onPointerMove={moveCategorySpotlight} onPointerLeave={clearCategorySpotlight}
 								onClick={() => selectCategory("CAR")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bg="#272323"
-								boxShadow={filter.itemType === "CAR" ? "0 0 0 3px #b86b4d, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
+								bg="#2b1e17"
+								boxShadow={filter.itemType === "CAR" ? "0 0 0 3px #6c4c37, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
 								_hover={{ boxShadow: "0 20px 42px rgba(34,25,25,.22)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Box className="explore-category-media" position="absolute" inset="0" bgImage="url('/assets/images/supercar-showcase.jpg')" bgSize="cover" bgPosition="center 55%" />
@@ -270,8 +270,8 @@ export default function ExplorePage({ user, keyword }) {
 								onPointerMove={moveCategorySpotlight} onPointerLeave={clearCategorySpotlight}
 								onClick={() => selectCategory("BUSINESS_SPACE")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bg="#272323"
-								boxShadow={filter.itemType === "BUSINESS_SPACE" ? "0 0 0 3px #b86b4d, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
+								bg="#2b1e17"
+								boxShadow={filter.itemType === "BUSINESS_SPACE" ? "0 0 0 3px #6c4c37, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
 								_hover={{ boxShadow: "0 20px 42px rgba(34,25,25,.22)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Box className="explore-category-media" position="absolute" inset="0" bgImage="url('/assets/images/apartment-showcase.jpg')" bgSize="cover" bgPosition="center" />
@@ -294,8 +294,8 @@ export default function ExplorePage({ user, keyword }) {
 								onPointerMove={moveCategorySpotlight} onPointerLeave={clearCategorySpotlight}
 								onClick={() => selectCategory("SERVICE")}
 								position="relative" overflow="hidden" h={{ base: "220px", md: "280px" }} borderRadius="2xl"
-								bg="#272323"
-								boxShadow={filter.itemType === "SERVICE" ? "0 0 0 3px #b86b4d, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
+								bg="#2b1e17"
+								boxShadow={filter.itemType === "SERVICE" ? "0 0 0 3px #6c4c37, 0 18px 36px rgba(34,25,25,.18)" : "0 14px 34px rgba(34,25,25,.12)"}
 								_hover={{ boxShadow: "0 20px 42px rgba(34,25,25,.22)" }} _focusVisible={{ outline: "3px solid #f2b64e", outlineOffset: "3px" }}
 							>
 								<Box className="explore-category-media" position="absolute" inset="0" bgImage="url('https://images.unsplash.com/photo-1741388222137-c0d3007ec173?auto=format&fit=crop&crop=faces&w=1200&h=800&q=80')" bgSize="cover" bgPosition="center 52%" />

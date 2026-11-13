@@ -10,7 +10,7 @@ export function ColorModeToggle() {
 		? isDark ? "ወደ ብርሃን ገጽታ ይቀይሩ" : "ወደ ጨለማ ገጽታ ይቀይሩ"
 		: isDark ? "Switch to light mode" : "Switch to dark mode";
 	const background = useColorModeValue("white", "#171717");
-	const foreground = useColorModeValue("#143A45", "#f0c978");
+	const foreground = useColorModeValue("#3b2b22", "#f0c978");
 	const border = useColorModeValue("blackAlpha.200", "whiteAlpha.200");
 
 	return (

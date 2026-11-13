@@ -10,16 +10,16 @@ export const WhyChooseSection = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
 	const sectionBg = useColorModeValue("#eee6de", "#000000");
-	const headingColor = useColorModeValue("#292725", "#f5f0ea");
+	const headingColor = useColorModeValue("#3b2b22", "#f5f0ea");
 	const bodyColor = useColorModeValue("#655e58", "gray.300");
-	const kickerColor = useColorModeValue("#a65d45", "#e6a17c");
+	const kickerColor = useColorModeValue("#6c4c37", "#e4c29a");
 	const divider = useColorModeValue("gray.300", "whiteAlpha.300");
 
 	return (
 		<Box as="section" bg={sectionBg} px={{ base: 5, md: 10, xl: 14 }} py={{ base: 12, md: 18 }}>
 			<Box maxW="1440px" mx="auto">
 				<Flex align="center" gap="3" mb="4">
-					<Box w="9" h="1.5" borderRadius="full" bgGradient="linear(to-r, #bd6748, #e9b75c)" />
+					<Box w="9" h="1.5" borderRadius="full" bgGradient="linear(to-r, #6c4c37, #e9b75c)" />
 					<Text color={kickerColor} textTransform="uppercase" letterSpacing=".16em" fontWeight="bold" fontSize="xs">{lang.home.benefits_kicker}</Text>
 				</Flex>
 				<Flex align={{ base: "flex-start", lg: "flex-end" }} justify="space-between" gap={{ base: 4, lg: 10 }} direction={{ base: "column", lg: "row" }}>
@@ -40,9 +40,9 @@ export const WhyChooseSection = () => {
 
 interface IWhyCard { number: string; title: string; icon: ReactNode; desc: string; motionDelay: number; }
 const WhyCard: FC<IWhyCard> = ({ number, title, icon, desc, motionDelay }) => {
-	const headingColor = useColorModeValue("#292725", "#f5f0ea");
+	const headingColor = useColorModeValue("#3b2b22", "#f5f0ea");
 	const bodyColor = useColorModeValue("#655e58", "gray.300");
-	const iconSurface = useColorModeValue("#292725", "rgba(233,183,92,.16)");
+	const iconSurface = useColorModeValue("#3b2b22", "rgba(233,183,92,.16)");
 	const border = useColorModeValue("gray.300", "whiteAlpha.200");
 	const iconColor = useColorModeValue("#f0c978", "#f0c978");
 	const numberColor = useColorModeValue("gray.500", "gray.400");
@@ -66,7 +66,7 @@ const WhyCard: FC<IWhyCard> = ({ number, title, icon, desc, motionDelay }) => {
 			transition="transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease"
 			_hover={{ transform: "translateY(-3px)", borderColor: "mainorange", boxShadow: hoverShadow }}
 		>
-			<Box position="absolute" top="0" left="6" right="6" h="1.5" borderBottomRadius="full" bgGradient="linear(to-r, #bd6748, #e9b75c)" />
+			<Box position="absolute" top="0" left="6" right="6" h="1.5" borderBottomRadius="full" bgGradient="linear(to-r, #6c4c37, #e9b75c)" />
 			<Flex align="center" justify="space-between" gap="4">
 				<Flex w="12" h="12" flexShrink={0} align="center" justify="center" color={iconColor} bg={iconSurface} borderRadius="xl">{icon}</Flex>
 				<Text color={numberColor} fontSize="sm" fontWeight="bold" letterSpacing=".16em">{number}</Text>

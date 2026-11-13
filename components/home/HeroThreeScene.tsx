@@ -53,16 +53,16 @@ function buildApartment(scene: THREE.Scene, plasterTexture: THREE.Texture) {
 	building.position.set(-0.96, 0.34, -0.18);
 	building.scale.setScalar(1.1);
 
-	const stone = makeSurface("#35444b", { roughness: 0.93 });
-	const stoneBand = makeSurface("#56676a", { roughness: 0.85 });
-	const charcoal = makeSurface("#171b1e", { roughness: 0.82 });
+	const stone = makeSurface("#47372d", { roughness: 0.93 });
+	const stoneBand = makeSurface("#6b5747", { roughness: 0.85 });
+	const charcoal = makeSurface("#211711", { roughness: 0.82 });
 	const sideWall = makeSurface("#766b66", { map: plasterTexture, roughness: 0.94 });
-	const frame = makeSurface("#111b1e", { metalness: 0.35, roughness: 0.42 });
+	const frame = makeSurface("#281b14", { metalness: 0.35, roughness: 0.42 });
 	const bronze = makeSurface("#815e42", { metalness: 0.48, roughness: 0.46 });
-	const rail = new THREE.MeshPhysicalMaterial({ color: "#24434a", metalness: 0.34, roughness: 0.2, transparent: true, opacity: 0.72, depthWrite: false });
+	const rail = new THREE.MeshPhysicalMaterial({ color: "#75563a", metalness: 0.34, roughness: 0.2, transparent: true, opacity: 0.72, depthWrite: false });
 	const planter = makeSurface("#3b332e", { roughness: 0.94 });
 	const foliage = makeSurface("#293f35", { roughness: 0.95 });
-	const glass = new THREE.MeshPhysicalMaterial({ color: "#142b32", metalness: 0.48, roughness: 0.16, clearcoat: 0.74, clearcoatRoughness: 0.12 });
+	const glass = new THREE.MeshPhysicalMaterial({ color: "#38281e", metalness: 0.48, roughness: 0.16, clearcoat: 0.74, clearcoatRoughness: 0.12 });
 	const litGlass = new THREE.MeshPhysicalMaterial({ color: "#282b2a", metalness: 0.15, roughness: 0.28, emissive: "#70482e", emissiveIntensity: 0.14, clearcoat: 0.3 });
 
 	const box = (size: [number, number, number], position: [number, number, number], material: THREE.Material, stage: number) => {
@@ -173,7 +173,7 @@ export default function HeroThreeScene() {
 		const environment = pmrem.fromScene(room, 0.035);
 		scene.environment = environment.texture;
 
-		const ambient = new THREE.HemisphereLight("#f7eee4", "#29343b", 0.92);
+		const ambient = new THREE.HemisphereLight("#f7eee4", "#3b2b22", 0.92);
 		scene.add(ambient);
 		const keyLight = new THREE.DirectionalLight("#ffe5c5", 1.75);
 		keyLight.position.set(-5, 10, 7);
@@ -185,7 +185,7 @@ export default function HeroThreeScene() {
 		keyLight.shadow.camera.bottom = -9;
 		keyLight.shadow.bias = -0.0003;
 		scene.add(keyLight);
-		const fillLight = new THREE.DirectionalLight("#9bc3cf", 0.54);
+		const fillLight = new THREE.DirectionalLight("#ddbd91", 0.54);
 		fillLight.position.set(7, 5, -6);
 		scene.add(fillLight);
 		// CC0 photographed plaster from https://polyhaven.com/a/modular_urban_apartments_facade.
@@ -220,7 +220,7 @@ export default function HeroThreeScene() {
 				new THREE.Vector3(width, height - 0.72, 0),
 				new THREE.Vector3(width, 0.3, 0),
 			], false, "centripetal", 0.5);
-			const material = new THREE.MeshBasicMaterial({ color: index % 2 ? "#7fc0c2" : "#d7a27a", transparent: true, opacity: 0, depthWrite: false, toneMapped: false });
+			const material = new THREE.MeshBasicMaterial({ color: index % 2 ? "#c9a46b" : "#d7a27a", transparent: true, opacity: 0, depthWrite: false, toneMapped: false });
 			const arch = new THREE.Mesh(new THREE.TubeGeometry(path, 72, 0.025, 6, false), material);
 			arch.position.set(-1.55, 0, -2.65 - index * 1.2);
 			portalMaterials.push(material);
@@ -318,7 +318,7 @@ export default function HeroThreeScene() {
 				if (mesh) mesh.material = new THREE.MeshStandardMaterial({ color: "#67737a", metalness: 0.69, roughness: 0.3 });
 			}
 			const glass = model.getObjectByName("glass") as THREE.Mesh | undefined;
-			if (glass) glass.material = new THREE.MeshPhysicalMaterial({ color: "#193840", metalness: 0.22, roughness: 0.16, clearcoat: 0.45 });
+			if (glass) glass.material = new THREE.MeshPhysicalMaterial({ color: "#38281e", metalness: 0.22, roughness: 0.16, clearcoat: 0.45 });
 			model.traverse((object) => {
 				if (!(object instanceof THREE.Mesh)) return;
 				object.castShadow = true;
@@ -337,7 +337,7 @@ export default function HeroThreeScene() {
 				const part = model.getObjectByName(name) as THREE.Mesh | undefined;
 				if (!part) continue;
 				const geometry = new THREE.EdgesGeometry(part.geometry, 30);
-				const material = new THREE.LineBasicMaterial({ color: name === "body" ? "#9bdcd3" : "#e6c492", transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false });
+				const material = new THREE.LineBasicMaterial({ color: name === "body" ? "#c9a46b" : "#e6c492", transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false });
 				const outline = new THREE.LineSegments(geometry, material);
 				outline.renderOrder = 30;
 				part.add(outline);

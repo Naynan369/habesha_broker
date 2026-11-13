@@ -78,7 +78,7 @@ export function ListingImage({
 				gap="3"
 				overflow="hidden"
 				color="white"
-				background="linear-gradient(135deg, #0b2535 0%, #234d5e 55%, #c97942 100%)"
+				background="linear-gradient(135deg, #2b1e17 0%, #6c4c37 55%, #c9a46b 100%)"
 			>
 				<Box
 					position="absolute"

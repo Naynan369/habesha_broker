@@ -18,7 +18,7 @@ export const CategoriesSection = () => {
 	const bodyColor = useColorModeValue("#655e58", "gray.300");
 	const surface = useColorModeValue("white", "#111111");
 	const border = useColorModeValue("#ded5cb", "whiteAlpha.200");
-	const kickerColor = useColorModeValue("#a65d45", "#e6a17c");
+	const kickerColor = useColorModeValue("#6c4c37", "#e4c29a");
 
 	return (
 		<Box id="categories" as="section" scrollMarginTop="96px" bg={sectionBg} px={{ base: 5, md: 10, xl: 14 }} py={{ base: 14, md: 20 }}>
@@ -36,7 +36,7 @@ export const CategoriesSection = () => {
 						</Text>
 					</Box>
 					<Flex align="center" gap="3" bg={surface} border="1px solid" borderColor={border} borderRadius="full" px="4" py="2.5" color={bodyColor} fontSize="sm" fontWeight="medium" boxShadow="0 5px 18px rgba(27,47,48,.05)">
-						<Box w="2" h="2" borderRadius="full" bg="#b66b4d" />
+						<Box w="2" h="2" borderRadius="full" bg="#c9a46b" />
 						{lang.home.category_hint}
 					</Flex>
 				</Flex>
@@ -54,7 +54,7 @@ export const CategoriesSection = () => {
 
 const Category = ({ title, categoryLabel, image, description, action, href, motionDelay = 0 }) => {
 	const router = useRouter();
-	const imageFallback = useColorModeValue("#2a2727", "#0a0a0a");
+	const imageFallback = useColorModeValue("#2b1e17", "#0a0a0a");
 	const handleSelect = () => void router.push(href);
 	const moveSpotlight = (event: ReactPointerEvent<HTMLButtonElement>) => {
 		if (event.pointerType !== "mouse") return;
@@ -101,7 +101,7 @@ const Category = ({ title, categoryLabel, image, description, action, href, moti
 			boxShadow="0 12px 30px rgba(22, 42, 43, .12)"
 			_hover={{ boxShadow: "0 20px 42px rgba(22,42,43,.2)" }}
 			_active={{ transform: "translateY(-1px)" }}
-			_focusVisible={{ outline: "3px solid", outlineColor: "#d69254", outlineOffset: "3px" }}
+			_focusVisible={{ outline: "3px solid", outlineColor: "#c9a46b", outlineOffset: "3px" }}
 			transition="transform 220ms ease, box-shadow 220ms ease"
 		>
 			<Box className="home-card-media" position="absolute" inset="0" bg={imageFallback}>
@@ -127,7 +127,7 @@ const Category = ({ title, categoryLabel, image, description, action, href, moti
 					<Text className="home-card-label" bg="whiteAlpha.200" border="1px solid" borderColor="whiteAlpha.300" backdropFilter="blur(10px)" color="whiteAlpha.900" borderRadius="full" px="3" py="1.5" fontSize="10px" fontWeight="bold" letterSpacing=".13em">
 						{categoryLabel}
 					</Text>
-					<Flex className="home-card-arrow" align="center" justify="center" flexShrink={0} w="9" h="9" border="1px solid" borderColor="whiteAlpha.500" borderRadius="full" color="white" bg="blackAlpha.200" transition="all 180ms ease" _groupHover={{ bg: "#d7783f", borderColor: "#d7783f", transform: "translateX(2px)" }}>
+					<Flex className="home-card-arrow" align="center" justify="center" flexShrink={0} w="9" h="9" border="1px solid" borderColor="whiteAlpha.500" borderRadius="full" color="white" bg="blackAlpha.200" transition="all 180ms ease" _groupHover={{ bg: "#6c4c37", borderColor: "#6c4c37", transform: "translateX(2px)" }}>
 						<MdArrowForward size="18" />
 					</Flex>
 				</Flex>

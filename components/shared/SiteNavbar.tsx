@@ -64,7 +64,7 @@ export function SiteNavbar({ mode = "public", user, onLogout }: SiteNavbarProps)
 	const accountHref = user?.role === "ADMIN" ? "/admin" : "/dashboard";
 	const isWorkspace = mode !== "public";
 	const headerSurface = useColorModeValue("rgba(255,255,255,.94)", "rgba(0,0,0,.92)");
-	const headerText = useColorModeValue("#143A45", "#e7eff0");
+	const headerText = useColorModeValue("#3b2b22", "#e7eff0");
 	const border = useColorModeValue("gray.200", "whiteAlpha.200");
 	const controlSurface = useColorModeValue("#f5f3ee", "whiteAlpha.100");
 	const controlHover = useColorModeValue("gray.100", "whiteAlpha.200");
@@ -103,11 +103,11 @@ export function SiteNavbar({ mode = "public", user, onLogout }: SiteNavbarProps)
 				px="4"
 				borderRadius="full"
 				variant={active ? "solid" : "ghost"}
-				bg={active ? "#21383e" : "transparent"}
+				bg={active ? "#52392a" : "transparent"}
 				color={active ? "white" : headerText}
 				fontWeight={active ? "bold" : "semibold"}
 				aria-current={active ? "page" : undefined}
-				_hover={{ bg: active ? "#142a30" : controlHover, color: active ? "white" : headerText }}
+				_hover={{ bg: active ? "#3d2b21" : controlHover, color: active ? "white" : headerText }}
 				_focusVisible={{ outline: "2px solid #E9B75C", outlineOffset: "2px" }}
 				onClick={onClick}
 			>
@@ -125,12 +125,12 @@ export function SiteNavbar({ mode = "public", user, onLogout }: SiteNavbarProps)
 				h="12"
 				px="4"
 				gap="3"
-				bg={active ? "#21383e" : "transparent"}
+				bg={active ? "#52392a" : "transparent"}
 				color={active ? "white" : drawerMuted}
 				fontWeight="semibold"
 				borderRadius="xl"
-				boxShadow={active ? "0 8px 20px rgba(33,56,62,.16)" : "none"}
-				_hover={{ bg: active ? "#142a30" : controlHover, color: active ? "white" : headerText }}
+				boxShadow={active ? "0 8px 20px rgba(43,30,23,.2)" : "none"}
+				_hover={{ bg: active ? "#3d2b21" : controlHover, color: active ? "white" : headerText }}
 				_focusVisible={{ outline: "2px solid #E9B75C", outlineOffset: "2px" }}
 				leftIcon={icon as any}
 				aria-current={active ? "page" : undefined}
@@ -238,8 +238,8 @@ export function SiteNavbar({ mode = "public", user, onLogout }: SiteNavbarProps)
 							<Box mb="4" p="4" bg={languageSurface} border="1px solid" borderColor={border} borderRadius="2xl">
 								<Flex align="center" gap="2" color="mainorange" mb="3"><MdLanguage /><Text color={drawerMuted} fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing=".1em">{lang.common.language}</Text></Flex>
 								<Flex p="1" bg={drawerSurface} border="1px solid" borderColor={border} borderRadius="xl" gap="1">
-									<Button flex="1" h="10" variant={locale === "en" ? "solid" : "ghost"} bg={locale === "en" ? "#21383e" : "transparent"} color={locale === "en" ? "white" : drawerMuted} _hover={{ bg: locale === "en" ? "#142a30" : controlHover }} borderRadius="lg" onClick={() => changeLocale("en")}>{lang.common.english}</Button>
-									<Button flex="1" h="10" variant={locale === "am" ? "solid" : "ghost"} bg={locale === "am" ? "#21383e" : "transparent"} color={locale === "am" ? "white" : drawerMuted} _hover={{ bg: locale === "am" ? "#142a30" : controlHover }} borderRadius="lg" onClick={() => changeLocale("am")}>{lang.common.amharic}</Button>
+									<Button flex="1" h="10" variant={locale === "en" ? "solid" : "ghost"} bg={locale === "en" ? "#52392a" : "transparent"} color={locale === "en" ? "white" : drawerMuted} _hover={{ bg: locale === "en" ? "#3d2b21" : controlHover }} borderRadius="lg" onClick={() => changeLocale("en")}>{lang.common.english}</Button>
+									<Button flex="1" h="10" variant={locale === "am" ? "solid" : "ghost"} bg={locale === "am" ? "#52392a" : "transparent"} color={locale === "am" ? "white" : drawerMuted} _hover={{ bg: locale === "am" ? "#3d2b21" : controlHover }} borderRadius="lg" onClick={() => changeLocale("am")}>{lang.common.amharic}</Button>
 								</Flex>
 							</Box>
 							{mode === "public" ? (

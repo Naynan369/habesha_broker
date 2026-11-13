@@ -26,7 +26,7 @@ export default function ResetPasswordPage() {
 	const [complete, setComplete] = useState(false);
 	const canvas = useColorModeValue("#f5f5f1", "#000000");
 	const surface = useColorModeValue("white", "#111111");
-	const textColor = useColorModeValue("#143A45", "#e7eff0");
+	const textColor = useColorModeValue("#3b2b22", "#e7eff0");
 	const bodyColor = useColorModeValue("gray.600", "gray.300");
 	const fieldBg = useColorModeValue("white", "#101010");
 	const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");

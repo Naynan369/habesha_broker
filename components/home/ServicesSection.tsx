@@ -23,8 +23,8 @@ export const ServicesSection = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
 	const cards = lang.home.service_cards;
-	const sectionBackground = useColorModeValue("#282427", "#000000");
-	const imageFallback = useColorModeValue("#3a3432", "#0c0c0c");
+	const sectionBackground = useColorModeValue("#241811", "#000000");
+	const imageFallback = useColorModeValue("#3b2b22", "#0c0c0c");
 
 	const renderCards = (isDuplicate: boolean) => cards.map((card, index) => {
 		const photo = servicePhotos[index];

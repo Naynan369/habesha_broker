@@ -50,7 +50,7 @@ export default function Home({ user, featuredListings }) {
 	const canvas = useColorModeValue("#f4efe8", "#000000");
 
 	return (
-		<Box id="pageContainer" minH="100dvh" overflowX="hidden" bg={canvas}>
+		<Box id="pageContainer" className="home-page-scroll-root" minH="100dvh" bg={canvas}>
 			<HomeMotionSystem />
 			<SiteNavbar mode="public" user={user} />
 			<main>

@@ -34,9 +34,9 @@ export const HomeHero = () => {
 			minH={{ base: "820px", lg: "min(900px, 100dvh)" }}
 			color="white"
 			overflow="hidden"
-			bg="#1d1b1c"
+			bg="#211811"
 		>
-			<Box aria-hidden="true" pointerEvents="none" position="absolute" inset="0" bgGradient="linear(120deg, #1d1b1c 0%, #2b2828 48%, #55483f 100%)" />
+			<Box aria-hidden="true" pointerEvents="none" position="absolute" inset="0" bgGradient="linear(120deg, #211811 0%, #3d2b21 48%, #6c4c37 100%)" />
 			<Box aria-hidden="true" pointerEvents="none" position="absolute" top="-22%" right="-12%" w={{ base: "100%", md: "75%" }} h="110%" bg="radial-gradient(ellipse, rgba(251,205,139,.36) 0%, rgba(194,128,88,.15) 40%, transparent 72%)" />
 			<Box aria-hidden="true" pointerEvents="none" position="absolute" bottom="-62%" left="-18%" w="85%" h="110%" bg="radial-gradient(ellipse, rgba(128,82,66,.25), transparent 68%)" />
 			<Box aria-hidden="true" pointerEvents="none" position="absolute" top="20%" right="-10%" w="50%" h="82%" bg="radial-gradient(ellipse, rgba(187,137,92,.18), transparent 70%)" />
@@ -87,7 +87,7 @@ export const HomeHero = () => {
 									<SearchIcon color="gray.400" />
 									<Input aria-label={lang.home.search_placeholder} variant="unstyled" px="3" py="3" color={searchText} placeholder={lang.home.search_placeholder} value={search} onChange={(event) => setSearch(event.target.value)} />
 								</Flex>
-					<Button type="submit" flexShrink={0} w={{ base: "full", sm: "auto" }} leftIcon={<SearchIcon />} bg="#861657" color="white" borderRadius="xl" px="6" h="52px" boxShadow="0 10px 28px rgba(134,22,87,.34)" _hover={{ bg: "#9a1b66", boxShadow: "0 12px 32px rgba(154,27,102,.4)", transform: "translateY(-1px)" }} _active={{ bg: "#701246", transform: "translateY(1px)" }}>
+					<Button type="submit" flexShrink={0} w={{ base: "full", sm: "auto" }} leftIcon={<SearchIcon />} bg="#6c4c37" color="white" borderRadius="xl" px="6" h="52px" boxShadow="0 10px 28px rgba(43,30,23,.34)" _hover={{ bg: "#52392a", boxShadow: "0 12px 32px rgba(43,30,23,.4)", transform: "translateY(-1px)" }} _active={{ bg: "#3d2b21", transform: "translateY(1px)" }}>
 									{lang.home.search_btn}
 								</Button>
 							</Flex>

@@ -1,1 +1,19 @@
-{"name":"Habesha Brokers","short_name":"Habesha","icons":[{"src":"/android-chrome-192x192.png","sizes":"192x192","type":"image/png"},{"src":"/android-chrome-512x512.png","sizes":"512x512","type":"image/png"}],"theme_color":"#0b2535","background_color":"#f5f5f1","display":"standalone"}
+{
+  "name": "Habesha Brokers",
+  "short_name": "Habesha",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#2b1e17",
+  "background_color": "#f5f5f1",
+  "display": "standalone"
+}

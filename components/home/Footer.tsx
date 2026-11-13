@@ -11,7 +11,7 @@ import { BrandLogo } from "@components/shared/BrandLogo";
 export const HomeFooter = () => {
 	const { locale } = useRouter();
 	const lang = locale === "am" ? am : en;
-	const background = useColorModeValue("#1b1a1b", "#000000");
+	const background = useColorModeValue("#211811", "#000000");
 	return (
 		<Flex as="footer" bg={background} color="white" direction="column">
 			<SimpleGrid maxW="1440px" w="full" mx="auto" columns={{ base: 1, sm: 2, lg: 4 }} spacing={{ base: 8, md: 10 }} px={{ base: 6, md: 12, xl: 16 }} py={{ base: 10, md: 14 }}>

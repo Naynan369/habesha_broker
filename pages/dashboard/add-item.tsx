@@ -56,10 +56,10 @@ export default function AddItem({ user }) {
 	const text = lang.businessListing;
 	const [type, setType] = useState("" as FormTypes);
 	const pageBg = useColorModeValue("#f4f5f2", "#050707");
-	const textColor = useColorModeValue("#20383d", "#e8eff0");
+	const textColor = useColorModeValue("#3b2b22", "#e8eff0");
 	const muted = useColorModeValue("#637278", "#a5b1b4");
 	const formSurface = useColorModeValue("#ffffff", "#101415");
-	const navBackground = useColorModeValue("#102f37", "#080b0c");
+	const navBackground = useColorModeValue("#2b1e17", "#080b0c");
 	const formBorder = useColorModeValue("#dce3e1", "whiteAlpha.200");
 	const formShadow = useColorModeValue("0 24px 60px rgba(20,48,53,.10)", "0 28px 76px rgba(0,0,0,.42)");
 	const ambientGlow = useColorModeValue("rgba(198,107,54,.08)", "rgba(233,183,92,.06)");
@@ -130,7 +130,7 @@ export default function AddItem({ user }) {
 				<Box position="relative" flex="1" overflow="hidden" color={textColor}>
 					<Box aria-hidden="true" position="absolute" w="520px" h="520px" top="-260px" right={{ base: "-220px", md: "-100px" }} borderRadius="full" bg={ambientGlow} filter="blur(2px)" pointerEvents="none" />
 					<Container position="relative" maxW="7xl" py={{ base: 6, md: 10, xl: 12 }} px={{ base: 4, sm: 6, lg: 8 }}>
-						<Flex className="dashboard-create-hero" position="relative" overflow="hidden" align={{ base: "flex-start", lg: "center" }} justify="space-between" gap={{ base: 5, lg: 8 }} direction={{ base: "column", lg: "row" }} p={{ base: 6, sm: 8, lg: 10 }} border="1px solid" borderColor="whiteAlpha.200" borderRadius={{ base: "2xl", md: "3xl" }} color="white" bgImage="radial-gradient(circle at 82% 15%, rgba(233,183,92,.24), transparent 28%), linear-gradient(125deg, #102f37 0%, #163d46 58%, #1b4449 100%)" boxShadow="0 26px 70px rgba(9,31,35,.22)">
+						<Flex className="dashboard-create-hero" position="relative" overflow="hidden" align={{ base: "flex-start", lg: "center" }} justify="space-between" gap={{ base: 5, lg: 8 }} direction={{ base: "column", lg: "row" }} p={{ base: 6, sm: 8, lg: 10 }} border="1px solid" borderColor="whiteAlpha.200" borderRadius={{ base: "2xl", md: "3xl" }} color="white" bgImage="radial-gradient(circle at 82% 15%, rgba(233,183,92,.24), transparent 28%), linear-gradient(125deg, #2b1e17 0%, #52392a 58%, #6c4c37 100%)" boxShadow="0 26px 70px rgba(34,22,15,.22)">
 							<Box aria-hidden="true" position="absolute" w={{ base: "180px", md: "260px" }} h={{ base: "180px", md: "260px" }} right={{ base: "-70px", md: "10%" }} top={{ base: "-100px", md: "-120px" }} border="1px solid" borderColor="whiteAlpha.100" borderRadius="full" boxShadow="0 0 0 28px rgba(255,255,255,.025), 0 0 0 58px rgba(255,255,255,.02)" />
 							<Box position="relative" maxW="760px">
 								<Flex align="center" gap="2" color="#f0c978" fontSize="xs" fontWeight="bold" letterSpacing=".16em" textTransform="uppercase">
@@ -191,7 +191,7 @@ const ItemButton: FC<ItemButtonProps> = ({
 	selected,
 }: ItemButtonProps) => {
 	const unselectedBg = useColorModeValue("#ffffff", "#101415");
-	const unselectedColor = useColorModeValue("#20383d", "#e8eff0");
+	const unselectedColor = useColorModeValue("#3b2b22", "#e8eff0");
 	const border = useColorModeValue("#dce3e1", "whiteAlpha.200");
 	const selectedBg = useColorModeValue("#fffaf1", "rgba(233,183,92,.10)");
 	const iconBg = useColorModeValue("#f4f0e6", "rgba(233,183,92,.10)");

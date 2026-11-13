@@ -26,7 +26,7 @@ function glowMaterial(color: string, opacity: number) {
 function portal(index: number) {
 	const frame = new THREE.Group();
 	const material = new THREE.MeshBasicMaterial({
-		color: index % 2 === 0 ? "#d48a66" : "#6daeb2",
+		color: index % 2 === 0 ? "#d48a66" : "#a98262",
 		transparent: true,
 		opacity: 0,
 		depthWrite: false,
@@ -61,7 +61,7 @@ export default function ExploreCinematicScene() {
 		try {
 			renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
 		} catch {
-			mount.style.backgroundImage = `linear-gradient(90deg,#1b1c20 0%,rgba(27,28,32,.15) 100%),url('${FALLBACK_IMAGE}')`;
+			mount.style.backgroundImage = `linear-gradient(90deg,#211811 0%,rgba(33,24,17,.15) 100%),url('${FALLBACK_IMAGE}')`;
 			mount.style.backgroundSize = "cover";
 			mount.style.backgroundPosition = "right center";
 			return;
@@ -96,7 +96,7 @@ export default function ExploreCinematicScene() {
 		key.castShadow = true;
 		key.shadow.mapSize.set(512, 512);
 		key.shadow.bias = -0.0004;
-		const rim = new THREE.PointLight(0x68c4ca, 35, 19);
+		const rim = new THREE.PointLight(0xc9a46b, 35, 19);
 		rim.position.set(3.6, 3.2, -3.7);
 		stage.add(ambient, key, key.target, rim);
 
@@ -120,7 +120,7 @@ export default function ExploreCinematicScene() {
 		const floorAlpha = new THREE.CanvasTexture(floorCanvas);
 		const floor = new THREE.Mesh(
 			new THREE.PlaneGeometry(7.4, 17),
-			new THREE.MeshStandardMaterial({ color: "#171c23", metalness: 0.47, roughness: 0.52, alphaMap: floorAlpha, transparent: true, opacity: 0.6, depthWrite: false }),
+			new THREE.MeshStandardMaterial({ color: "#2b1e17", metalness: 0.47, roughness: 0.52, alphaMap: floorAlpha, transparent: true, opacity: 0.6, depthWrite: false }),
 		);
 		floor.rotation.x = -Math.PI / 2;
 		floor.position.set(0, -0.08, -3.45);
@@ -128,13 +128,13 @@ export default function ExploreCinematicScene() {
 		stage.add(floor);
 		const contactShadow = new THREE.Mesh(
 			new THREE.PlaneGeometry(5.1, 2.45),
-			new THREE.MeshBasicMaterial({ color: "#07080c", alphaMap: floorAlpha, transparent: true, opacity: 0, depthWrite: false }),
+			new THREE.MeshBasicMaterial({ color: "#0c0806", alphaMap: floorAlpha, transparent: true, opacity: 0, depthWrite: false }),
 		);
 		contactShadow.rotation.x = -Math.PI / 2;
 		contactShadow.position.y = -0.045;
 		stage.add(contactShadow);
 		const railMaterial = new THREE.MeshBasicMaterial({ color: "#c98a68", transparent: true, opacity: 0.5, toneMapped: false });
-		const coolRailMaterial = new THREE.MeshBasicMaterial({ color: "#6eb5b8", transparent: true, opacity: 0.48, toneMapped: false });
+		const coolRailMaterial = new THREE.MeshBasicMaterial({ color: "#896448", transparent: true, opacity: 0.48, toneMapped: false });
 		for (const side of [-1, 1]) {
 			const rail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.014, 16), side < 0 ? railMaterial : coolRailMaterial);
 			rail.position.set(side * 2.9, -0.058, -3.5);
@@ -182,7 +182,7 @@ export default function ExploreCinematicScene() {
 				if (mesh) mesh.material = new THREE.MeshStandardMaterial({ color: "#535b62", metalness: 0.72, roughness: 0.32 });
 			}
 			const glass = model.getObjectByName("glass") as THREE.Mesh | undefined;
-			if (glass) glass.material = new THREE.MeshPhysicalMaterial({ color: "#2a4149", metalness: 0.22, roughness: 0.16, transparent: true, opacity: 0.75 });
+			if (glass) glass.material = new THREE.MeshPhysicalMaterial({ color: "#3d2b21", metalness: 0.22, roughness: 0.16, transparent: true, opacity: 0.75 });
 			for (const name of ["wheel_fl", "wheel_fr", "wheel_rl", "wheel_rr"]) {
 				const wheel = model.getObjectByName(name);
 				if (wheel) wheels.push(wheel);
@@ -202,7 +202,7 @@ export default function ExploreCinematicScene() {
 				const part = model.getObjectByName(name) as THREE.Mesh | undefined;
 				if (!part) continue;
 				const geometry = new THREE.EdgesGeometry(part.geometry, 30);
-				const material = new THREE.LineBasicMaterial({ color: name === "body" ? "#8fe5dd" : "#d9af80", transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false });
+				const material = new THREE.LineBasicMaterial({ color: name === "body" ? "#c9a46b" : "#d9af80", transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false });
 				const outline = new THREE.LineSegments(geometry, material);
 				outline.renderOrder = 30;
 				part.add(outline);

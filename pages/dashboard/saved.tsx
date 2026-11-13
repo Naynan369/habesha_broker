@@ -57,7 +57,7 @@ export default function SavedItems() {
 					px={{ base: 4, md: 8, xl: 12 }}
 					alignItems="center"
 					boxShadow="0 12px 34px rgba(4,16,19,.18)"
-					bg="#102f37"
+					bg="#2b1e17"
 					color="white"
 					borderBottom="1px solid"
 					borderColor="whiteAlpha.200"
@@ -74,7 +74,7 @@ export default function SavedItems() {
 					</Container>
 				</Flex>
 				<Container flex="1" maxW="1500px" py={{ base: 6, md: 10, xl: 12 }} px={{ base: 4, md: 8, xl: 12 }}>
-					<Flex className="dashboard-saved-hero" position="relative" overflow="hidden" align={{ base: "flex-start", md: "center" }} justify="space-between" gap="5" mb={{ base: 5, md: 7 }} p={{ base: 6, sm: 8, lg: 10 }} border="1px solid" borderColor="whiteAlpha.200" borderRadius={{ base: "2xl", md: "3xl" }} color="white" bgImage="radial-gradient(circle at 82% 10%, rgba(233,183,92,.22), transparent 27%), linear-gradient(125deg, #102f37 0%, #163d46 58%, #1b4449 100%)" boxShadow="0 26px 70px rgba(9,31,35,.18)">
+					<Flex className="dashboard-saved-hero" position="relative" overflow="hidden" align={{ base: "flex-start", md: "center" }} justify="space-between" gap="5" mb={{ base: 5, md: 7 }} p={{ base: 6, sm: 8, lg: 10 }} border="1px solid" borderColor="whiteAlpha.200" borderRadius={{ base: "2xl", md: "3xl" }} color="white" bgImage="radial-gradient(circle at 82% 10%, rgba(233,183,92,.22), transparent 27%), linear-gradient(125deg, #2b1e17 0%, #52392a 58%, #6c4c37 100%)" boxShadow="0 26px 70px rgba(34,22,15,.18)">
 						<Box position="relative" zIndex="1" maxW="3xl">
 							<Heading as="h1" fontSize={{ base: "2xl", md: "4xl" }} letterSpacing="-.045em" lineHeight="1.1">{copy.heading}</Heading>
 							<Text mt="3" color="whiteAlpha.800" fontSize={{ base: "sm", md: "md" }} lineHeight="1.7">{copy.description}</Text>

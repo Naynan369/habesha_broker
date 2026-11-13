@@ -54,7 +54,7 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 	const pageBg = useColorModeValue("#f4f5f2", "#050707");
 	const surface = useColorModeValue("#ffffff", "#101415");
 	const border = useColorModeValue("#dce3e1", "whiteAlpha.200");
-	const headingColor = useColorModeValue("#20383d", "#eef2f1");
+	const headingColor = useColorModeValue("#3b2b22", "#eef2f1");
 	const muted = useColorModeValue("#637278", "#a5b1b4");
 	const controlBg = useColorModeValue("#f7f8f6", "#090c0d");
 	const sortValue = orderBy.title === "asc" ? "title-asc"
@@ -75,7 +75,7 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 					alignItems="center"
 					minH={NAVBAR_HEIGHT_COMPACT}
 					px={{ base: 4, md: 8, xl: 12 }}
-					background="#102f37"
+					background="#2b1e17"
 					color={"white"}
 					boxShadow="0 12px 34px rgba(4,16,19,.18)"
 					borderBottom="1px solid"
@@ -97,7 +97,7 @@ export default function MyItemsList({ user, paymentFee, paymentEnabled }) {
 				</Flex>
 
 				<Container flex="1" maxW="1500px" py={{ base: 6, md: 10, xl: 12 }} px={{ base: 4, md: 8, xl: 12 }}>
-					<Flex className="dashboard-manage-hero" position="relative" overflow="hidden" align={{ base: "flex-start", md: "center" }} justify="space-between" gap="5" mb={{ base: 5, md: 7 }} p={{ base: 6, sm: 8, lg: 10 }} direction={{ base: "column", md: "row" }} border="1px solid" borderColor="whiteAlpha.200" borderRadius={{ base: "2xl", md: "3xl" }} color="white" bgImage="radial-gradient(circle at 82% 10%, rgba(233,183,92,.22), transparent 27%), linear-gradient(125deg, #102f37 0%, #163d46 58%, #1b4449 100%)" boxShadow="0 26px 70px rgba(9,31,35,.18)">
+					<Flex className="dashboard-manage-hero" position="relative" overflow="hidden" align={{ base: "flex-start", md: "center" }} justify="space-between" gap="5" mb={{ base: 5, md: 7 }} p={{ base: 6, sm: 8, lg: 10 }} direction={{ base: "column", md: "row" }} border="1px solid" borderColor="whiteAlpha.200" borderRadius={{ base: "2xl", md: "3xl" }} color="white" bgImage="radial-gradient(circle at 82% 10%, rgba(233,183,92,.22), transparent 27%), linear-gradient(125deg, #2b1e17 0%, #52392a 58%, #6c4c37 100%)" boxShadow="0 26px 70px rgba(34,22,15,.18)">
 						<Box position="relative" zIndex="1">
 							<Text color="#f0c978" fontSize="xs" fontWeight="bold" letterSpacing=".16em" textTransform="uppercase">{text.myAccount}</Text>
 							<Heading as="h1" mt="3" fontSize={{ base: "2xl", md: "4xl" }} letterSpacing="-.045em" lineHeight="1.1">{text.heading}</Heading>
@@ -214,7 +214,7 @@ function FilterButton({ filters, setFilters, value, text }) {
 			variant="ghost"
 			onClick={handleToggle}
 			transition="all 180ms ease"
-			_hover={{ bg: selected ? "#1c4a53" : unselectedHoverBg, borderColor: selected ? "#1c4a53" : "mainorange", color: selected ? "white" : unselectedHoverText, transform: "translateY(-1px)" }}
+			_hover={{ bg: selected ? "#52392a" : unselectedHoverBg, borderColor: selected ? "#52392a" : "mainorange", color: selected ? "white" : unselectedHoverText, transform: "translateY(-1px)" }}
 			_active={{ transform: "scale(.97)" }}
 			_focusVisible={{ outline: "3px solid #E9B75C", outlineOffset: "2px" }}
 		>
